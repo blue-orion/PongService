@@ -1,10 +1,10 @@
+import "#env";
 import Fastify from "fastify";
-import "./env.js";
-import routes from "./routes/index.js";
-import config from "./shared/config/index.js";
+import domainRoutes from "#routes/index.js";
+import config from "#shared/config/index.js";
 
 const app = Fastify({ logger: true });
-app.register(routes);
+app.register(domainRoutes, { prefix: "/v1" });
 
 const { host, port, nodeEnv } = config.server;
 
