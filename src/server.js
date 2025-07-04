@@ -4,6 +4,7 @@ import "./env.js";
 import routes from "./routes/index.js";
 import config from "./shared/config/index.js";
 import gameRoutes from './domains/game/gameRoutes.js';
+import handle from './domains/game/gameRoutes.js';
 
 const app = Fastify({ logger: true });
 
