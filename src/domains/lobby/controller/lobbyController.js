@@ -1,3 +1,4 @@
+import { ApiResponse } from "#shared/api/response.js";
 import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 
 export class LobbyController {
@@ -14,10 +15,6 @@ export class LobbyController {
   }
 
   async getAllLobbies(_req, res) {
-    try {
-      return await this.lobbyService.getAllLobbies();
-    } catch (error) {
-      res.code(400).send({ error: error.message });
-    }
+    return ApiResponse.ok(res, await this.lobbyService.getAllLobbies());
   }
 }

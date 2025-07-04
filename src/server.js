@@ -1,10 +1,14 @@
 import "#env";
 import Fastify from "fastify";
 import domainRoutes from "#routes/index.js";
+import { ApiResponse } from "#shared/api/response.js";
 import config from "#shared/config/index.js";
 
 const app = Fastify({ logger: true });
 app.register(domainRoutes, { prefix: "/v1" });
+app.setErrorHandler((error, _req, res) => {
+  ApiResponse.error(res, error);
+});
 
 const { host, port, nodeEnv } = config.server;
 
