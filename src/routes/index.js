@@ -1,9 +1,8 @@
-import authRoutes from "./authRoute.js";
-import jwtPlugin from "../shared/plugins/jwt.js";
+import lobbyRoutes from "#domains/lobby/lobbyRoutes.js";
 
-export default async function routes(fastify) {
-  fastify.register(jwtPlugin);
-  fastify.register(authRoutes);
+export default async function domainRoutes(fastify, _opts) {
+  await fastify.register(lobbyRoutes, { prefix: "/lobbies" });
+
   fastify.get("/health", async (_request, _reply) => {
     return { status: "ok" };
   });
