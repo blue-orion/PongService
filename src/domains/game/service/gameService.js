@@ -1,18 +1,37 @@
 import GameState from '../model/GameState.js';
 
 export class GameService {
-	static async startGame(gameState) {
+	constructor() {
+		this.players = [];
+		this.gameState = new GameState;
+	}
+
+	newConnect(ws) {
+		this.players.push(ws);
+		if (this.players.length === 2) {
+			this.startGame();
+		}
+	}
+
+	startGame() {
 		let intervalId = setInterval(() => {
-			gameState.updateBall();
+			this.gameState.updateBall();
+			this.players.forEach((socket) => {
+				socket.emit('state', this.gameState.getState());
+			})
 		}, 1000);
 
 		setTimeout(() => {
 			clearInterval(intervalId);
 			console.log("Game Over");
-		}, 10000);
+		}, 30000);
 	}
 
-	static async getState(gameState) {
-		return (gameState.getState());
+	getState() {
+		return (this.gameState.getState());
+	}
+	
+	movePaddle(role, direction) {
+		return this.gameState.movePaddle(role, direction);
 	}
 }

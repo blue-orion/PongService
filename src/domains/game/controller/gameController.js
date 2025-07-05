@@ -2,12 +2,17 @@ import { GameService } from "../service/gameService.js";
 
 export class GameController {
 	constructor() {
-		this.gameSession = new GameSession();
 		this.gameService = new GameService();
 	}
 
-	getState() {
-		return (this.gameService.getState());
+	handleMessage(ws, data) {
+		if (data.type === 'new') {
+			console.log(`새로운 데이터: ${data.msg}`);
+			this.gameService.newConnect(ws);
+		}
+		if (data.type === 'move') {
+			this.gameService.movePaddle("left", data.msg);
+		}
 	}
 }
 
