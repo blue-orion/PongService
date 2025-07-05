@@ -1,5 +1,6 @@
 import Fastify from "fastify";
-import websocket from "@fastify/websocket";
+// import websocket from "@fastify/websocket";
+import fastifyIO from "fastify-socket.io";
 import "./env.js";
 import routes from "./routes/index.js";
 import config from "./shared/config/index.js";
@@ -9,7 +10,7 @@ import handle from './domains/game/gameRoutes.js';
 const app = Fastify({ logger: true });
 
 // ✅ 플러그인 등록 순서 중요!
-app.register(websocket);       // 가장 먼저 등록해야 WebSocket 작동
+app.register(fastifyIO);       // 가장 먼저 등록해야 WebSocket 작동
 app.register(routes);          // 일반 HTTP 라우트
 app.register(gameRoutes);      // WebSocket 라우트
 
