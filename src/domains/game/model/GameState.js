@@ -5,7 +5,7 @@ class GameState {
 			left: {x: 10, y: 300},
 			right: {x: 790, y: 300}
 		};
-		this.ball = { x: 400, y: 300, dx: 100, dy: 20 };
+		this.ball = { x: 400, y: 300, dx: 2, dy: 1 };
 		this.height = 600;
 		this.width = 800;
 		this.score = { left: 0, right: 0 };
@@ -71,13 +71,13 @@ class GameState {
 		}
 		if (b.x <= this.paddles.left.x) {
 			if (b.y >= this.paddles.left.y - this.paddles.length
-				|| b.y <= this.paddles.left.y + this.paddles.length) {
+				&& b.y <= this.paddles.left.y + this.paddles.length) {
 				b.dx *= -1;
 			}
 		}
 		if (b.x >= this.paddles.right.x) {
 			if (b.y >= this.paddles.right.y - this.paddles.length
-				|| b.y <= this.paddles.right.y + this.paddles.length) {
+				&& b.y <= this.paddles.right.y + this.paddles.length) {
 				b.dx *= -1;
 			}
 		}
@@ -87,8 +87,11 @@ class GameState {
 		return {
 			paddles: { ...this.paddles },
 			ball: { ...this.ball },
-			score: {...this.score },
+			score: { ...this.score },
 		};
+	}
+	getScore() {
+		return 	this.score;
 	}
 }
 

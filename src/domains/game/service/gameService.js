@@ -13,18 +13,32 @@ export class GameService {
 		}
 	}
 
+	isGameOver() {
+		const score = this.gameState.getScore();
+		console.log("current score = ", score);
+		if (score.left >= 3) {
+			return 'left';
+		}
+		if (score.right >= 3) {
+			return 'right'
+		}
+		return false;
+	}
+
 	startGame() {
 		let intervalId = setInterval(() => {
-			this.gameState.updateBall();
-			this.players.forEach((socket) => {
-				socket.emit('state', this.gameState.getState());
-			})
-		}, 1000);
-
-		setTimeout(() => {
-			clearInterval(intervalId);
-			console.log("Game Over");
-		}, 30000);
+			const result = this.isGameOver();
+			if (result === 'left' || result === 'right') {
+				clearInterval(intervalId);
+				console.log(`${result} user win!!!`);
+			}
+			else {
+				this.gameState.updateBall();
+				this.players.forEach((socket) => {
+					socket.emit('state', this.gameState.getState());
+				})
+			}
+		}, 10);
 	}
 
 	getState() {
