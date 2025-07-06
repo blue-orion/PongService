@@ -6,9 +6,7 @@ export class LobbyController {
     this.lobbyService = new LobbyService();
 
     Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-      .filter(
-        (prop) => typeof this[prop] === "function" && prop !== "constructor"
-      )
+      .filter((prop) => typeof this[prop] === "function" && prop !== "constructor")
       .forEach((fn) => {
         this[fn] = this[fn].bind(this);
       });
