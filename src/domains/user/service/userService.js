@@ -1,17 +1,12 @@
 import bcrypt from "bcrypt";
+import { getUserByUsername } from "../../auth/repo/authRepo.js";
 
-const users = [
-  {
-    id: 1,
-    username: "gitkim",
-    passwordHash: await bcrypt.hash("password123", 10),
-  },
-];
-
+// DB에서 유저 조회
 export async function findUserByUsername(username) {
-  return users.find((user) => user.username === username);
+  return getUserByUsername(username);
 }
 
+// 비밀번호 검증
 export async function validatePassword(password, hash) {
   return bcrypt.compare(password, hash);
 }
