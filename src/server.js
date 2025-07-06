@@ -3,17 +3,12 @@ import Fastify from "fastify";
 import domainRoutes from "#routes/index.js";
 import { ApiResponse } from "#shared/api/response.js";
 import config from "#shared/config/index.js";
-// import websocket from "@fastify/websocket";
 import fastifyIO from "fastify-socket.io";
 import "./env.js";
 import routes from "./routes/index.js";
-import config from "./shared/config/index.js";
 import gameRoutes from './domains/game/gameRoutes.js';
-import handle from './domains/game/gameRoutes.js';
 
 const app = Fastify({ logger: true });
-
-const { host, port, nodeEnv } = config.server;
 
 // ✅ 플러그인 등록 순서 중요!
 app.register(fastifyIO);       // 가장 먼저 등록해야 WebSocket 작동

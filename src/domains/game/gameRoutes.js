@@ -1,5 +1,6 @@
 // src/domains/game/gameRoutes.js
 import { gameController } from './controller/gameController.js'; 
+import { loadGameState } from './repo/gameRepo.js';
 
 export default async function gameRoutes(fastify, opts) {
 	const io = fastify.io;
@@ -22,7 +23,8 @@ export default async function gameRoutes(fastify, opts) {
 		})
 
 		// 클라이언트 연결 종료
-		socket.on('disconnect', () => {
+		socket.on('disconnect', async () => {
+			console.log(JSON.stringify(await loadGameState()));
 			console.log('클라이언트 연결 종료');
 		})
 	});

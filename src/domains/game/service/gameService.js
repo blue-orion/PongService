@@ -1,4 +1,5 @@
 import GameState from '../model/GameState.js';
+import { saveGameState } from '../repo/gameRepo.js';
 
 export class GameService {
 	constructor() {
@@ -31,6 +32,7 @@ export class GameService {
 			if (result === 'left' || result === 'right') {
 				clearInterval(intervalId);
 				console.log(`${result} user win!!!`);
+				saveGameState(1);
 			}
 			else {
 				this.gameState.updateBall();
