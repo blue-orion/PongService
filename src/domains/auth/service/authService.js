@@ -6,7 +6,7 @@ export async function authenticateUser(username, password) {
     return null;
   }
 
-  const isValid = await validatePassword(password, user.passwordHash);
+  const isValid = await validatePassword(password, user.passwd);
   if (!isValid) {
     return null;
   }

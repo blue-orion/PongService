@@ -23,9 +23,9 @@ export async function updateUser2FASecret(userId, secret) {
 }
 
 // 유저 생성 (회원가입)
-export async function createUser({ username, passwordHash }) {
+export async function createUser({ username, passwd }) {
   return prisma.user.create({
-    data: { username, passwordHash },
+    data: { username, passwd },
   });
 }
 
