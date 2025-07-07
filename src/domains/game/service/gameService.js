@@ -17,10 +17,10 @@ export class GameService {
 	isGameOver() {
 		const score = this.gameState.getScore();
 		console.log("current score = ", score);
-		if (score.left >= 3) {
+		if (score.left >= 10) {
 			return 'left';
 		}
-		if (score.right >= 3) {
+		if (score.right >= 10) {
 			return 'right'
 		}
 		return false;
@@ -40,7 +40,7 @@ export class GameService {
 					socket.emit('state', this.gameState.getState());
 				})
 			}
-		}, 10);
+		}, 1000/60);
 	}
 
 	getState() {

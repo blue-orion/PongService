@@ -4,14 +4,28 @@ import domainRoutes from "#routes/index.js";
 import { ApiResponse } from "#shared/api/response.js";
 import config from "#shared/config/index.js";
 import fastifyIO from "fastify-socket.io";
+import fastifyCors from "@fastify/cors";
 import "./env.js";
 import routes from "./routes/index.js";
 import gameRoutes from './domains/game/gameRoutes.js';
 
 const app = Fastify({ logger: true });
 
-// ✅ 플러그인 등록 순서 중요!
-app.register(fastifyIO);       // 가장 먼저 등록해야 WebSocket 작동
+// 플러그인 등록 순서 중요!
+app.register(fastifyIO, {
+  cors: {
+    origin: "http://localhost:3000", // 프론트엔드 서버 주소
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// fastify-cors 등록
+app.register(fastifyCors, {
+  origin: "*", // 또는 구체적인 도메인
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  credentials: true
+});
 
 app.register(domainRoutes, { prefix: "/v1" });
 app.setErrorHandler((error, _req, res) => {
