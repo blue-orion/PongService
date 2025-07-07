@@ -10,6 +10,8 @@ export class GameService {
 	newConnect(ws) {
 		this.players.push(ws);
 		if (this.players.length === 2) {
+			this.players[0].emit('role', { role: 'left' })
+			this.players[1].emit('role', { role: 'right' })
 			this.startGame();
 		}
 	}

@@ -11,7 +11,9 @@ export class GameController {
 			this.gameService.newConnect(ws);
 		}
 		if (data.type === 'move') {
-			this.gameService.movePaddle("left", data.msg);
+			if (!data.role)
+				data.role = 'left';
+			this.gameService.movePaddle(data.role, data.msg);
 		}
 	}
 }
