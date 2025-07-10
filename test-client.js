@@ -4,7 +4,7 @@
 import { io } from "socket.io-client";
 
 const socket = io("ws://localhost:3003/ws/game", {
-  query: { playerId: 1 },
+  query: { playerId: 2 },
 });
 
 socket.on("connect", () => {

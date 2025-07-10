@@ -54,12 +54,7 @@ export async function loadGameState() {
   return game; // 예시용 dummy
 }
 
-export async function createGameWithTournament({
-  playerOneId,
-  playerTwoId,
-  round = 1,
-  match = 1,
-}) {
+export async function createGameWithTournament(playerOneId, playerTwoId, round = 1, match = 1) {
   // 1. 먼저 토너먼트 생성
   const tournament = await prisma.tournament.create({
     data: {
@@ -71,13 +66,17 @@ export async function createGameWithTournament({
   // 2. Game 생성 (tournament_id 연결)
   const game = await prisma.game.create({
     data: {
-      player_one_id: playerOneId,
-      player_two_id: playerTwoId,
       round,
       match,
       game_status: GameStatus.PENDING,
       tournament: {
         connect: { id: tournament.id },
+      },
+      player_one: {
+        connect: { id: playerOneId },
+      },
+      player_two: {
+        connect: { id: playerTwoId },
       },
     },
   });
@@ -85,10 +84,7 @@ export async function createGameWithTournament({
   return game;
 }
 
-export async function updateGame(
-  gameId,
-  { leftScore, rightScore, winnerId, loserId }
-) {
+export async function updateGame(gameId, { leftScore, rightScore, winnerId, loserId }) {
   const exists = await prisma.game.findUnique({ where: { id: gameId } });
 
   if (!exists) {
