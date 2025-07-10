@@ -1,7 +1,9 @@
 import { generate2FASecret, verify2FACode } from "../service/2faService.js";
-import { getUserByUsername, updateUser2FASecret } from "../repo/authRepo.js";
+import { getUserByUsername, updateUser2FASecret } from "#domains/user/repo/userRepo.js";
 
-// 2FA 시크릿 및 QR코드 발급
+/**
+ /auth/2fa/setup 
+ */
 export async function setup2FAHandler(request, reply) {
   const { username } = request.body;
   const user = await getUserByUsername(username);
@@ -9,11 +11,13 @@ export async function setup2FAHandler(request, reply) {
     return reply.code(404).send({ message: "User not found" });
   }
   const { secret, qrCodeDataURL } = await generate2FASecret(username);
-  await updateUser2FASecret(user.id, secret); // DB에 시크릿 저장
+  await updateUser2FASecret(user.id, secret);
   return reply.send({ qrCodeDataURL });
 }
 
-// 2FA 코드 검증
+/**
+ /auth/2fa/verify
+ */
 export async function verify2FAHandler(request, reply) {
   const { username, token } = request.body;
   const user = await getUserByUsername(username);

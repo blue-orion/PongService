@@ -1,4 +1,4 @@
-import { findUserByUsername, validatePassword } from "../../user/service/userService.js";
+import { findUserByUsername, validatePassword } from "#domains/user/service/userService.js";
 
 export async function authenticateUser(username, password) {
   const user = await findUserByUsername(username);

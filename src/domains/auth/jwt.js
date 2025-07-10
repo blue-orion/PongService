@@ -6,9 +6,15 @@ export default fp(async (fastify) => {
     secret: process.env.JWT_SECRET || "your-secret-key",
   });
 
+  /**
+   /auth/me
+   */
   fastify.decorate("authenticate", async function (request, reply) {
     try {
       await request.jwtVerify();
+      if (!request.user || request.user.type !== "access") {
+        return reply.code(401).send({ message: "Access token required" });
+      }
     } catch {
       reply.code(401).send({ message: "Unauthorized" });
     }

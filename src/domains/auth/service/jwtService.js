@@ -1,9 +1,9 @@
 export function generateAccessToken(fastify, user) {
-  return fastify.jwt.sign({ userId: user.id, username: user.username }, { expiresIn: "1h" });
+  return fastify.jwt.sign({ userId: user.id, username: user.username, type: "access" }, { expiresIn: "1h" });
 }
 
 export function generateRefreshToken(fastify, user) {
-  return fastify.jwt.sign({ userId: user.id }, { expiresIn: "7d" });
+  return fastify.jwt.sign({ userId: user.id, type: "refresh" }, { expiresIn: "7d" });
 }
 
 export async function verifyToken(fastify, token) {
