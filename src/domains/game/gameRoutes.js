@@ -1,31 +1,24 @@
-// src/domains/game/gameRoutes.js
-import { gameController } from './controller/gameController.js'; 
-import { loadGameState } from './repo/gameRepo.js';
+import { gameController } from "./controller/gameController.js";
 
 export default async function gameRoutes(fastify, opts) {
-	const io = fastify.io;
-	const gameNameSpace = io.of("/ws/game");
+  const io = fastify.io;
+  const gameNamespace = io.of("/ws/game");
 
-	gameNameSpace.on('connection', (socket) => {
-		console.log('클라이언트 연결됨.');
-		console.log(socket.id);
+  gameNamespace.on("connection", (socket) => {
+    const playerId = parseInt(socket.handshake.query.playerId);
+    console.log("🎯 받은 playerId:", socket.handshake.query.playerId);
+    console.log("🎯 파싱된 playerId:", playerId); // URL에 ?playerId=123 식으로 연결
 
-		// 서버 → 클라이언트 환영 메시지 전송
-		socket.emit("message", {
-			type: 'welcome',
-			msg: '👋 서버에서 보낸 환영 메시지입니다!',
-		});
+    console.log(`🎮 플레이어 ${playerId} 연결됨`);
+    gameController.handleConnection(socket, playerId);
 
-		// 클라이언트로부터 메세지 수신
-		socket.on('message', (raw) => {
-			console.log("클라이언트 메세지", raw);
-			gameController.handleMessage(socket, raw);
-		})
+    socket.on("message", (raw) => {
+      gameController.handleMessage(socket, raw);
+    });
 
-		// 클라이언트 연결 종료
-		socket.on('disconnect', async () => {
-			console.log(JSON.stringify(await loadGameState()));
-			console.log('클라이언트 연결 종료');
-		})
-	});
+    socket.on("disconnect", async () => {
+      //   console.log(JSON.stringify(await loadGameState()));
+      console.log("클라이언트 연결 종료");
+    });
+  });
 }
