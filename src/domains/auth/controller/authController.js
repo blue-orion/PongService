@@ -10,9 +10,9 @@ import bcrypt from "bcrypt";
  */
 export function loginHandler(fastify) {
   return async function (request, reply) {
-    const { username, password, token } = request.body;
+    const { username, passwd, token } = request.body;
 
-    const user = await authenticateUser(username, password);
+    const user = await authenticateUser(username, passwd);
     if (!user) {
       return reply.code(401).send({ message: "Invalid username or password" });
     }
@@ -49,13 +49,16 @@ export function logoutHandler() {
   };
 }
 
+/**
+ /auth/register
+ */
 export async function registerHandler(request, reply) {
-  const { username, password } = request.body;
-  if (!username || !password) {
+  const { username, passwd } = request.body;
+  if (!username || !passwd) {
     return reply.code(400).send({ message: "Username and password required" });
   }
 
-  const hashed = await bcrypt.hash(password, 10);
+  const hashed = await bcrypt.hash(passwd, 10);
   try {
     await createUser({ username, passwd: hashed });
     return reply.send({ message: "User registered successfully" });
@@ -89,7 +92,10 @@ export function refreshTokenHandler(fastify) {
     }
 
     const accessToken = generateAccessToken(fastify, user);
-    return reply.send({ accessToken });
+    const newRefreshToken = generateRefreshToken(fastify, user);
+    await updateUserRefreshToken(user.id, newRefreshToken);
+
+    return reply.send({ accessToken, newRefreshToken });
   };
 }
 
