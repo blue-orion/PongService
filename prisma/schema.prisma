@@ -37,6 +37,7 @@ enum LobbyStatus {
 model User {
   id            Int       @id @default(autoincrement())
   passwd        String
+  two_fa_secret String?
   username      String    @unique
   profile_image String?
   refresh_token String?
