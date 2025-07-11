@@ -1,39 +1,21 @@
 // src/domains/game/controller/gameController.js
-import { GameService } from "../service/gameService.js";
-import { createGameWithTournament } from "../repo/gameRepo.js";
+//
+// 전역 객체로 생성하여 한 개의 서비스 객체만을 유지
+import { gameService } from "../service/gameService.js";
+import { loadTournament } from "../repo/gameRepo.js";
 
 const waiting = [];
-const activeGames = new Map(); // gameId -> GameService
 
 export const gameController = {
-  async handleConnection(socket, playerId) {
-    waiting.push({ socket, playerId });
+  async handleConnection(socket, tournamentId, playerId) {
+    waiting.push({ socket, tournamentId, playerId });
 
-    // ✅ 2명 이상일 때 게임 시작
-    if (waiting.length >= 2) {
-      const left = waiting.shift();
-      const right = waiting.shift();
-
-      // ✅ 1. 게임 생성 (DB)
-      const game = await createGameWithTournament(
-        left.playerId,
-        right.playerId
-      );
-      const gameId = game.id;
-
-      // ✅ 2. GameService 생성
-      const gameService = new GameService(gameId, [left.socket, right.socket], {
-        left: left.playerId,
-        right: right.playerId,
-      });
-
-      // ✅ 3. 게임 시작
-      gameService.startGame();
-
-      // ✅ 4. 게임을 Map에 등록
-      activeGames.set(gameId, gameService);
-    }
-  },
+		const status = gameService.newConnection(socket, tournamentId, playerId);
+		if (status) {
+			console.log(`${playerId} came in tournament(Tournament Id = ${tournamentId})!`);
+		}
+		return (status); //JSON 형태 혹은 API 형태로 연결 결과 응답 보내주기
+	},
 
   handleMessage(socket, raw) {
     const data = typeof raw === "string" ? JSON.parse(raw) : raw;

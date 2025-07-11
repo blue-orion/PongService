@@ -1,68 +1,62 @@
 import Game from "../model/Game.js";
+import Tournament from "../model/Tournament.js"
 import { updateGame } from "../repo/gameRepo.js";
 
 export class GameService {
-  /**
-   * @param {number} gameId
-   * @param {[Socket, Socket]} players - [leftSocket, rightSocket]
-   * @param {{ left: number, right: number }} playerIds - DB user ID
-   */
-  constructor(gameId, players, playerIds) {
-    this.game = new Game(gameId, playerIds);
-    this.players = players;
-    this.playerIds = playerIds;
-    this.intervalId = null;
+
+	// 클래스 멤버들:
+	// - tournaments: 진행중인 토너먼트 객체 저장
+	// - tournamentInits: 비동기적 연결 요청 시 동기화 보장
+	//
+	/** @constructor */
+  constructor() {
+		/** @type { Map<number, Tournament> } */
+    this.tournaments = new Map(); // tournamentId -> Tournament
+    this.tournamentInits = new Map();
   }
 
-  startGame() {
-    // 역할 지정
-    this.players[0].emit("role", { role: "left" });
-    this.players[1].emit("role", { role: "right" });
+	async newConnection(socket, tournamentId, playerId) {
+		// TournamentId에 해당하는 토너먼트 정보 로드
+		const tournament = await this.getOrConstructTournament(tournamentId);
 
-    this.intervalId = setInterval(async () => {
-      const result = this.isGameOver();
-      if (result) {
-        clearInterval(this.intervalId);
-        await this.finishGame(result);
-      } else {
-        this.game.updateBall();
-        const state = this.game.getState();
-        this.players.forEach((socket) => {
-          socket.emit("state", state);
-        });
-      }
-    }, 1000 / 60); // 60fps
-  }
+		// 해당 토너먼트에 유저 추가
+		const status = tournament.addPlayer(socket, playerId);
 
-  isGameOver() {
-    const score = this.game.getScore();
-    if (score.left >= 10) return "left";
-    if (score.right >= 10) return "right";
-    return null;
-  }
+		// 유저가 모두 접속하면 게임 시작
+		if (tournament.isFull()) {
+			console.log("tournament start!!");
+			tournament.start();
+		}
+		else
+			console.log("waiting players ...");
+		return status;
+	}
 
-  async finishGame(winnerRole) {
-    const loserRole = winnerRole === "left" ? "right" : "left";
-    const winnerId = this.playerIds[winnerRole];
-    const loserId = this.playerIds[loserRole];
-    const score = this.game.getScore();
+	// 새로운 유저 접속 시 토너먼트 로딩 동기화 보장
+	// 접속 == 비동기적 이벤트
+	// 비동기적으로 생성자 호출 시 여러 개의 객체가 생길 수 있음
+	async getOrConstructTournament(tournamentId) {
+		// 성공적으로 DB에서 토너먼트 정보를 불러와 객체가 이미 존재
+		if (this.tournaments.has(tournamentId)) {
+			return this.tournaments.get(tournamentId);
+		}
 
-    // ✅ DB에 결과 저장
-    await updateGame(this.game.id, {
-      leftScore: score.left,
-      rightScore: score.right,
-      winnerId,
-      loserId,
-    });
+		// 아직 객체를 DB에서 불러오는 중인 경우
+		if (this.tournamentInits.has(tournamentId)) {
+			return await this.tournamentInits.get(tournamentId);
+		}
 
-    // 📨 클라이언트에 결과 전송
-    this.players.forEach((socket) =>
-      socket.emit("game_over", {
-        winner: winnerRole,
-        score,
-      })
-    );
-  }
+		// 객체가 존재하지 않아 새롭게 생성해야 하는 경우
+		const tournament = new Tournament(tournamentId);
+		const initPromise = tournament.init().then(() => {
+			this.tournaments.set(tournamentId, tournament);
+			this.tournamentInits.delete(tournamentId);
+			return tournament;
+		});
+
+		this.tournamentInits.set(tournamentId, initPromise);
+		return await initPromise;
+	}
 
   handleMove(role, direction) {
     this.game.movePaddle(role, direction);
@@ -76,3 +70,5 @@ export class GameService {
     if (this.intervalId) clearInterval(this.intervalId);
   }
 }
+
+export const gameService = new GameService();

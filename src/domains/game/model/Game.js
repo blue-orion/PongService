@@ -1,7 +1,15 @@
+import { updateGame } from "../repo/gameRepo.js"
+
 export default class Game {
-  constructor(gameId, playerIds) {
+	/**
+		* @param { number } gameId
+		* @param { {id, Socket}[] } players - 0번째 인덱스가 left, 1번째 인덱스가 right
+		*/
+  constructor(gameId, players) {
     this.id = gameId;
-    this.playerIds = playerIds;
+
+		/** @type {{id: number, socket: Socket}[]} */
+    this.players = players;
 
     this.paddles = {
       length: 100,
@@ -103,5 +111,64 @@ export default class Game {
       ball: this.ball,
       score: this.score,
     };
+  }
+
+  isGameOver() {
+    const score = this.getScore();
+    if (score.left >= 10) return "left";
+    if (score.right >= 10) return "right";
+    return null;
+  }
+
+	startGame() {
+    // 역할 지정
+    this.players[0].socket.emit("role", { role: "left" });
+    this.players[1].socket.emit("role", { role: "right" });
+
+    const intervalId = setInterval(async () => {
+      const result = this.isGameOver();
+      if (result) {
+        clearInterval(intervalId);
+        await this.finishGame(result);
+      } else {
+        this.updateBall();
+        const state = this.getState();
+        this.players.forEach((player) => {
+          player.socket.emit("state", state);
+        });
+      }
+    }, 1000 / 60); // 60fps
+  }
+
+  async finishGame(winnerRole) {
+		let winnerId = null;
+		let loserId = null;
+
+		if (winnerRole === "left") {
+			winnerId = this.players[0].id;
+			loserId = this.players[1].id;
+		}
+		else {
+			winnerId = this.players[1].id;
+			loserId = this.players[0].id;
+		}
+
+    const score = this.getScore();
+
+    // ✅ DB에 결과 저장
+    await updateGame(this.id, {
+      leftScore: score.left,
+      rightScore: score.right,
+      winnerId,
+      loserId,
+    });
+
+    // 📨 클라이언트에 결과 전송
+    this.players.forEach((player) =>
+      player.socket.emit("game_over", {
+        winner: winnerRole,
+        score,
+      })
+    );
   }
 }

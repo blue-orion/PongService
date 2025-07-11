@@ -46,31 +46,49 @@ export async function saveGameState(state) {
   console.log("Game state 저장됨:", game);
 }
 
-export async function loadGameState() {
-  const game = await prisma.game.findMany({
-    where: { id: 1 },
+export async function loadGameState(gameId) {
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
   });
   console.log("Game state 불러옴:", game);
-  return game; // 예시용 dummy
+  return game;
 }
 
-export async function createGameWithTournament(playerOneId, playerTwoId, round = 1, match = 1) {
-  // 1. 먼저 토너먼트 생성
-  const tournament = await prisma.tournament.create({
+export async function loadTournament(tournamentId) {
+	console.log("Try to load tournament Id: ", tournamentId);
+	const tournament = await prisma.tournament.findUnique({
+		where: { id: tournamentId },
+	});
+	console.log("Tournament Loaded");
+	return tournament;
+}
+
+export async function updateTournament(tournamentId, tournamentType, tournamentStatus) {
+  const exists = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+
+  if (!exists) {
+    console.error(`❌ [updateGame] Tournament ID ${tournamentId} not found in DB.`);
+    return null;
+  }
+
+  return await prisma.tournament.update({
+    where: { id: tournamentId },
     data: {
-      tournament_status: TournamentStatus.PENDING, // or 'ongoing'
-      tournament_type: TournamentType.FINAL,
+      tournament_status: tournamentStatus,
+      tournament_type: tournamentType,
     },
   });
+}
 
-  // 2. Game 생성 (tournament_id 연결)
+export async function createGame(tournamentId, playerOneId, playerTwoId, round = 1, match = 1) {
+  // 1. Game 생성 (tournament_id 연결)
   const game = await prisma.game.create({
     data: {
       round,
       match,
       game_status: GameStatus.PENDING,
       tournament: {
-        connect: { id: tournament.id },
+        connect: { id: tournamentId },
       },
       player_one: {
         connect: { id: playerOneId },
@@ -99,7 +117,7 @@ export async function updateGame(gameId, { leftScore, rightScore, winnerId, lose
       player_two_score: rightScore,
       winner_id: winnerId,
       loser_id: loserId,
-      game_status: GameStatus.done,
+      game_status: GameStatus.COMPLETED,
     },
   });
 }
