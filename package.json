@@ -25,8 +25,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.11.1",
     "@fastify/jwt": "^8.0.0",
+    "@prisma/client": "^6.11.1",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.0.0",
     "fastify": "^4.29.1",

@@ -1,5 +1,4 @@
 import {
-  loginHandler,
   logoutHandler,
   registerHandler,
   refreshTokenHandler,
@@ -8,9 +7,11 @@ import {
 } from "./controller/authController.js";
 import { setup2FAHandler, verify2FAHandler } from "./controller/2faController.js";
 
+import authController from "#domains/auth/controller/authController.js";
+
 export default async function authRoutes(fastify) {
   // authController.js
-  fastify.post("/login", loginHandler(fastify));
+  fastify.post("/login", authController.loginHandler);
   fastify.post("/logout", logoutHandler);
   fastify.post("/register", registerHandler);
   fastify.post("/refresh", refreshTokenHandler(fastify));

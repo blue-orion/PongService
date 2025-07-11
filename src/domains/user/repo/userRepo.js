@@ -1,11 +1,14 @@
 import prisma from "#shared/database/prisma.js";
 
-// username으로 유저 조회
-export async function getUserByUsername(username) {
-  return prisma.user.findUnique({
-    where: { username },
-  });
-}
+const userRepo = {
+  async getUserByUsername(username) {
+    return await prisma.user.findUnique({
+      where: { username },
+    });
+  },
+};
+
+export default userRepo;
 
 // id로 유저 조회
 export async function getUserById(id) {

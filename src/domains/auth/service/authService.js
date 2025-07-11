@@ -1,15 +1,25 @@
-import { findUserByUsername, validatePassword } from "#domains/user/service/userService.js";
+import bcrypt from "bcrypt";
 
-export async function authenticateUser(username, password) {
-  const user = await findUserByUsername(username);
-  if (!user) {
-    return null;
-  }
+import TokenDto from "#domains/auth/model/tokenDto.js";
+import authRepo from "#domains/auth/repo/authRepo.js";
+import userRepo from "#domains/user/repo/userRepo.js";
+import twoFAService from "#domains/auth/service/2faService.js";
+import PongException from "#shared/exception/pongException.js";
 
-  const isValid = await validatePassword(password, user.passwd);
-  if (!isValid) {
-    return null;
-  }
+const authService = {
+  async authenticateUser(username, passwd, token, jwtUtils) {
+    const user = await userRepo.getUserByUsername(username);
+    if (!user) throw PongException.ENTITY_NOT_FOUNT;
+    if (!(await bcrypt.compare(passwd, user.passwd))) throw new PongException("invalid password", 400);
 
-  return user;
-}
+    twoFAService.verify2FACode(user.twoFASecret, token);
+
+    const accessToken = jwtUtils.generateAccessToken(user);
+    const refreshToken = jwtUtils.generateRefreshToken(user);
+    await authRepo.updateUserRefreshToken(user.id, refreshToken);
+
+    return new TokenDto(accessToken, refreshToken);
+  },
+};
+
+export default authService;
