@@ -1,5 +1,6 @@
 import fp from "fastify-plugin";
 import fastifyJwt from "@fastify/jwt";
+import fastifyOauth2 from "@fastify/oauth2";
 
 export default fp(async (fastify) => {
   fastify.register(fastifyJwt, {
@@ -7,7 +8,7 @@ export default fp(async (fastify) => {
   });
 
   /**
-   /auth/me
+   * /auth/me
    */
   fastify.decorate("authenticate", async function (request, reply) {
     try {
