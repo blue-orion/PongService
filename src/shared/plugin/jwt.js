@@ -1,5 +1,7 @@
 import fp from "fastify-plugin";
 
+import PongException from "#shared/exception/pongException.js";
+
 async function jwtPlugin(fastify, _options) {
   const jwtUtils = {
     generateAccessToken(user) {
@@ -18,11 +20,9 @@ async function jwtPlugin(fastify, _options) {
   const authenticate = async (request, reply) => {
     try {
       await request.jwtVerify();
-      if (!request.user || request.user.type !== "access") {
-        return reply.code(403).send({ message: "Access token required" });
-      }
+      if (!request.user || request.user.type !== "access") throw PongException.FORBIDDEN;
     } catch {
-      reply.code(401).send({ message: "Unauthorized" });
+      throw PongException.UNAUTHORIZE;
     }
   };
 
