@@ -1,30 +1,45 @@
 // src/domains/game/controller/gameController.js
-//
-// 전역 객체로 생성하여 한 개의 서비스 객체만을 유지
-import { gameService } from '../service/gameService.js';
-import { loadTournament } from '../repo/gameRepo.js';
 
-const waiting = [];
+import { gameService } from "../service/gameService.js";
 
 export const gameController = {
-	async handleConnection(socket, tournamentId, playerId) {
-		waiting.push({ socket, tournamentId, playerId });
+  /**
+   * 새로운 플레이어 연결 처리
+   */
+  async handleConnection(socket, tournamentId, playerId) {
+    try {
+      const status = await gameService.newConnection(socket, tournamentId, playerId);
+      console.log(`[Connected] player ${playerId} joined tournament ${tournamentId}`);
+      return status;
+    } catch (err) {
+      console.error("❌ 연결 오류:", err);
+      return { success: false, message: "Tournament connection failed" };
+    }
+  },
 
-		const status = gameService.newConnection(socket, tournamentId, playerId);
-		if (status) {
-			console.log(`${playerId} came in tournament(Tournament Id = ${tournamentId})!`);
-		}
-		return status; //JSON 형태 혹은 API 형태로 연결 결과 응답 보내주기
-	},
+  /**
+   * 클라이언트의 메시지 처리
+   */
+  handleMessage(socket, raw) {
+    let data;
+    try {
+      data = typeof raw === "string" ? JSON.parse(raw) : raw;
+    } catch {
+      console.warn("⚠️ Invalid message format");
+      return;
+    }
 
-	handleMessage(socket, raw) {
-		const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    switch (data.type) {
+      case "move":
+        gameService.handleMoveBySocket(socket.id, data.role, data.direction);
+        break;
 
-		if (data.type === 'move') {
-			// TODO: gameId별로 정확히 찾아서 이동 처리 (2단계에서)
-			for (const gameService of activeGames.values()) {
-				gameService.handleMove(data.role, data.direction);
-			}
-		}
-	},
+      case "ping":
+        socket.emit("pong");
+        break;
+
+      default:
+        console.warn("알 수 없는 메시지 타입:", data.type);
+    }
+  },
 };

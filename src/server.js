@@ -7,7 +7,7 @@ import fastifyIO from "fastify-socket.io";
 import fastifyCors from "@fastify/cors";
 import "./env.js";
 import routes from "./routes/index.js";
-import gameRoutes from './domains/game/gameRoutes.js';
+import gameRoutes from "#domains/pong/gameRoutes.js";
 
 const app = Fastify({ logger: true });
 
@@ -16,15 +16,15 @@ app.register(fastifyIO, {
   cors: {
     origin: "http://localhost:3000", // 프론트엔드 서버 주소
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 // fastify-cors 등록
 app.register(fastifyCors, {
   origin: "*", // 또는 구체적인 도메인
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  credentials: true
+  credentials: true,
 });
 
 app.register(domainRoutes, { prefix: "/v1" });
@@ -32,8 +32,8 @@ app.setErrorHandler((error, _req, res) => {
   ApiResponse.error(res, error);
 });
 
-app.register(routes);          // 일반 HTTP 라우트
-app.register(gameRoutes);      // WebSocket 라우트
+app.register(routes); // 일반 HTTP 라우트
+app.register(gameRoutes); // WebSocket 라우트
 
 // ✅ .env 또는 설정 파일로부터 host, port, nodeEnv 추출
 const { host = "0.0.0.0", port = 3003, nodeEnv = "development" } = config.server;
