@@ -1,14 +1,14 @@
-import { updateGame } from "../repo/gameRepo.js"
+import { updateGame } from '../repo/gameRepo.js';
 
 export default class Game {
-	/**
-		* @param { number } gameId
-		* @param { {id, Socket}[] } players - 0번째 인덱스가 left, 1번째 인덱스가 right
-		*/
+  /**
+   * @param { number } gameId
+   * @param { {id, Socket}[] } players - 0번째 인덱스가 left, 1번째 인덱스가 right
+   */
   constructor(gameId, players) {
     this.id = gameId;
 
-		/** @type {{id: number, socket: Socket}[]} */
+    /** @type {{id: number, socket: Socket}[]} */
     this.players = players;
 
     this.paddles = {
@@ -38,18 +38,18 @@ export default class Game {
     const paddle = this.paddles[role];
     if (!paddle) return;
 
-    if (direction === "up") paddle.y += 10;
-    if (direction === "down") paddle.y -= 10;
-    if (direction === "left") paddle.x -= 10;
-    if (direction === "right") paddle.x += 10;
+    if (direction === 'up') paddle.y += 10;
+    if (direction === 'down') paddle.y -= 10;
+    if (direction === 'left') paddle.x -= 10;
+    if (direction === 'right') paddle.x += 10;
 
     const halfWidth = this.width / 2;
     const limitY = { min: 15, max: this.height - 15 };
 
-    if (role === "left") {
+    if (role === 'left') {
       if (paddle.x < 0) paddle.x = 1;
       if (paddle.x > halfWidth) paddle.x = halfWidth - 1;
-    } else if (role === "right") {
+    } else if (role === 'right') {
       if (paddle.x < halfWidth) paddle.x = halfWidth + 1;
       if (paddle.x > this.width) paddle.x = this.width - 1;
     }
@@ -115,15 +115,15 @@ export default class Game {
 
   isGameOver() {
     const score = this.getScore();
-    if (score.left >= 10) return "left";
-    if (score.right >= 10) return "right";
+    if (score.left >= 10) return 'left';
+    if (score.right >= 10) return 'right';
     return null;
   }
 
-	startGame() {
+  startGame() {
     // 역할 지정
-    this.players[0].socket.emit("role", { role: "left" });
-    this.players[1].socket.emit("role", { role: "right" });
+    this.players[0].socket.emit('role', { role: 'left' });
+    this.players[1].socket.emit('role', { role: 'right' });
 
     const intervalId = setInterval(async () => {
       const result = this.isGameOver();
@@ -134,24 +134,23 @@ export default class Game {
         this.updateBall();
         const state = this.getState();
         this.players.forEach((player) => {
-          player.socket.emit("state", state);
+          player.socket.emit('state', state);
         });
       }
     }, 1000 / 60); // 60fps
   }
 
   async finishGame(winnerRole) {
-		let winnerId = null;
-		let loserId = null;
+    let winnerId = null;
+    let loserId = null;
 
-		if (winnerRole === "left") {
-			winnerId = this.players[0].id;
-			loserId = this.players[1].id;
-		}
-		else {
-			winnerId = this.players[1].id;
-			loserId = this.players[0].id;
-		}
+    if (winnerRole === 'left') {
+      winnerId = this.players[0].id;
+      loserId = this.players[1].id;
+    } else {
+      winnerId = this.players[1].id;
+      loserId = this.players[0].id;
+    }
 
     const score = this.getScore();
 
@@ -165,7 +164,7 @@ export default class Game {
 
     // 📨 클라이언트에 결과 전송
     this.players.forEach((player) =>
-      player.socket.emit("game_over", {
+      player.socket.emit('game_over', {
         winner: winnerRole,
         score,
       })

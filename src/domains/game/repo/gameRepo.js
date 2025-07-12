@@ -1,13 +1,13 @@
-import prisma from "#shared/database/prisma.js";
-import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
+import prisma from '#shared/database/prisma.js';
+import { GameStatus, TournamentStatus, TournamentType } from '@prisma/client';
 
 export async function saveGameState(state) {
   const user1 = await prisma.user.findUnique({ where: { id: 1 } });
   if (!user1) {
     await prisma.user.create({
       data: {
-        username: "Hyuntaek",
-        passwd: "temppassword",
+        username: 'Hyuntaek',
+        passwd: 'temppassword',
       },
     }); // id = 1
   }
@@ -15,8 +15,8 @@ export async function saveGameState(state) {
   if (!user2) {
     await prisma.user.create({
       data: {
-        username: "Taeho",
-        passwd: "temppassword",
+        username: 'Taeho',
+        passwd: 'temppassword',
       },
     }); // id = 2
   }
@@ -24,8 +24,8 @@ export async function saveGameState(state) {
   if (!tournament1) {
     await prisma.tournament.create({
       data: {
-        tournament_type: "FINAL",
-        tournament_status: "PENDING",
+        tournament_type: 'FINAL',
+        tournament_status: 'PENDING',
       },
     }); // id = 1
   }
@@ -40,27 +40,27 @@ export async function saveGameState(state) {
       loser_id: 2,
       round: 0,
       match: 1,
-      game_status: "COMPLETED",
+      game_status: 'COMPLETED',
     },
   });
-  console.log("Game state 저장됨:", game);
+  console.log('Game state 저장됨:', game);
 }
 
 export async function loadGameState(gameId) {
   const game = await prisma.game.findUnique({
     where: { id: gameId },
   });
-  console.log("Game state 불러옴:", game);
+  console.log('Game state 불러옴:', game);
   return game;
 }
 
 export async function loadTournament(tournamentId) {
-	console.log("Try to load tournament Id: ", tournamentId);
-	const tournament = await prisma.tournament.findUnique({
-		where: { id: tournamentId },
-	});
-	console.log("Tournament Loaded");
-	return tournament;
+  console.log('Try to load tournament Id: ', tournamentId);
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+  });
+  console.log('Tournament Loaded');
+  return tournament;
 }
 
 export async function updateTournament(tournamentId, tournamentType, tournamentStatus) {
