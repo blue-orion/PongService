@@ -1,8 +1,12 @@
 import "#env";
+
 import Fastify from "fastify";
+
 import domainRoutes from "#routes/index.js";
 import { ApiResponse } from "#shared/api/response.js";
 import config from "#shared/config/index.js";
+import jwtPlugin from "#shared/plugin/jwt.js";
+import oauthPlugin from "#shared/plugin/oauth.js";
 import fastifyIO from "fastify-socket.io";
 import fastifyCors from "@fastify/cors";
 import "./env.js";
@@ -32,11 +36,9 @@ app.setErrorHandler((error, _req, res) => {
   ApiResponse.error(res, error);
 });
 
-app.register(routes); // 일반 HTTP 라우트
-app.register(gameRoutes); // WebSocket 라우트
+app.register(domainRoutes, { prefix: "/v1" });
 
-// ✅ .env 또는 설정 파일로부터 host, port, nodeEnv 추출
-const { host = "0.0.0.0", port = 3003, nodeEnv = "development" } = config.server;
+const { host, port, nodeEnv } = config.server;
 
 const start = async () => {
   try {

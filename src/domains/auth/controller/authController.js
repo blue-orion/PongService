@@ -1,107 +1,50 @@
-import { authenticateUser } from "../service/authService.js";
-import { generateAccessToken, generateRefreshToken, verifyToken } from "../service/jwtService.js";
-import { verify2FACode } from "../service/2faService.js";
-import { updateUserRefreshToken, removeUserRefreshToken } from "#domains/auth/repo/authRepo.js";
-import { getUserById, createUser } from "#domains/user/repo/userRepo.js";
-import bcrypt from "bcrypt";
+import authService from "#domains/auth/service/authService.js";
+import { ApiResponse } from "#shared/api/response.js";
 
-/**
- /auth/login
- */
-export function loginHandler(fastify) {
-  return async function (request, reply) {
+const authController = {
+  // POST /v1/auth/login
+  async loginHandler(request, reply) {
     const { username, passwd, token } = request.body;
+    const jwtUtils = request.server.jwtUtils;
+    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils);
+    return ApiResponse.ok(reply, jwt);
+  },
 
-    const user = await authenticateUser(username, passwd);
-    if (!user) {
-      return reply.code(401).send({ message: "Invalid username or password" });
-    }
-
-    if (user.twoFASecret) {
-      if (!token) {
-        return reply.code(206).send({ message: "2FA code required" });
-      }
-      const verified = verify2FACode(user.twoFASecret, token);
-      if (!verified) {
-        return reply.code(401).send({ message: "Invalid 2FA code" });
-      }
-    }
-
-    const accessToken = generateAccessToken(fastify, user);
-    const refreshToken = generateRefreshToken(fastify, user);
-    await updateUserRefreshToken(user.id, refreshToken);
-
-    return reply.send({ accessToken, refreshToken });
-  };
-}
-
-/**
- /auth/logout
- */
-export function logoutHandler() {
-  return async function (request, reply) {
+  // POST /v1/auth/logout
+  async logoutHandler(request, reply) {
     const userId = request.user.id;
-    if (!userId) {
-      return reply.code(401).send({ message: "Unauthorized" });
-    }
-    await removeUserRefreshToken(userId);
-    return reply.send({ message: "Logged out successfully" });
-  };
-}
+    await authService.signOutUser(userId);
+    return ApiResponse.ok(reply, { message: "Logged out successfully" });
+  },
+
+  // POST /v1/auth/register
+  async registerHandler(request, reply) {
+    const { username, passwd } = request.body;
+    await authService.registerUser(username, passwd);
+    return ApiResponse.ok(reply, { message: "User registered successfully" });
+  },
+
+  // POST /v1/auth/refresh
+  async refreshTokenHandler(request, reply) {
+    const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
+    const jwtUtils = request.server.jwtUtils;
+    const { userId } = request.user;
+    const jwt = await authService.refreshTokens(userId, refreshToken, jwtUtils);
+    return ApiResponse.ok(reply, jwt);
+  },
+
+  // GET /v1/auth/google/callback
+  async googleOAuthCallbackHandler(request, reply) {
+    const jwtUtils = request.server.jwtUtils;
+    const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+    const jwt = await authService.googleOAuth(jwtUtils, token);
+    return ApiResponse.ok(reply, jwt);
+  },
+};
+
+export default authController;
 
 /**
- /auth/register
+ * 회원 탈퇴 로직
+ * enable colume 확인 로직/ 분기/ 필요한 부분 확인
  */
-export async function registerHandler(request, reply) {
-  const { username, passwd } = request.body;
-  if (!username || !passwd) {
-    return reply.code(400).send({ message: "Username and password required" });
-  }
-
-  const hashed = await bcrypt.hash(passwd, 10);
-  try {
-    await createUser({ username, passwd: hashed });
-    return reply.send({ message: "User registered successfully" });
-  } catch {
-    return reply.code(409).send({ message: "Username already exists" });
-  }
-}
-
-/**
- /auth/refresh
- */
-export function refreshTokenHandler(fastify) {
-  return async function (request, reply) {
-    const { refreshToken } = request.body;
-    if (!refreshToken) {
-      return reply.code(400).send({ message: "Refresh token required" });
-    }
-
-    const payload = await verifyToken(fastify, refreshToken);
-    if (!payload || payload.type !== "refresh") {
-      return reply.code(401).send({ message: "Invalid refresh token" });
-    }
-
-    const user = await getUserById(payload.userId);
-    if (!user) {
-      return reply.code(404).send({ message: "User not found" });
-    }
-
-    if (user.refresh_token !== refreshToken) {
-      return reply.code(401).send({ message: "Refresh token mismatch" });
-    }
-
-    const accessToken = generateAccessToken(fastify, user);
-    const newRefreshToken = generateRefreshToken(fastify, user);
-    await updateUserRefreshToken(user.id, newRefreshToken);
-
-    return reply.send({ accessToken, newRefreshToken });
-  };
-}
-
-/**
- /auth/me
- */
-export async function meHandler(request, reply) {
-  return reply.send({ user: request.user });
-}

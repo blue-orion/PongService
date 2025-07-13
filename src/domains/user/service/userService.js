@@ -1,12 +1,9 @@
-import bcrypt from "bcrypt";
-import { getUserByUsername } from "#domains/user/repo/userRepo.js";
+import UserDto from "#domains/user/model/userDto.js";
 
-// DB에서 유저 조회
-export async function findUserByUsername(username) {
-  return getUserByUsername(username);
-}
+const userService = {
+  async getMe(user) {
+    return new UserDto(user);
+  },
+};
 
-// 비밀번호 검증
-export async function validatePassword(password, hash) {
-  return bcrypt.compare(password, hash);
-}
+export default userService;

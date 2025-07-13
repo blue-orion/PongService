@@ -35,15 +35,15 @@ enum LobbyStatus {
 }
 
 model User {
-  id               Int           @id @default(autoincrement())
-  passwd           String
-  two_fa_secret    String?
-  username         String        @unique
-  profile_image    String?
-  refresh_token    String?
-  created_at       DateTime      @default(now())
-  updated_at       DateTime      @updatedAt
-  enabled          Boolean       @default(true)
+  id            Int       @id @default(autoincrement())
+  passwd        String?
+  two_fa_secret String?
+  username      String    @unique
+  profile_image String?
+  refresh_token String?   @unique
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  enabled       Boolean   @default(true)
   // Relations
   gamesAsPlayerOne Game[]        @relation("PlayerOne")
   gamesAsPlayerTwo Game[]        @relation("PlayerTwo")

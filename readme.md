@@ -20,6 +20,26 @@
 
 ---
 
+### vscode extensions
+
+- `ESLint @Microsoft`
+
+  자바스크립트 문법 검사기
+
+- `Prettier - Code formatter @Prettier`
+
+  코드 스타일 포맷터
+
+  ctrl(cmd) + k + (k 떼고) f 수행 후 포맷팅 방식 prettier로 변경
+
+  vscode 설정에서 _format on save_ **true** 설정
+
+  vscode 설정에서 _prettier.width_ **120** 설정
+
+  vscode 설정에서 _rulers_ **120** 설정
+
+---
+
 ### 프로젝트 구조
 
 ```text

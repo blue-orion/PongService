@@ -1,18 +1,15 @@
-import {
-  loginHandler,
-  logoutHandler,
-  registerHandler,
-  refreshTokenHandler,
-  meHandler,
-} from "./controller/authController.js";
-import { setup2FAHandler, verify2FAHandler } from "./controller/2faController.js";
+import authController from "#domains/auth/controller/authController.js";
+import twoFAController from "#domains/auth/controller/2faController.js";
 
 export default async function authRoutes(fastify) {
-  fastify.post("/login", loginHandler(fastify));
-  fastify.post("/logout", logoutHandler);
-  fastify.post("/register", registerHandler);
-  fastify.get("/me", { preHandler: [fastify.authenticate] }, meHandler);
-  fastify.post("/refresh", refreshTokenHandler(fastify));
-  fastify.post("/2fa/setup", setup2FAHandler);
-  fastify.post("/2fa/verify", verify2FAHandler);
+  // authController.js
+  fastify.post("/login", authController.loginHandler);
+  fastify.post("/logout", authController.logoutHandler);
+  fastify.post("/register", authController.registerHandler);
+  fastify.post("/refresh", { preHandler: [fastify.refreshAuth] }, authController.refreshTokenHandler);
+  fastify.get("/google/callback", authController.googleOAuthCallbackHandler);
+
+  // 2faController.js
+  fastify.post("/2fa/setup", twoFAController.setup2FAHandler);
+  fastify.post("/2fa/verify", twoFAController.verify2FAHandler);
 }
