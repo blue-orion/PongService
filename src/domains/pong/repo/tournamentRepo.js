@@ -10,6 +10,12 @@ const tournamentRepo = {
     return tournament;
   },
 
+  async findById(tournamentId) {
+    console.log('In tournament Repo', tournamentId, '!!!');
+    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+    return tournament;
+  },
+
   /** 토너먼트 상태 업데이트 */
   async updateTournament(tournamentId, tournamentType, tournamentStatus) {
     const exists = await prisma.tournament.findUnique({ where: { id: tournamentId } });

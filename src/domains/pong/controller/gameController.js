@@ -1,6 +1,7 @@
 // src/domains/game/controller/gameController.js
 
-import { gameService } from "../service/gameService.js";
+import { gameService } from '../service/gameService.js';
+import { tournamentService } from '../service/tournamentService.js';
 
 export const gameController = {
   /**
@@ -8,12 +9,12 @@ export const gameController = {
    */
   async handleConnection(socket, tournamentId, playerId) {
     try {
-      const status = await gameService.newConnection(socket, tournamentId, playerId);
+      const status = await tournamentService.newConnection(socket, tournamentId, playerId);
       console.log(`[Connected] player ${playerId} joined tournament ${tournamentId}`);
       return status;
     } catch (err) {
-      console.error("❌ 연결 오류:", err);
-      return { success: false, message: "Tournament connection failed" };
+      console.error('❌ 연결 오류:', err);
+      return { success: false, message: 'Tournament connection failed' };
     }
   },
 
@@ -23,23 +24,23 @@ export const gameController = {
   handleMessage(socket, raw) {
     let data;
     try {
-      data = typeof raw === "string" ? JSON.parse(raw) : raw;
+      data = typeof raw === 'string' ? JSON.parse(raw) : raw;
     } catch {
-      console.warn("⚠️ Invalid message format");
+      console.warn('⚠️ Invalid message format');
       return;
     }
 
     switch (data.type) {
-      case "move":
+      case 'move':
         gameService.handleMoveBySocket(socket.id, data.role, data.direction);
         break;
 
-      case "ping":
-        socket.emit("pong");
+      case 'ping':
+        socket.emit('pong');
         break;
 
       default:
-        console.warn("알 수 없는 메시지 타입:", data.type);
+        console.warn('알 수 없는 메시지 타입:', data.type);
     }
   },
 };
