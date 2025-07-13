@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import axios from "axios";
 
 import TokenDto from "#domains/auth/model/tokenDto.js";
-import UserDto from "#domains/user/model/userDto.js";
 import authRepo from "#domains/auth/repo/authRepo.js";
 import userRepo from "#domains/user/repo/userRepo.js";
 import twoFAService from "#domains/auth/service/2faService.js";
@@ -56,8 +55,7 @@ const authService = {
       user = await userRepo.createUser({ username: email, passwd: null, profile_image: picture });
     }
 
-    const jwt = await generateTokens(jwtUtils, user);
-    return { jwt, user: new UserDto(user) };
+    return await generateTokens(jwtUtils, user);
   },
 };
 

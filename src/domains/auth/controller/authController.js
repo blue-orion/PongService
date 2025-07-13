@@ -37,8 +37,8 @@ const authController = {
   async googleOAuthCallbackHandler(request, reply) {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
-    const { jwt, user } = await authService.googleOAuth(jwtUtils, token);
-    return ApiResponse.ok(reply, { jwt, user });
+    const jwt = await authService.googleOAuth(jwtUtils, token);
+    return ApiResponse.ok(reply, jwt);
   },
 };
 

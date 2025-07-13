@@ -1,9 +1,13 @@
 import fp from "fastify-plugin";
-import fastifyOauth2 from "@fastify/oauth2";
+import fastifyJwt from "@fastify/jwt";
 
 import PongException from "#shared/exception/pongException.js";
 
 async function jwtPlugin(fastify, _options) {
+  fastify.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || "your-secret-key",
+  });
+
   const jwtUtils = {
     generateAccessToken(user) {
       return fastify.jwt.sign({ userId: user.id, username: user.username, type: "access" }, { expiresIn: "15m" });
@@ -28,20 +32,6 @@ async function jwtPlugin(fastify, _options) {
 
   fastify.decorate("jwtUtils", jwtUtils);
   fastify.decorate("authenticate", authenticate);
-
-  fastify.register(fastifyOauth2, {
-    name: "googleOAuth",
-    scope: ["profile", "email"],
-    credentials: {
-      client: {
-        id: process.env.GOOGLE_CLIENT_ID,
-        secret: process.env.GOOGLE_CLIENT_SECRET,
-      },
-      auth: fastifyOauth2.GOOGLE_CONFIGURATION,
-    },
-    startRedirectPath: "/auth/google",
-    callbackUri: process.env.GOOGLE_REDIRECT_URI || "http://localhost:3333/v1/auth/google/callback",
-  });
 }
 
 export default fp(jwtPlugin);
