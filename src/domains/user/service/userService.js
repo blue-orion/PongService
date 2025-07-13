@@ -1,4 +1,4 @@
-import userRepo from "#domains/user/repo/userRepo.js";
+import UserDto from "#domains/user/model/userDto.js";
 
 const userService = {
   async getMe(user) {

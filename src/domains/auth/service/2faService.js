@@ -7,9 +7,8 @@ import PongException from "#shared/exception/pongException.js";
 const twoFAService = {
   async setup2FA(username) {
     const user = userRepo.getUserByUsername(username);
-    if (!user) throw new PongException.NOT_FOUND();
-
     const { secret, qrCodeDataURL } = await twoFAService.generate2FASecret(username);
+
     await userRepo.updateUser2FASecret(user.id, secret);
     return { qrCodeDataURL };
   },
@@ -23,7 +22,7 @@ const twoFAService = {
 
   async verifyUser2FA(username, token) {
     const user = await userRepo.getUserByUsername(username);
-    if (!user || !user.twoFASecret) throw new PongException.ENTITY_NOT_FOUNT();
+    if (!user.twoFASecret) throw PongException.BAD_REQUEST;
 
     twoFAService.verify2FACode(username, token);
     return true;

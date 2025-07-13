@@ -2,21 +2,27 @@ import prisma from "#shared/database/prisma.js";
 
 const userRepo = {
   async getUserByUsername(username) {
-    return await prisma.user.findUnique({
+    return await prisma.user.findUniqueOrThrow({
       where: { username },
     });
   },
 
   async getUserById(id) {
-    return await prisma.user.findUnique({
+    return await prisma.user.findUniqueOrThrow({
       where: { id },
+    });
+  },
+
+  async getUserByRefreshToken(refreshToken) {
+    return await prisma.user.findUniqueOrThrow({
+      where: { refresh_token: refreshToken },
     });
   },
 
   async updateUser2FASecret(userId, secret) {
     return await prisma.user.update({
       where: { id: userId },
-      data: { twoFASecret: secret },
+      data: { two_fa_secret: secret },
     });
   },
 
@@ -29,7 +35,7 @@ const userRepo = {
   async removeUser2FASecret(userId) {
     return prisma.user.update({
       where: { id: userId },
-      data: { twoFASecret: null },
+      data: { two_fa_secret: null },
     });
   },
 };
