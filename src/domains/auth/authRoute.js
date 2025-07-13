@@ -6,7 +6,7 @@ export default async function authRoutes(fastify) {
   fastify.post("/login", authController.loginHandler);
   fastify.post("/logout", authController.logoutHandler);
   fastify.post("/register", authController.registerHandler);
-  fastify.post("/refresh", { preHandler: [fastify.authenticate] }, authController.refreshTokenHandler);
+  fastify.post("/refresh", { preHandler: [fastify.refreshAuth] }, authController.refreshTokenHandler);
   fastify.get("/google/callback", authController.googleOAuthCallbackHandler);
 
   // 2faController.js

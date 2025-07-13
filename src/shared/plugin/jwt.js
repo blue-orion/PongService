@@ -30,8 +30,19 @@ async function jwtPlugin(fastify, _options) {
     }
   };
 
+  const accessAuth = async (request, _reply) => {
+    await authenticate(request, _reply);
+    if (request.user.type !== "access") throw PongException.UNAUTHORIZE;
+  };
+
+  const refreshAuth = async (request, _reply) => {
+    await authenticate(request, _reply);
+    if (request.user.type !== "refresh") throw PongException.UNAUTHORIZE;
+  };
+
   fastify.decorate("jwtUtils", jwtUtils);
-  fastify.decorate("authenticate", authenticate);
+  fastify.decorate("accessAuth", accessAuth);
+  fastify.decorate("refreshAuth", refreshAuth);
 }
 
 export default fp(jwtPlugin);

@@ -137,3 +137,4 @@ root
    npm run dev # package.json에 선언된 스크립트 실행
    npm start # 시작 예약어, 'npm run start' 와 동일
    ```
+   
