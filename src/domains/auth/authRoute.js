@@ -1,6 +1,6 @@
 import authController from "#domains/auth/controller/authController.js";
+import twoFAController from "#domains/auth/controller/2faController.js";
 import userController from "#domains/user/controller/userController.js";
-import twoFAController from "#domains/user/controller/2faController.js";
 
 export default async function authRoutes(fastify) {
   // authController.js

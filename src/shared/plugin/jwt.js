@@ -1,5 +1,5 @@
 import fp from "fastify-plugin";
-import fastifyOauth2 from "fastify/oauth2";
+import fastifyOauth2 from "@fastify/oauth2";
 
 import PongException from "#shared/exception/pongException.js";
 
