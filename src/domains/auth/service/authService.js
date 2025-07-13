@@ -43,7 +43,7 @@ const authService = {
   async refreshTokens(refreshToken, jwtUtils) {
     if (!refreshToken) throw PongException.ENTITY_NOT_FOUNT;
 
-    const payload = jwtUtils.verifyToken(fastify, refreshToken);
+    const payload = jwtUtils.verifyToken(refreshToken);
     if (!payload || payload.type !== "refresh") throw new PongException("invalid refresh token", 400);
 
     const user = await userRepo.getUserById(payload.userId);
@@ -57,8 +57,7 @@ const authService = {
     return new TokenDto(accessToken, newRefreshToken);
   },
 
-  async googleOAuth(fastify, jwtUtils) {
-    const token = await fastify.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+  async googleOAuth(jwtUtils, token) {
     const userRes = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
       headers: { Authorization: `Bearer ${token.access_token}` },
     });
@@ -66,14 +65,14 @@ const authService = {
 
     let user = await userRepo.getUserByUsername(email);
     if (!user) {
-      user = await createUser({ username: email, passwd: null, profile_image: picture });
+      user = await userRepo.createUser({ username: email, passwd: null, profile_image: picture });
     }
 
     const accessToken = jwtUtils.generateAccessToken(user);
     const refreshToken = jwtUtils.generateRefreshToken(user);
     await authRepo.updateUserRefreshToken(user.id, refreshToken);
 
-    return { jwt: new TokenDto(accessToken, newRefreshToken), user: new UserDto(user) };
+    return { jwt: new TokenDto(accessToken, refreshToken), user: new UserDto(user) };
   },
 };
 

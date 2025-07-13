@@ -11,7 +11,7 @@ const authController = {
   },
 
   // POST /v1/auth/logout
-  async logoutHandler() {
+  async logoutHandler(request, reply) {
     const userId = request.user.id;
     await authService.signOutUser(userId);
     return ApiResponse.ok(reply, { message: "Logged out successfully" });
@@ -34,9 +34,9 @@ const authController = {
 
   // GET /v1/auth/google/callback
   async googleOAuthCallbackHandler(request, reply) {
-    const fastify = request.server;
     const jwtUtils = request.server.jwtUtils;
-    const { jwt, user } = await authService.googleOAuth(fastify, jwtUtils);
+    const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+    const { jwt, user } = await authService.googleOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, { jwt, user });
   },
 };

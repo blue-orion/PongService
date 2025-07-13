@@ -9,7 +9,7 @@ const twoFAService = {
     const user = userRepo.getUserByUsername(username);
     if (!user) throw new PongException.NOT_FOUND();
 
-    const { secret, qrCodeDataURL } = await generate2FASecret(username);
+    const { secret, qrCodeDataURL } = await twoFAService.generate2FASecret(username);
     await userRepo.updateUser2FASecret(user.id, secret);
     return { qrCodeDataURL };
   },
@@ -25,7 +25,7 @@ const twoFAService = {
     const user = await userRepo.getUserByUsername(username);
     if (!user || !user.twoFASecret) throw new PongException.ENTITY_NOT_FOUNT();
 
-    const verified = twoFAService.verify2FACode(username, token);
+    twoFAService.verify2FACode(username, token);
     return true;
   },
 

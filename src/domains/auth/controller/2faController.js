@@ -12,7 +12,7 @@ const twoFAController = {
   // POST /v1/auth/2fa/verify
   async verify2FAHandler(request, reply) {
     const { username, token } = request.body;
-    const verified = await twoFAService.verifyUser2FA(username, token);
+    await twoFAService.verifyUser2FA(username, token);
     return ApiResponse.ok(reply, { verified: true });
   },
 };

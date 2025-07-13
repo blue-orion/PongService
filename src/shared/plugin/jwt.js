@@ -17,7 +17,7 @@ async function jwtPlugin(fastify, _options) {
     },
   };
 
-  const authenticate = async (request, reply) => {
+  const authenticate = async (request, _reply) => {
     try {
       await request.jwtVerify();
       if (!request.user || request.user.type !== "access") throw PongException.FORBIDDEN;
