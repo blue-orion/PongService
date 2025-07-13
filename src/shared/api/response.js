@@ -8,7 +8,7 @@ export class ApiResponse {
   }
 
   static error(res, error, code) {
-    const status = code || error.statusCode || error.code || 400;
+    const status = code || error.statusCode || 500;
     res.code(status).send({
       success: false,
       data: null,
