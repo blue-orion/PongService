@@ -1,5 +1,5 @@
-import prisma from "#shared/database/prisma.js";
-import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
+import prisma from '#shared/database/prisma.js';
+import { GameStatus, TournamentStatus, TournamentType } from '@prisma/client';
 
 const gameRepo = {
   /**
@@ -13,13 +13,13 @@ const gameRepo = {
 
     if (!user1) {
       await prisma.user.create({
-        data: { username: "Hyuntaek", passwd: "temppassword" },
+        data: { username: 'Hyuntaek', passwd: 'temppassword' },
       });
     }
 
     if (!user2) {
       await prisma.user.create({
-        data: { username: "Taeho", passwd: "temppassword" },
+        data: { username: 'Taeho', passwd: 'temppassword' },
       });
     }
 
@@ -48,39 +48,14 @@ const gameRepo = {
         game_status: GameStatus.COMPLETED,
       },
     });
-    console.log("Game state 저장됨:", game);
+    console.log('Game state 저장됨:', game);
   },
 
   /** 특정 게임 ID로 상태 불러오기 */
   async loadGameState(gameId) {
     const game = await prisma.game.findUnique({ where: { id: gameId } });
-    console.log("Game state 불러옴:", game);
+    console.log('Game state 불러옴:', game);
     return game;
-  },
-
-  /** 특정 토너먼트 ID로 불러오기 */
-  async loadTournament(tournamentId) {
-    console.log("Try to load tournament Id: ", tournamentId);
-    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
-    console.log("Tournament Loaded");
-    return tournament;
-  },
-
-  /** 토너먼트 상태 업데이트 */
-  async updateTournament(tournamentId, tournamentType, tournamentStatus) {
-    const exists = await prisma.tournament.findUnique({ where: { id: tournamentId } });
-    if (!exists) {
-      console.error(`❌ [updateTournament] Tournament ID ${tournamentId} not found in DB.`);
-      return null;
-    }
-
-    return await prisma.tournament.update({
-      where: { id: tournamentId },
-      data: {
-        tournament_status: tournamentStatus,
-        tournament_type: tournamentType,
-      },
-    });
   },
 
   /** 게임 생성 */
