@@ -38,6 +38,8 @@ app.setErrorHandler((error, _req, res) => {
 
 app.register(domainRoutes, { prefix: "/v1" });
 
+app.register(domainRoutes, { prefix: "/v1" });
+
 const { host, port, nodeEnv } = config.server;
 
 const start = async () => {
