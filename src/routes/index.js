@@ -6,7 +6,7 @@ import gameRoutes from "#domains/game/gameRoutes.js";
 export default async function domainRoutes(fastify, _opts) {
   await fastify.register(authRoutes, { prefix: "/auth" });
   await fastify.register(lobbyRoutes, { prefix: "/lobbies", preHandler: [fastify.accessAuth] });
-  await fastify.register(userRoutes, { prefix: "/user", preHandler: [fastify.accessAuth] });
+  await fastify.register(userRoutes, { prefix: "/users", preHandler: [fastify.accessAuth] });
   await fastify.register(gameRoutes, { prefix: "/game", preHandler: [fastify.accessAuth] });
 
   fastify.get("/health", async (_request, _reply) => {
