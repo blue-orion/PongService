@@ -19,7 +19,7 @@ const userRepo = {
     });
   },
 
-  async updateUserProfile(userId, nickname) {
+  async putNickname(userId, nickname) {
     return await prisma.user.update({
       where: { id: userId },
       data: { nickname: nickname },

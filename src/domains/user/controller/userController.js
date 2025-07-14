@@ -2,13 +2,6 @@ import userService from "#domains/user/service/userService.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const userController = {
-  // PUT /v1/users/update/:id
-  async updateMyPageHandler(request, reply) {
-    const { nickname } = request.body;
-    await userService.updateUserProfile(request.params.id, request.user.userId, nickname);
-    return ApiResponse.ok(reply, { message: "User profile updated successfully" });
-  },
-
   // GET /v1/users/profile/id/:id
   async getUserProfileByIdHandler(request, reply) {
     const { id } = request.params;
@@ -40,8 +33,15 @@ const userController = {
     const myInfo = await userService.getProfileById(user, user.id);
     return ApiResponse.ok(reply, myInfo);
   },
-};
 
+  // PUT /v1/users/update/:id
+  async updateMyPageHandler(request, reply) {
+    const user = request.user;
+    const { nickname } = request.body;
+    await userService.updateUserNickname(user, nickname);
+    return ApiResponse.ok(reply, { message: "User profile updated successfully" });
+  },
+};
 export default userController;
 
 //비밀번호 변경

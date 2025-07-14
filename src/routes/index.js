@@ -7,7 +7,7 @@ export default async function domainRoutes(fastify, _opts) {
   await fastify.register(authRoutes, { prefix: "/auth" });
   await fastify.register(lobbyRoutes, { prefix: "/lobbies" });
   await fastify.register(userRoutes, { prefix: "/users" });
-  // await fastify.register(gameRoutes, { prefix: "/game", preHandler: [fastify.accessAuth] });
+  // await fastify.register(gameRoutes, { prefix: "/game"});
 
   fastify.get("/health", async (_request, _reply) => {
     return { status: "ok" };
