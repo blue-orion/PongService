@@ -26,7 +26,7 @@ const authService = {
 
   async registerUser(registerDto, encryptUtils) {
     const { username, passwd, nickname } = registerDto;
-    if (!username || !passwd || !nickname) throw PongException.BAD_REQUEST;
+    if (!username || !passwd || !nickname) throw PongException.NOT_FOUND;
 
     const hashed = await encryptUtils.hashPasswd(passwd);
     registerDto.passwd = hashed;

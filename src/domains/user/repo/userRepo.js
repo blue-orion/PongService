@@ -19,6 +19,13 @@ const userRepo = {
     });
   },
 
+  async updateUserProfile(userId, nickname) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { nickname: nickname },
+    });
+  },
+
   async getUserByRefreshToken(refreshToken) {
     return await prisma.user.findUniqueOrThrow({
       where: { refresh_token: refreshToken },

@@ -22,6 +22,7 @@ const authController = {
   // POST /v1/auth/register
   async registerHandler(request, reply) {
     const registerDto = new RegisterDto(request.body);
+    console.log("Registering user:", registerDto);
     const encryptUtils = await request.server.encryptUtils;
     await authService.registerUser(registerDto, encryptUtils);
     return ApiResponse.ok(reply, { message: "User registered successfully" });
