@@ -17,12 +17,13 @@ export class LobbyService {
 
   async createLobby(tournament_id, max_player, creator_id) {
     const tournament = await this.tournamentRepository.findById(tournament_id);
+    if (!tournament_id || !max_player || !creator_id) throw new Error("입력 값이 누락되었습니다.");
     if (!tournament) throw new Error("해당 토너먼트를 찾을 수 없습니다.");    
     if (tournament.tournament_status !== "PENDING") throw new Error("이미 시작된 토너먼트입니다.");
 
     // 로비 생성
     const lobby = await this.lobbyRepository.create(tournament_id, max_player, creator_id);
-    
+
     // 방장을 자동으로 로비에 참가시키기
     await this.lobbyRepository.addOrReactivatePlayer(lobby.id, creator_id, true); // true = 방장
 

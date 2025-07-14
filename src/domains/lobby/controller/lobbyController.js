@@ -58,7 +58,7 @@ export class LobbyController {
       const newLobby = await this.lobbyService.createLobby(tournament.id, max_player, user_id);
 
       return ApiResponse.ok(res, {
-        tournament,
+        // tournament,
         lobby: newLobby
       }, 201);
     } catch (err) {
