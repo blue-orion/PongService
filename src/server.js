@@ -11,7 +11,6 @@ import fastifyIO from 'fastify-socket.io';
 import fastifyCors from '@fastify/cors';
 import './env.js';
 import routes from './routes/index.js';
-import gameRoutes from '#domains/pong/gameRoutes.js';
 
 const app = Fastify({ logger: true });
 
