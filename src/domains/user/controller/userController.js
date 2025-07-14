@@ -7,6 +7,14 @@ const userController = {
     const user = await userService.getMe(request.user);
     return ApiResponse.ok(reply, user);
   },
+
+  // GET /v1/users/profile/:username
+
+  // GET /v1/users/profile/:id
+
+  // GET /v1/users/myinfo/:username
+
+  // PUT /v1/users/update/:username
 };
 
 export default userController;

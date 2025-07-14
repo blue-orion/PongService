@@ -13,6 +13,12 @@ const userRepo = {
     });
   },
 
+  async getUserByNickname(nickname) {
+    return await prisma.user.findUniqueOrThrow({
+      where: { nickname },
+    });
+  },
+
   async getUserByRefreshToken(refreshToken) {
     return await prisma.user.findUniqueOrThrow({
       where: { refresh_token: refreshToken },
@@ -26,9 +32,9 @@ const userRepo = {
     });
   },
 
-  async createUser({ username, passwd }) {
+  async createUser(registerDto) {
     return prisma.user.create({
-      data: { username, passwd },
+      data: registerDto,
     });
   },
 
