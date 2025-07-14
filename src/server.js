@@ -35,11 +35,10 @@ app.register(fastifyCors, {
 });
 
 app.register(domainRoutes, { prefix: '/v1' });
+
 app.setErrorHandler((error, _req, res) => {
   ApiResponse.error(res, error);
 });
-
-app.register(domainRoutes, { prefix: "/v1" });
 
 const { host, port, nodeEnv } = config.server;
 

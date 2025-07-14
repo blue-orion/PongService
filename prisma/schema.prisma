@@ -91,6 +91,7 @@ model Game {
 model Lobby {
   id            Int           @id @default(autoincrement())
   tournament_id Int
+  creator_id    Int           
   max_player    Int
   lobby_status  LobbyStatus
   created_at    DateTime      @default(now())
@@ -105,6 +106,8 @@ model LobbyPlayer {
   id         Int      @id @default(autoincrement())
   lobby_id   Int
   user_id    Int
+  is_ready   Boolean  @default(false)
+  is_leader  Boolean  @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   enabled    Boolean  @default(true)
