@@ -2,9 +2,9 @@ import { LobbyRepository } from "#domains/lobby/repo/lobbyRepo.js";
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
 
 export class LobbyService {
-  constructor() {
-    this.lobbyRepository = new LobbyRepository();
-    this.tournamentRepository = new TournamentRepository();
+  constructor(lobbyRepository = new LobbyRepository(), tournamentRepository = new TournamentRepository()) {
+    this.lobbyRepository = lobbyRepository;
+    this.tournamentRepository = tournamentRepository;
   }
 
   async getAllLobbies() {
@@ -16,17 +16,15 @@ export class LobbyService {
   }
 
   async createLobby(tournament_id, max_player, creator_id) {
-    // 토너먼트 유효성 검증
     const tournament = await this.tournamentRepository.findById(tournament_id);
-    if (!tournament) throw new Error("해당 토너먼트를 찾을 수 없습니다.");
-    if (tournament.tournament_status !== "PENDING")
-      throw new Error("이미 시작된 토너먼트입니다.");
+    if (!tournament) throw new Error("해당 토너먼트를 찾을 수 없습니다.");    
+    if (tournament.tournament_status !== "PENDING") throw new Error("이미 시작된 토너먼트입니다.");
 
     // 로비 생성
     const lobby = await this.lobbyRepository.create(tournament_id, max_player, creator_id);
-
+    
     // 방장을 자동으로 로비에 참가시키기
-    await this.lobbyRepository.addPlayer(lobby.id, creator_id, true); // true = 방장
+    await this.lobbyRepository.addOrReactivatePlayer(lobby.id, creator_id, true); // true = 방장
 
     return lobby;
   }

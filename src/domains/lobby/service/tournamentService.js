@@ -1,8 +1,8 @@
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
 
 export class TournamentService {
-    constructor() {
-        this.tournamentRepository = new TournamentRepository();
+    constructor(tournamentRepository) {
+        this.tournamentRepository = tournamentRepository;
     }
 
     async getTournamentById(tournament_id) {

@@ -3,9 +3,9 @@ import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
 
 export class LobbyController {
-  constructor() {
-    this.lobbyService = new LobbyService();
-    this.tournamentService = new TournamentService();
+  constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService()) {
+    this.lobbyService = lobbyService;
+    this.tournamentService = tournamentService;
 
     Object.getOwnPropertyNames(Object.getPrototypeOf(this))
       .filter((prop) => typeof this[prop] === "function" && prop !== "constructor")
@@ -39,13 +39,18 @@ export class LobbyController {
   // 로비 생성
   async create(req, res) {
     const { tournament_type, max_player, user_id } = req.body;
-
-    // 입력 검증
-    if (!tournament_type) {
-      return ApiResponse.error(res, new Error("토너먼트 타입이 필요합니다."), 400);
-    }
+    const validTypes = ['LAST_16', 'QUARTERFINAL', 'SEMIFINAL', 'FINAL'];
 
     try {
+      // 입력 검증
+      if (!tournament_type) {
+        return ApiResponse.error(res, new Error("토너먼트 타입이 필요합니다."), 400);
+      }
+
+      if (!validTypes.includes(tournament_type)) {
+        return ApiResponse.error(res, new Error("유효하지 않은 토너먼트 타입입니다."), 400);
+      }
+
       // 1. 토너먼트 생성
       const tournament = await this.tournamentService.createTournament(tournament_type);
 
