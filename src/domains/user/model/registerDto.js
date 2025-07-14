@@ -1,9 +1,9 @@
 class RegisterDto {
-  constructor(username, passwd, nickname, profileImage) {
-    this.username = username;
-    this.passwd = passwd;
-    this.nickname = nickname;
-    this.profile_image = profileImage || null;
+  constructor(requestBody) {
+    this.username = requestBody.username;
+    this.passwd = requestBody.passwd;
+    this.nickname = requestBody.nickname;
+    this.profile_image = requestBody.profileImage || null;
   }
 }
 

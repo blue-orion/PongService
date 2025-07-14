@@ -1,5 +1,5 @@
 import authService from "#domains/auth/service/authService.js";
-import { RegisterDto } from "#domains/user/model/registerDto.js";
+import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const authController = {
@@ -29,10 +29,9 @@ const authController = {
 
   // POST /v1/auth/refresh
   async refreshTokenHandler(request, reply) {
-    const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
+    const user = request.user;
     const jwtUtils = request.server.jwtUtils;
-    const { userId } = request.user;
-    const jwt = await authService.refreshTokens(userId, refreshToken, jwtUtils);
+    const jwt = await authService.refreshTokens(user, jwtUtils);
     return ApiResponse.ok(reply, jwt);
   },
 

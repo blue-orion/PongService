@@ -19,7 +19,7 @@ CREATE TABLE "new_User" (
     "updated_at" DATETIME NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'LOGGED_OUT',
     "enabled" BOOLEAN NOT NULL DEFAULT true,
-    "gameRating" INTEGER NOT NULL DEFAULT 1000
+    "game_rating" INTEGER NOT NULL DEFAULT 1000
 );
 INSERT INTO "new_User" ("created_at", "enabled", "id", "passwd", "profile_image", "refresh_token", "two_fa_secret", "updated_at", "username") SELECT "created_at", "enabled", "id", "passwd", "profile_image", "refresh_token", "two_fa_secret", "updated_at", "username" FROM "User";
 DROP TABLE "User";

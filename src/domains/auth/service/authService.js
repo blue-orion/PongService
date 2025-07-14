@@ -37,10 +37,7 @@ const authService = {
     }
   },
 
-  async refreshTokens(userId, refreshToken, jwtUtils) {
-    const user = await userRepo.getUserByRefreshToken(refreshToken);
-    if (user.id !== userId) throw PongException.UNAUTHORIZE;
-
+  async refreshTokens(user, jwtUtils) {
     return await generateTokens(jwtUtils, user);
   },
 

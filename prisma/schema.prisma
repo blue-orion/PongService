@@ -52,7 +52,7 @@ model User {
   updated_at    DateTime    @updatedAt
   status        UserStatus  @default(LOGGED_OUT)
   enabled       Boolean     @default(true)
-  gameRating    Int         @default(1000)
+  game_rating   Int         @default(1000)
   // Relations
   gamesAsPlayerOne Game[]       @relation("PlayerOne")
   gamesAsPlayerTwo Game[]       @relation("PlayerTwo")
