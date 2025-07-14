@@ -34,7 +34,7 @@ const userController = {
     return ApiResponse.ok(reply, myInfo);
   },
 
-  // PUT /v1/users/update/:id
+  // PUT /v1/users/update
   async updateMyPageHandler(request, reply) {
     const user = request.user;
     const { nickname } = request.body;
