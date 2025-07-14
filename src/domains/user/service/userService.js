@@ -1,8 +1,12 @@
-import UserDto from "#domains/user/model/userDto.js";
+import userRepo from "#domains/user/repo/userRepo.js";
 
 const userService = {
-  async getMe(user) {
-    return new UserDto(user);
+  async updateUserProfile(userId, requestUserId, nickname) {
+    if (userId != requestUserId) {
+      throw new Error("Unauthorized to update this user profile");
+    }
+    const user = await userRepo.getUserById(requestUserId);
+    await userRepo.updateUserProfile(user.id, nickname);
   },
 };
 
