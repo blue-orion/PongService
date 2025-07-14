@@ -8,4 +8,5 @@ export default async function userRoutes(fastify) {
   fastify.get("/profile/nickname/:nickname", userController.getUserProfileByNicknameHandler);
   fastify.get("/myinfo", userController.getMyInfoHandler);
   fastify.put("/update", userController.updateMyPageHandler);
+  fastify.put("/update/password", userController.updatePasswordHandler);
 }

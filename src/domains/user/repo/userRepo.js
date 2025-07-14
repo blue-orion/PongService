@@ -26,6 +26,13 @@ const userRepo = {
     });
   },
 
+  async putPassword(userId, hashedPassword) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { passwd: hashedPassword },
+    });
+  },
+
   async getUserByRefreshToken(refreshToken) {
     return await prisma.user.findUniqueOrThrow({
       where: { refresh_token: refreshToken },

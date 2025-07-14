@@ -4,11 +4,11 @@ import bcrypt from "bcrypt";
 async function encryptPlugin(fastify, _options) {
   const encryptUtils = {
     async hashPasswd(password) {
-      return bcrypt.hash(password, 10);
+      return await bcrypt.hash(password, 10);
     },
 
     async comparePasswd(password, hash) {
-      return bcrypt.compare(password, hash);
+      return await bcrypt.compare(password, hash);
     },
   };
 

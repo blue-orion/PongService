@@ -2,9 +2,9 @@ class OtherUserDto {
   constructor(user) {
     this.user = {
       nickname: user.nickname,
-      profile_image: user.profile_image,
+      profileImage: user.profile_image,
       status: user.status,
-      game_rating: user.game_rating,
+      gameRating: user.game_rating,
     };
   }
 }

@@ -1,4 +1,5 @@
 import userService from "#domains/user/service/userService.js";
+import UpdatePasswordDto from "#domains/user/model/updatePasswordDto.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const userController = {
@@ -40,6 +41,15 @@ const userController = {
     const { nickname } = request.body;
     await userService.updateUserNickname(user, nickname);
     return ApiResponse.ok(reply, { message: "User profile updated successfully" });
+  },
+
+  // PUT /v1/users/update/password
+  async updatePasswordHandler(request, reply) {
+    const user = request.user;
+    const updatePasswordDto = new UpdatePasswordDto(request.body);
+    const encryptUtils = await request.server.encryptUtils;
+    await userService.updateUserPassword(user, updatePasswordDto, encryptUtils);
+    return ApiResponse.ok(reply, { message: "Password updated successfully" });
   },
 };
 export default userController;

@@ -1,13 +1,17 @@
 class User {
-  constructor({ id, username, passwd, profile_image, refresh_token, created_at, updated_at, enabled }) {
-    this.id = id;
-    this.username = username;
-    this.passwd = passwd;
-    this.profile_image = profile_image;
-    this.refresh_token = refresh_token;
-    this.created_at = created_at;
-    this.updated_at = updated_at;
-    this.enabled = enabled;
+  constructor(user) {
+    this.id = user.id;
+    this.username = user.username;
+    this.nickname = user.nickname;
+    this.profileImage = user.profile_image;
+    this.passwd = user.passwd;
+    this.profileImage = user.profile_image;
+    this.refreshToken = user.refresh_token;
+    this.createdAt = user.created_at;
+    this.updatedAt = user.updated_at;
+    this.status = user.status;
+    this.enabled = user.enabled;
+    this.gameRating = user.game_rating;
   }
 }
 
