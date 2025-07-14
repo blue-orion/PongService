@@ -2,7 +2,6 @@ class MeUserDto {
   constructor(user) {
     this.user = {
       id: user.id,
-      passwd: user.password,
       username: user.username,
       nickname: user.nickname,
       profileImage: user.profile_image,
