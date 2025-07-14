@@ -10,11 +10,11 @@ async function jwtPlugin(fastify, _options) {
 
   const jwtUtils = {
     generateAccessToken(user) {
-      return fastify.jwt.sign({ userId: user.id, username: user.username, type: "access" }, { expiresIn: "15m" });
+      return fastify.jwt.sign({ id: user.id, username: user.username, type: "access" }, { expiresIn: "15m" });
     },
 
     generateRefreshToken(user) {
-      return fastify.jwt.sign({ userId: user.id, type: "refresh" }, { expiresIn: "1d" });
+      return fastify.jwt.sign({ id: user.id, type: "refresh" }, { expiresIn: "1d" });
     },
 
     verifyToken(token) {
@@ -47,7 +47,7 @@ async function jwtPlugin(fastify, _options) {
 
   const userIdFromToken = (token) => {
     const payload = this.verifyToken(token);
-    return payload.userId;
+    return payload.id;
   };
 
   fastify.decorate("jwtUtils", jwtUtils);

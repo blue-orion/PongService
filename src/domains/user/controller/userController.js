@@ -2,19 +2,39 @@ import userService from "#domains/user/service/userService.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const userController = {
-  // GET /v1/auth/me
-  async meHandler(request, reply) {
-    const user = await userService.getMe(request.user);
-    return ApiResponse.ok(reply, user);
+  // GET /v1/users/profile/id/:id
+  async getUserProfileByIdHandler(request, reply) {
+    const { id } = request.params;
+    const userId = request.user.id;
+    const profile = await userService.getProfileById(userId, id);
+    return ApiResponse.ok(reply, profile);
   },
 
-  // GET /v1/users/profile/:username
+  // GET /v1/users/profile/username/:username
+  async getUserProfileByUsernameHandler(request, reply) {
+    const { username } = request.params;
+    const userId = request.user.id;
+    console.log("username", username);
+    const profile = await userService.getProfileByUsername(userId, username);
+    return ApiResponse.ok(reply, profile);
+  },
 
-  // GET /v1/users/profile/:id
+  // GET /v1/users/profile/nickname/:nickname
+  async getUserProfileByNicknameHandler(request, reply) {
+    const { nickname } = request.params;
+    const userId = request.user.id;
+    const profile = await userService.getProfileByNickname(userId, nickname);
+    return ApiResponse.ok(reply, profile);
+  },
 
-  // GET /v1/users/myinfo/:username
+  // GET /v1/users/myinfo
+  async getMyInfoHandler(request, reply) {
+    const user = request.user;
+    const myInfo = await userService.getProfileById(user, user.id);
+    return ApiResponse.ok(reply, myInfo);
+  },
 
-  // PUT /v1/users/update/:username
+  // PUT /v1/users/update/:id
 };
 
 export default userController;
