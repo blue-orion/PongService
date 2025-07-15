@@ -112,8 +112,13 @@ export class GameService {
     }
 
     const gameState = game.getState();
+    const message = {
+      ball: gameState.ball,
+      paddles: gameState.paddles,
+      score: game.getScore(),
+    };
 
-    this.broadcastCallback(gameId, 'state', gameState);
+    this.broadcastCallback(gameId, 'state', message);
   }
 
   /**
@@ -131,6 +136,11 @@ export class GameService {
     const game = this.activeGames.get(gameId);
     const { score, winnerId, loserId } = game.getResult();
     await gameRepo.updateGameResult(gameId, score, winnerId, loserId);
+  }
+
+  handleMoveEvent(gameId, role, direction) {
+    const game = this.activeGames.get(gameId);
+    game.movePaddle(role, direction);
   }
 }
 

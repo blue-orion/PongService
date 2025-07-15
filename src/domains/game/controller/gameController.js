@@ -62,6 +62,7 @@ class GameController {
    * @returns {void}
    */
   handleMessage(socket, raw) {
+    const { playerId } = socket.handshake.auth;
     let data;
     try {
       data = typeof raw === 'string' ? JSON.parse(raw) : raw;
@@ -72,7 +73,13 @@ class GameController {
 
     switch (data.type) {
       case 'move':
-        gameService.handleMoveBySocket(socket.id, data.role, data.direction);
+        const gameId = data.payload.gameId;
+        const role = data.payload.role;
+        const direction = data.payload.direction;
+        if (!direction) {
+          console.warn('알 수 없는 메시지:', data.payload);
+        }
+        gameService.handleMoveEvent(gameId, role, direction);
         break;
 
       default:

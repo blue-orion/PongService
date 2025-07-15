@@ -19,6 +19,7 @@ export default class Game {
 
     /** @type {GameState} - 볼의 위치, 패들의 위치 등을 가진 클래스 객체*/
     this.state = new GameState();
+    this.score = { left: 0, right: 0 };
   }
 
   start() {
@@ -26,9 +27,14 @@ export default class Game {
       if (this.isGameOver()) {
         clearInterval(intervalId);
       } else {
-        this.state.updateBall();
+        const scoredRole = this.state.updateBall();
+        if (scoredRole !== null) {
+          this.score[scoredRole]++;
+          this.state.resetBall();
+          console.log(this.score);
+        }
       }
-    }, 1000 / 30);
+    }, 1000 / 60);
   }
 
   isFull() {
@@ -45,7 +51,7 @@ export default class Game {
    * @returns {"left" | "right" | false}
    */
   isGameOver() {
-    const score = this.state.getScore();
+    const score = this.score;
     if (score.left >= END_SCORE) return 'left';
     if (score.right >= END_SCORE) return 'right';
     return false;
@@ -77,7 +83,7 @@ export default class Game {
 
   /** 점수 상태 반환 */
   getScore() {
-    return this.state.getScore();
+    return this.score;
   }
 
   /** 게임 결과 반환 함수
