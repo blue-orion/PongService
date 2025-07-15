@@ -5,8 +5,8 @@ export class LobbyRepository {
     return await prisma.lobby.findMany({
       include: {
         lobby_players: { include: { user: true } },
-        tournament: true
-      }
+        tournament: true,
+      },
     });
   }
 
@@ -15,8 +15,8 @@ export class LobbyRepository {
       where: { id },
       include: {
         lobby_players: { include: { user: true } },
-        tournament: true
-      }
+        tournament: true,
+      },
     });
   }
 
@@ -32,8 +32,8 @@ export class LobbyRepository {
         lobby_players: {
           include: { user: true },
         },
-        tournament: true
-      }
+        tournament: true,
+      },
     });
   }
 
@@ -55,9 +55,9 @@ export class LobbyRepository {
           enabled: true,
           is_leader,
           is_ready: false, // 재입장 시 준비 상태 초기화
-          updated_at: new Date()
+          updated_at: new Date(),
         },
-        include: { user: true }
+        include: { user: true },
       });
     } else {
       // 기존 레코드가 없으면 새로 생성
@@ -67,9 +67,9 @@ export class LobbyRepository {
           user_id,
           is_leader,
           enabled: true,
-          is_ready: false
+          is_ready: false,
         },
-        include: { user: true }
+        include: { user: true },
       });
     }
   }
@@ -77,14 +77,14 @@ export class LobbyRepository {
   async removePlayer(lobby_id, user_id) {
     return await prisma.lobbyPlayer.updateMany({
       where: { lobby_id, user_id },
-      data: { enabled: false }
+      data: { enabled: false },
     });
   }
 
   // 기존 플레이어 레코드 찾기 (enabled 상관없이)
   async findExistingPlayer(lobby_id, user_id) {
     return await prisma.lobbyPlayer.findFirst({
-      where: { lobby_id, user_id }
+      where: { lobby_id, user_id },
     });
   }
 
@@ -99,7 +99,7 @@ export class LobbyRepository {
   async updateLobbyStatus(lobby_id, status) {
     return await prisma.lobby.update({
       where: { id: lobby_id },
-      data: { lobby_status: status }
+      data: { lobby_status: status },
     });
   }
 
@@ -110,12 +110,12 @@ export class LobbyRepository {
         where: {
           lobby_id: lobbyId,
           user_id: currentLeaderId,
-          enabled: true
+          enabled: true,
         },
         data: {
           is_leader: false,
-          updated_at: new Date()
-        }
+          updated_at: new Date(),
+        },
       });
 
       // 2. 새로운 방장의 is_leader를 true로 변경
@@ -123,12 +123,12 @@ export class LobbyRepository {
         where: {
           lobby_id: lobbyId,
           user_id: targetUserId,
-          enabled: true
+          enabled: true,
         },
         data: {
           is_leader: true,
-          updated_at: new Date()
-        }
+          updated_at: new Date(),
+        },
       });
 
       // 3. 로비의 creator_id도 변경
@@ -136,8 +136,8 @@ export class LobbyRepository {
         where: { id: lobbyId },
         data: {
           creator_id: targetUserId,
-          updated_at: new Date()
-        }
+          updated_at: new Date(),
+        },
       });
 
       // 4. 업데이트된 로비 정보 반환
@@ -146,10 +146,10 @@ export class LobbyRepository {
         include: {
           lobby_players: {
             where: { enabled: true },
-            include: { user: true }
+            include: { user: true },
           },
-          tournament: true
-        }
+          tournament: true,
+        },
       });
     });
   }
@@ -161,8 +161,8 @@ export class LobbyRepository {
       where: {
         lobby_id,
         user_id,
-        enabled: true
-      }
+        enabled: true,
+      },
     });
 
     if (!currentPlayer) {
@@ -174,12 +174,12 @@ export class LobbyRepository {
       where: {
         lobby_id,
         user_id,
-        enabled: true
+        enabled: true,
       },
       data: {
         is_ready: !currentPlayer.is_ready,
-        updated_at: new Date()
-      }
+        updated_at: new Date(),
+      },
     });
   }
 
@@ -189,12 +189,12 @@ export class LobbyRepository {
     const players = await prisma.lobbyPlayer.findMany({
       where: {
         lobby_id,
-        enabled: true
+        enabled: true,
       },
       select: {
         is_ready: true,
-        is_leader: true
-      }
+        is_leader: true,
+      },
     });
 
     // 플레이어가 없으면 false
@@ -203,7 +203,7 @@ export class LobbyRepository {
     }
 
     // 모든 플레이어가 준비 상태인지 확인
-    return players.every(player => player.is_ready);
+    return players.every((player) => player.is_ready);
   }
 
   // 초기 매칭 생성 (게임 도메인과 연동 필요)

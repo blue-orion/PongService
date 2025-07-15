@@ -39,7 +39,7 @@ export class LobbyController {
   // 로비 생성
   async create(req, res) {
     const { tournament_type, max_player, user_id } = req.body;
-    const validTypes = ['LAST_16', 'QUARTERFINAL', 'SEMIFINAL', 'FINAL'];
+    const validTypes = ["LAST_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
 
     try {
       // 입력 검증
@@ -57,10 +57,14 @@ export class LobbyController {
       // 2. 로비 생성 (토너먼트 ID와 생성자 ID 사용)
       const newLobby = await this.lobbyService.createLobby(tournament.id, max_player, user_id);
 
-      return ApiResponse.ok(res, {
-        // tournament,
-        lobby: newLobby
-      }, 201);
+      return ApiResponse.ok(
+        res,
+        {
+          // tournament,
+          lobby: newLobby,
+        },
+        201
+      );
     } catch (err) {
       return ApiResponse.error(res, err, 400);
     }
@@ -84,9 +88,13 @@ export class LobbyController {
       const joinedLobby = await this.lobbyService.joinLobby(id, user_id);
       return ApiResponse.ok(res, joinedLobby);
     } catch (err) {
-      const statusCode = err.message.includes("존재하지 않는") ? 404 :
-        err.message.includes("가득") ? 409 :
-          err.message.includes("이미") ? 409 : 400;
+      const statusCode = err.message.includes("존재하지 않는")
+        ? 404
+        : err.message.includes("가득")
+        ? 409
+        : err.message.includes("이미")
+        ? 409
+        : 400;
       return ApiResponse.error(res, err, statusCode);
     }
   }
@@ -105,8 +113,11 @@ export class LobbyController {
       const leftLobby = await this.lobbyService.leaveLobby(id, user_id);
       return ApiResponse.ok(res, leftLobby);
     } catch (err) {
-      const statusCode = err.message.includes("존재하지 않는") ? 404 :
-        err.message.includes("참가하지 않은") ? 403 : 400;
+      const statusCode = err.message.includes("존재하지 않는")
+        ? 404
+        : err.message.includes("참가하지 않은")
+        ? 403
+        : 400;
       return ApiResponse.error(res, err, statusCode);
     }
   }
@@ -129,8 +140,11 @@ export class LobbyController {
       const authorizedLobby = await this.lobbyService.transferLeadership(lobbyId, current_user_id, target_user_id);
       return ApiResponse.ok(res, authorizedLobby);
     } catch (err) {
-      const statusCode = err.message.includes("권한이 없습니다") ? 403 :
-        err.message.includes("존재하지 않는") ? 404 : 400;
+      const statusCode = err.message.includes("권한이 없습니다")
+        ? 403
+        : err.message.includes("존재하지 않는")
+        ? 404
+        : 400;
       return ApiResponse.error(res, err, statusCode);
     }
   }
@@ -149,8 +163,11 @@ export class LobbyController {
       const readyState = await this.lobbyService.toggleReadyState(lobbyId, user_id);
       return ApiResponse.ok(res, readyState);
     } catch (err) {
-      const statusCode = err.message.includes("존재하지 않는") ? 404 :
-        err.message.includes("참가하지 않은") ? 403 : 400;
+      const statusCode = err.message.includes("존재하지 않는")
+        ? 404
+        : err.message.includes("참가하지 않은")
+        ? 403
+        : 400;
       return ApiResponse.error(res, err, statusCode);
     }
   }
@@ -168,9 +185,13 @@ export class LobbyController {
       const createdMatch = await this.lobbyService.createMatch(lobbyId, user_id);
       return ApiResponse.ok(res, createdMatch);
     } catch (err) {
-      const statusCode = err.message.includes("권한이 없습니다") ? 403 :
-        err.message.includes("존재하지 않는") ? 404 :
-          err.message.includes("충분하지 않습니다") ? 409 : 400;
+      const statusCode = err.message.includes("권한이 없습니다")
+        ? 403
+        : err.message.includes("존재하지 않는")
+        ? 404
+        : err.message.includes("충분하지 않습니다")
+        ? 409
+        : 400;
       return ApiResponse.error(res, err, statusCode);
     }
   }
