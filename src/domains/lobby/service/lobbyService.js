@@ -34,6 +34,8 @@ export class LobbyService {
     const lobby = await this.lobbyRepository.findById(id);
     if (!lobby) throw new Error("존재하지 않는 로비입니다.");
 
+    if (!id || !userId) throw new Error("입력 값이 누락되었습니다.");
+
     if (lobby.lobby_status !== "PENDING") throw new Error("이미 시작된 로비입니다.");
 
     const alreadyIn = await this.lobbyRepository.isPlayerAlreadyInLobby(id, userId);

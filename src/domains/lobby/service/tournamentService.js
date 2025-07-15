@@ -1,7 +1,7 @@
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
 
 export class TournamentService {
-  constructor(tournamentRepository) {
+  constructor(tournamentRepository = new TournamentRepository()) {
     this.tournamentRepository = tournamentRepository;
   }
 
