@@ -15,9 +15,12 @@ export class LobbyController {
   }
 
   // 로비 전체 조회
-  async getAll(_req, res) {
+  async getAll(req, res) {
     try {
-      const lobbies = await this.lobbyService.getAllLobbies();
+      const page = parseInt(req.query.page) || 1;
+      const size = parseInt(req.query.size) || 6;
+
+      const lobbies = await this.lobbyService.getAllLobbies(page, size);
       return ApiResponse.ok(res, lobbies);
     } catch (err) {
       return ApiResponse.error(res, err, 500);

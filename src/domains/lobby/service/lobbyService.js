@@ -1,5 +1,6 @@
 import { LobbyRepository } from "#domains/lobby/repo/lobbyRepo.js";
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
+import prisma from "#shared/database/prisma.js";
 
 export class LobbyService {
   constructor(lobbyRepository = new LobbyRepository(), tournamentRepository = new TournamentRepository()) {
@@ -7,8 +8,16 @@ export class LobbyService {
     this.tournamentRepository = tournamentRepository;
   }
 
-  async getAllLobbies() {
-    return await this.lobbyRepository.findAll();
+  async getAllLobbies(page, size) {
+    const skip = (page - 1) * size;
+    const [lobbies, total] = await Promise.all([this.lobbyRepository.findAll(skip, size), prisma.lobby.count()]);
+
+    return {
+      total,
+      page,
+      size,
+      lobbies,
+    };
   }
 
   async getLobbyById(id) {

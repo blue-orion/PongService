@@ -1,8 +1,13 @@
 import prisma from "#shared/database/prisma.js";
 
 export class LobbyRepository {
-  async findAll() {
+  async findAll(skip, take) {
     return await prisma.lobby.findMany({
+      skip,
+      take,
+      orderBy: {
+        created_at: "desc", // 최신순 정렬 등 필요시
+      },
       include: {
         lobby_players: { include: { user: true } },
         tournament: true,
