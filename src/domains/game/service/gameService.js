@@ -105,7 +105,7 @@ export class GameService {
     }, 1000 / 60);
   }
 
-  sendGameState(gameId) {
+  _sendGameState(gameId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
       console.log('[Game] 해당하는 게임이 없음');
@@ -125,7 +125,7 @@ export class GameService {
    * @returns {Promise<void>} - 비동기 작업으로 반환값 없음
    * @throws {Error} - 게임 정보를 찾을 수 없거나 DB 업데이트에 실패할 경우
    */
-  async processEndGame(gameId, intervalId) {
+  async _processEndGame(gameId, intervalId) {
     clearInterval(intervalId);
 
     const game = this.activeGames.get(gameId);
