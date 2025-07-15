@@ -20,8 +20,9 @@ const userController = {
   // PUT /v1/users/update
   async updateMyPageHandler(request, reply) {
     const user = request.user;
-    const { nickname } = request.body;
+    const { nickname, profileImage } = request.body;
     await userService.updateUserNickname(user, nickname);
+    await userService.updateUserProfileImage(user, profileImage);
     return ApiResponse.ok(reply, { message: "User profile updated successfully" });
   },
 
@@ -33,10 +34,12 @@ const userController = {
     await userService.updateUserPassword(user, updatePasswordDto, encryptUtils);
     return ApiResponse.ok(reply, { message: "Password updated successfully" });
   },
+
+  // DELETE /v1/users/disable
+  async disableUserHandler(request, reply) {
+    const userId = request.user.id;
+    await userService.disableUser(userId);
+    return ApiResponse.ok(reply, { message: "User account disabled successfully" });
+  },
 };
 export default userController;
-
-//비밀번호 변경
-//닉네임, 프로필, 이미지 변경
-//내 정보, 다른 유저 정보
-//enable 상태 확인

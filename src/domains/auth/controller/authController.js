@@ -43,6 +43,14 @@ const authController = {
     const jwt = await authService.googleOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
+
+  // POST /v1/auth/enable
+  async enableUserHandler(request, reply) {
+    const { username, passwd } = request.body;
+    const encryptUtils = await request.server.encryptUtils;
+    await authService.enableUser(username, passwd, encryptUtils);
+    return ApiResponse.ok(reply, { message: "User account enabled successfully" });
+  },
 };
 
 export default authController;

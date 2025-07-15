@@ -26,6 +26,13 @@ const userRepo = {
     });
   },
 
+  async putProfileImage(userId, profileImage) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { profile_image: profileImage },
+    });
+  },
+
   async putPassword(userId, hashedPassword) {
     return await prisma.user.update({
       where: { id: userId },
@@ -56,6 +63,20 @@ const userRepo = {
     return prisma.user.update({
       where: { id: userId },
       data: { two_fa_secret: null },
+    });
+  },
+
+  async disableUser(userId) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { enabled: false },
+    });
+  },
+
+  async enableUser(userId) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { enabled: true },
     });
   },
 };

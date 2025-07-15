@@ -11,6 +11,10 @@ const userService = {
     await userRepo.putNickname(user.id, nickname);
   },
 
+  async updateUserProfileImage(user, profileImage) {
+    await userRepo.putProfileImage(user.id, profileImage);
+  },
+
   async updateUserPassword(user, passwordDto, encryptUtils) {
     const { currentPassword, newPassword, confirmNewPassword } = passwordDto;
     const targetUser = await userRepo.getUserById(user.id);
@@ -25,6 +29,10 @@ const userService = {
     }
     const hashedPassword = await encryptUtils.hashPasswd(newPassword);
     await userRepo.putPassword(user.id, hashedPassword);
+  },
+
+  async disableUser(userId) {
+    await userRepo.disableUser(userId);
   },
 };
 export default userService;
