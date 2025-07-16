@@ -15,7 +15,9 @@ export const LOBBY_STATUS = {
 };
 
 export const GAME_STATUS = {
-  WAITING: "WAITING",
+  PENDING: "PENDING",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
 };
 
 export const TOURNAMENT_TYPE = {
@@ -219,7 +221,7 @@ export class Helpers {
   }
 
   _getRoundNumber(power) {
-    return power; // 1, 2, 3...
+    return power;
   }
 
   _getRoundType(roundNumber) {
@@ -251,9 +253,11 @@ export class Helpers {
 
       matches.push({
         tournament_id: tournament.id,
-        player1_id: p1.user_id,
-        player2_id: p2.user_id,
+        player_one_id: p1.user_id,
+        player_two_id: p2.user_id,
         round,
+        match: i,
+        game_status: GAME_STATUS.PENDING
       });
     }
 

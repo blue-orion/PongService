@@ -226,12 +226,8 @@ export class LobbyRepository {
   async findActivePlayersByLobbyId(lobby_id) {
     return await prisma.lobbyPlayer.findMany({
       where: {
-        lobby_id,
-        enabled: true,
-      },
-      include: {
-        user: true,
-      },
+        lobby_id
+      }
     });
   }
 

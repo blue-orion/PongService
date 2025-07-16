@@ -91,7 +91,6 @@ export class GameRepository {
       where: {
         tournament_id: tournamentId,
         round: round,
-        enabled: true,
       },
     });
 
@@ -100,7 +99,6 @@ export class GameRepository {
         tournament_id: tournamentId,
         round: round,
         game_status: "COMPLETED",
-        enabled: true,
       },
     });
 

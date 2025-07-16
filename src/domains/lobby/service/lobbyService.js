@@ -20,6 +20,14 @@ export class LobbyService {
   }
 
   // === 조회 메서드 ===
+  /**
+   * 로비 전체 조회 (페이징)
+   * @method GET /v1/lobbies?page=1&size=10
+   * 
+   * @param {Number} page 
+   * @param {Number} size 
+   * @returns {total, page, size, lobbies};
+   */
   async getAllLobbies(page, size) {
     const skip = (page - 1) * size;
     const [lobbies, total] = await Promise.all([this.lobbyRepository.findAll(skip, size), prisma.lobby.count()]);
@@ -32,11 +40,27 @@ export class LobbyService {
     };
   }
 
+  /**
+   * 로비 단일 조회
+   * @method GET v1/lobbies/:id
+   * 
+   * @param {Number} id 
+   * @returns {Lobby}
+   */
   async getLobbyById(id) {
     return await this.lobbyRepository.findById(id);
   }
 
   // === 로비 관리 메서드 ===
+  /**
+   * 로비 생성
+   * @method POST /v1/lobbies
+   * 
+   * @param {Number} tournament_id 
+   * @param {Number} max_player 
+   * @param {Number} creator_id 
+   * @returns {lobby}
+   */
   async createLobby(tournament_id, max_player, creator_id) {
     this.helpers._validateLobbyInput(tournament_id, max_player, creator_id);
 
@@ -50,6 +74,14 @@ export class LobbyService {
     return lobby;
   }
 
+  /**
+   * 로비 입장
+   * @method POST v1/lobbies/:id/join
+   * 
+   * @param {Number} id 
+   * @param {Number} userId 
+   * @returns {lobby}
+   */
   async joinLobby(id, userId) {
     this.helpers._validateInput(id, userId);
 
@@ -61,6 +93,14 @@ export class LobbyService {
     return await this.lobbyRepository.addOrReactivatePlayer(id, userId, false);
   }
 
+  /**
+   * 로비 퇴장
+   * @method POST v1/:id/left
+   * 
+   * @param {Number} lobbyId 
+   * @param {Number} userId 
+   * @returns {lobby}
+   */
   async leaveLobby(lobbyId, userId) {
     this.helpers._validateInput(lobbyId, userId);
 
@@ -70,6 +110,15 @@ export class LobbyService {
     return await this.lobbyRepository.removePlayer(lobbyId, userId);
   }
 
+  /**
+   * 방장 위임
+   * @method POST v1/:id/authorize
+   * 
+   * @param {Number} lobbyId 
+   * @param {Number} currentLeaderId 
+   * @param {Number} targetUserId 
+   * @returns 
+   */
   async transferLeadership(lobbyId, currentLeaderId, targetUserId) {
     this.helpers._validateInput(lobbyId, currentLeaderId, targetUserId);
 
@@ -82,6 +131,14 @@ export class LobbyService {
     return await this.lobbyRepository.transferLeadership(lobbyId, currentLeaderId, targetUserId);
   }
 
+  /**
+   * 레디 상태값 변경
+   * @method POST v1/:id/ready_state
+   * 
+   * @param {Number} lobbyId 
+   * @param {Number} userId 
+   * @returns 
+   */
   async toggleReadyState(lobbyId, userId) {
     await this.helpers._getLobbyWithValidation(lobbyId);
     await this.helpers._validatePlayerInLobby(lobbyId, userId);
@@ -90,6 +147,14 @@ export class LobbyService {
   }
 
   // === 매치 생성 메서드 ===
+  /**
+   * 매칭 생성
+   * @method POST v1/:id/create_match
+   * 
+   * @param {Number} lobbyId 
+   * @param {Number} userId 
+   * @returns 
+   */
   async createMatch(lobbyId, userId) {
     const lobby = await this.helpers._getLobbyWithValidation(lobbyId);
 
@@ -117,8 +182,6 @@ export class LobbyService {
   async _startInitialTournament(lobby, tournament) {
     await this.helpers._validateAllPlayersReady(lobby.id);
 
-    console.log("llllllllllllllllllllllllllllllll");
-
     await Promise.all([
       this.tournamentRepository.updateStatus(tournament.id, TOURNAMENT_STATUS.IN_PROGRESS),
       this.lobbyRepository.updateLobbyStatus(lobby.id, LOBBY_STATUS.STARTED),
@@ -126,7 +189,7 @@ export class LobbyService {
 
     const players = await this.lobbyRepository.findActivePlayersByLobbyId(lobby.id);
     const shuffled = this.helpers._shuffleArray(players);
-    const round = this.helpers._getRoundNumber(this.helpers._getInitialRound(players.length));
+    const round = this.helpers._getRoundNumber(tournament.round);
     const matches = this.helpers._generateMatches(shuffled, tournament, round);
 
     await this.gameRepository.createInitialMatches(matches);
@@ -141,7 +204,7 @@ export class LobbyService {
 
   // ===== 다음 라운드 진행 =====
   async _startNextRound(lobby, tournament) {
-    const currentRound = await this.gameRepository.getCurrentRound(tournament.id);
+    const currentRound = tournament.round;
     await this.helpers._validateRoundComplete(tournament.id, currentRound);
 
     const winners = await this.gameRepository.getRoundWinners(tournament.id, currentRound);
