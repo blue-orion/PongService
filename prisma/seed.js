@@ -116,6 +116,21 @@ async function main() {
   await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
   console.log(`Added ${lobbyPlayers.length} players to lobbies`);
 
+  const game = await prisma.game.create({
+    data: {
+      tournament_id: tournament.id,
+      player_one_id: user1.id,
+      player_two_id: user2.id,
+      player_one_score: 0,
+      player_two_score: 0,
+      round: 1,
+      match: 1,
+      game_status: "PENDING",
+      enabled: true,
+    },
+  });
+
+  console.log("Seed data created:", { game });
   console.log("Seeding complete");
 }
 

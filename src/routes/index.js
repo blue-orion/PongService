@@ -1,7 +1,7 @@
 import authRoutes from '#domains/auth/authRoute.js';
 import lobbyRoutes from '#domains/lobby/lobbyRoutes.js';
 // import userRoutes from "#domains/user/userRoutes.js";
-import gameRoutes from '#domains/pong/gameRoutes.js';
+import gameRoutes from '#domains/game/gameRoutes.js';
 
 export default async function domainRoutes(fastify, _opts) {
   await fastify.register(authRoutes, { prefix: '/auth' });
