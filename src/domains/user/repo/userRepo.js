@@ -72,13 +72,6 @@ const userRepo = {
       data: { enabled: false },
     });
   },
-
-  async enableUser(userId) {
-    return await prisma.user.update({
-      where: { id: userId },
-      data: { enabled: true },
-    });
-  },
 };
 
 export default userRepo;

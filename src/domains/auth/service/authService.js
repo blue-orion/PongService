@@ -59,16 +59,6 @@ const authService = {
 
     return await generateTokens(jwtUtils, user);
   },
-
-  async enableUser(username, passwd, encryptUtils) {
-    const user = await userRepo.getUserByUsername(username);
-    if (!(await encryptUtils.comparePasswd(passwd, user.passwd))) throw PongException.UNAUTHORIZED;
-
-    if (user.enabled) throw PongException.BAD_REQUEST;
-    const userId = user.id;
-    await authRepo.removeUserRefreshToken(userId);
-    await userRepo.enableUser(userId);
-  },
 };
 
 async function generateTokens(jwtUtils, user) {

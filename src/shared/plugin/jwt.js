@@ -40,21 +40,9 @@ async function jwtPlugin(fastify, _options) {
     if (request.user.type !== "refresh") throw PongException.UNAUTHORIZE;
   };
 
-  const usernameFromToken = (token) => {
-    const payload = this.verifyToken(token);
-    return payload.username;
-  };
-
-  const userIdFromToken = (token) => {
-    const payload = this.verifyToken(token);
-    return payload.id;
-  };
-
   fastify.decorate("jwtUtils", jwtUtils);
   fastify.decorate("accessAuth", accessAuth);
   fastify.decorate("refreshAuth", refreshAuth);
-  fastify.decorate("usernameFromToken", usernameFromToken);
-  fastify.decorate("userIdFromToken", userIdFromToken);
 }
 
 export default fp(jwtPlugin);
