@@ -20,6 +20,7 @@ export class LobbyController {
   /**
    * 로비 전체 조회 (페이징)
    * @method GET /v1/lobbies?page=1&size=10
+   * 
    * @param {query: page, query: size} req
    * @returns
    */
@@ -40,6 +41,7 @@ export class LobbyController {
   /**
    * 로비 단일 조회
    * @method GET v1/lobbies/:id
+   * 
    * @param {params: id} req
    * @returns
    */
@@ -124,7 +126,7 @@ export class LobbyController {
 
   /**
    * 방장 위임
-   * @method POST v1/:id/authorize"
+   * @method POST v1/:id/authorize
    * @param {params: id, body: current_user_id, target_user_id} req
    * @returns
    */
