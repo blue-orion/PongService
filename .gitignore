@@ -1,0 +1,75 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build output (TypeScript 컴파일된 파일들)
+public/js/
+public/styles/
+dist/
+build/
+out/
+
+# TypeScript artifacts
+*.tsbuildinfo
+
+# Coverage directory
+coverage/
+
+# Optional npm cache directory
+.npm/
+
+# dotenv environment files
+.env
+.env.local
+.env.*.local
+
+# VS Code project settings (선택사항 - 팀에서 공유하려면 주석 처리)
+.vscode/
+
+# Mac system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux system files
+*~
+
+# ESLint cache
+.eslintcache
+
+# Tailwind CSS 캐시
+.tailwindcache
+
+# Temporary files
+tmp/
+temp/
+
+# Test output
+test-results/
+
+# Editor backups
+*.swp
+*.swo
+*~
+
+# Package manager lockfiles (팀에서 사용하는 것만 유지)
+# package-lock.json  # npm 사용시 주석 해제
+# yarn.lock          # yarn 사용시 주석 해제
+# pnpm-lock.yaml     # pnpm 사용시 주석 해제

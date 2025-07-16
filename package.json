@@ -1,19 +1,26 @@
 {
   "name": "tsen-front",
   "version": "1.0.0",
-  "description": "npm init",
-  "main": "index.js",
+  "description": "pong",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run build:css:watch\" \"npm run build:ts:watch\" \"npm run serve\"",
+    "build": "npm run build:css && npm run build:ts",
+    "build:css": "tailwindcss -i ./src/styles/input.css -o ./public/styles/output.css",
+    "build:css:watch": "tailwindcss -i ./src/styles/input.css -o ./public/styles/output.css --watch",
+    "build:ts": "tsc",
+    "build:ts:watch": "tsc --watch",
+    "serve": "http-server public -p 8080 -c-1",
+    "clean": "rm -rf dist public/js public/styles/output.css"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/42-gyeongsan-minishell/tsen-front.git"
+  "devDependencies": {
+    "@types/socket.io-client": "^3.0.0",
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/42-gyeongsan-minishell/tsen-front/issues"
-  },
-  "homepage": "https://github.com/42-gyeongsan-minishell/tsen-front#readme"
+  "dependencies": {
+    "socket.io-client": "^4.7.2"
+  }
 }

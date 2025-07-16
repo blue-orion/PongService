@@ -1,38 +1,29 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <title>핑퐁 게임</title>
-    <style>
-		body {
-			font-family: 'Noto Sans KR', sans-serif;
-		}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/output.css" />
+    <title>pong</title>
+  </head>
+  <body>
+    <div class="game-container">
+      <div id="gameStatus" class="game-status">
+        <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+        <div class="mt-2 text-lg font-semibold">핑퐁 게임</div>
+      </div>
+      <canvas id="gameCanvas" class="game-canvas" width="800" height="600"></canvas>
+      <div class="mt-4 text-center text-sm text-gray-400">
+        <p>W/S 또는 ↑/↓ 키로 패들을 조작하세요</p>
+      </div>
+    </div>
 
-		#gameStatus {
-			text-align: center;
-			margin: 10px;
-			font-family: 'Noto Sans KR', sans-serif;
-		}
-	
-        #gameCanvas {
-            border: 2px solid #000;
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
-</head>
-<body>
-	<div id="gameBox">
-		<div id="gameStatus"></div>
-		<canvas id="gameCanvas" width="800" height="600"></canvas>
-		<!-- Socket.IO 클라이언트 라이브러리 -->
-		<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-		<script src="game.js"></script>
-	</div>
-</body>
+    <script type="module" src="js/main.js"></script>
+  </body>
 </html>

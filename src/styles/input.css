@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-noto bg-game-bg text-white;
+  }
+}
+
+@layer components {
+  .game-container {
+    @apply min-h-screen flex flex-col items-center justify-center p-4;
+  }
+
+  .game-status {
+    @apply text-center mb-4 p-4 bg-game-primary rounded-lg shadow-lg;
+  }
+
+  .game-canvas {
+    @apply border-2 border-game-accent rounded-lg shadow-2xl;
+  }
+
+  .connection-status {
+    @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .status-connected {
+    @apply bg-green-500 text-white;
+  }
+
+  .status-connecting {
+    @apply bg-yellow-500 text-black;
+  }
+
+  .status-disconnected {
+    @apply bg-red-500 text-white;
+  }
+}
