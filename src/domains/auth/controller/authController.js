@@ -43,6 +43,14 @@ const authController = {
     const jwt = await authService.googleOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
+
+  // GET /v1/auth/42/callback
+  async fortyOAuthCallbackHandler(request, reply) {
+    const jwtUtils = request.server.jwtUtils;
+    const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+    const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
+    return ApiResponse.ok(reply, jwt);
+  },
 };
 
 export default authController;
