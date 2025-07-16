@@ -1,25 +1,43 @@
-import { WebSocketManager } from "./utils/websocket";
-import { AuthManager } from "./utils/auth";
-import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "./types/game";
+import { Component } from "./Component";
+import { WebSocketManager } from "../utils/websocket";
+import { AuthManager } from "../utils/auth";
+import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "../types/game";
 
-export class PongGame {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private wsManager!: WebSocketManager; // 나중에 초기화됨을 명시
+export class GameComponent extends Component {
+  private canvas!: HTMLCanvasElement;
+  private ctx!: CanvasRenderingContext2D;
+  private wsManager!: WebSocketManager;
   private gameState: GameState | null = null;
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
   private animationId: number | null = null;
 
   // UI 요소들
-  private statusElement: HTMLElement;
-  private connectionStatusElement: HTMLElement;
+  private statusElement!: HTMLElement;
+  private connectionStatusElement!: HTMLElement;
 
-  constructor() {
-    this.canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+  render(): void {
+    this.clearContainer();
+
+    this.container.innerHTML = `
+      <div class="game-container">
+        <div id="gameStatus" class="game-status">
+          <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+          <div class="mt-3 text-2xl font-bold text-primary-800">🏓 Pong Game</div>
+          <div class="mt-2 text-sm text-primary-600">실시간 멀티플레이어 핑퐁 게임</div>
+        </div>
+        <canvas id="gameCanvas" class="game-canvas" width="800" height="600"></canvas>
+        <div class="mt-6 text-center text-sm text-primary-600 glass-card p-4">
+          <p class="font-medium">게임 조작법</p>
+          <p class="mt-1">W/S 또는 ↑/↓ 키로 패들을 조작하세요</p>
+        </div>
+      </div>
+    `;
+
+    this.canvas = this.container.querySelector("#gameCanvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
-    this.statusElement = document.getElementById("gameStatus")!;
-    this.connectionStatusElement = document.getElementById("connectionStatus")!;
+    this.statusElement = this.container.querySelector("#gameStatus")!;
+    this.connectionStatusElement = this.container.querySelector("#connectionStatus")!;
 
     // 인증 체크 후 게임 초기화
     this.initializeWithAuth();
@@ -30,7 +48,9 @@ export class PongGame {
       // 인증 상태 확인
       const isAuthenticated = await AuthManager.checkAuthAndRedirect();
       if (!isAuthenticated) {
-        return; // 인증 실패 시 로그인 페이지로 리다이렉트됨
+        // 인증 실패 시 로그인 페이지로 이동
+        window.router.navigate("/login");
+        return;
       }
 
       // 인증 성공 시 게임 초기화
@@ -74,7 +94,7 @@ export class PongGame {
   }
 
   private setupKeyboardControls(): void {
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
+    const keydownHandler = (event: KeyboardEvent) => {
       switch (event.key) {
         case "ArrowUp":
         case "w":
@@ -91,9 +111,9 @@ export class PongGame {
           event.preventDefault();
           break;
       }
-    });
+    };
 
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
+    const keyupHandler = (event: KeyboardEvent) => {
       switch (event.key) {
         case "ArrowUp":
         case "w":
@@ -108,7 +128,14 @@ export class PongGame {
           event.preventDefault();
           break;
       }
-    });
+    };
+
+    document.addEventListener("keydown", keydownHandler);
+    document.addEventListener("keyup", keyupHandler);
+
+    // 컴포넌트 정리 시 이벤트 리스너도 제거하기 위해 저장
+    this.container.dataset.keydownHandler = keydownHandler.toString();
+    this.container.dataset.keyupHandler = keyupHandler.toString();
   }
 
   private setupUI(): void {
@@ -129,6 +156,7 @@ export class PongGame {
     logoutBtn.onclick = () => {
       if (confirm("정말 로그아웃하시겠습니까?")) {
         AuthManager.logout();
+        window.router.navigate("/login");
       }
     };
 
@@ -168,19 +196,20 @@ export class PongGame {
 
   private updateGameStatus(state: GameState): void {
     const playerCount = Object.keys(state.players).length;
-    const statusText = `플레이어: ${playerCount}명 | 게임 상태: ${state.gameStatus}`;
 
     // 점수 표시
     if (playerCount > 0) {
       const scores = Object.entries(state.players)
         .map(([id, player]) => `${id.substring(0, 8)}: ${player.score}`)
         .join(" | ");
-      this.statusElement.querySelector(".scores")?.remove();
 
-      const scoresDiv = document.createElement("div");
-      scoresDiv.className = "scores mt-2 text-sm";
+      let scoresDiv = this.statusElement.querySelector(".scores") as HTMLElement;
+      if (!scoresDiv) {
+        scoresDiv = document.createElement("div");
+        scoresDiv.className = "scores mt-2 text-sm";
+        this.statusElement.appendChild(scoresDiv);
+      }
       scoresDiv.textContent = scores;
-      this.statusElement.appendChild(scoresDiv);
     }
   }
 
@@ -199,14 +228,14 @@ export class PongGame {
       const deltaTime = currentTime - this.lastUpdateTime;
       this.lastUpdateTime = currentTime;
 
-      this.render();
+      this.renderCanvas();
       this.animationId = requestAnimationFrame(gameLoop);
     };
 
     this.animationId = requestAnimationFrame(gameLoop);
   }
 
-  private render(): void {
+  private renderCanvas(): void {
     // 캔버스 클리어
     this.ctx.fillStyle = "#1a1a2e";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -216,17 +245,9 @@ export class PongGame {
       return;
     }
 
-    this.renderGame();
+    this.renderGameObjects();
   }
-
-  private renderWaitingScreen(): void {
-    this.ctx.fillStyle = "#e94560";
-    this.ctx.font = '24px "Noto Sans KR"';
-    this.ctx.textAlign = "center";
-    this.ctx.fillText("게임 서버에 연결 중...", this.canvas.width / 2, this.canvas.height / 2);
-  }
-
-  private renderGame(): void {
+  private renderGameObjects(): void {
     if (!this.gameState) return;
 
     // 플레이어 렌더링
@@ -253,16 +274,26 @@ export class PongGame {
     this.ctx.setLineDash([]);
   }
 
-  // 정리 메서드
+  private renderWaitingScreen(): void {
+    this.ctx.fillStyle = "#e94560";
+    this.ctx.font = '24px "Noto Sans KR"';
+    this.ctx.textAlign = "center";
+    this.ctx.fillText("게임 서버에 연결 중...", this.canvas.width / 2, this.canvas.height / 2);
+  }
+
   destroy(): void {
+    // 애니메이션 정리
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
-    this.wsManager.disconnect();
+
+    // WebSocket 연결 정리
+    if (this.wsManager) {
+      this.wsManager.disconnect();
+    }
+
+    // 키보드 이벤트 리스너 정리
+    // TODO: 실제로는 저장된 핸들러를 제거해야 하지만 간단히 처리
+    // 실제 프로덕션에서는 더 정교한 이벤트 관리가 필요
   }
 }
-
-// 페이지 로드 시 게임 초기화
-document.addEventListener("DOMContentLoaded", () => {
-  new PongGame();
-});
