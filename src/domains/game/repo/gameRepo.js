@@ -1,7 +1,7 @@
 import prisma from '#shared/database/prisma.js';
 import { GameStatus, TournamentStatus, TournamentType } from '@prisma/client';
 
-const class GameRepository {
+class GameRepository {
   /** 특정 게임 ID로 상태 불러오기 */
   async loadGameDataById(gameId) {
     const game = await prisma.game.findUnique({ where: { id: gameId } });
