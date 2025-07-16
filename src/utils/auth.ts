@@ -160,9 +160,42 @@ export class AuthManager {
     return fetch(url, { ...options, headers });
   }
 
-  // 로그인 페이지로 리다이렉트
+  // 로그인 페이지로 리다이렉트 (SPA용)
   static redirectToLogin(): void {
-    window.location.href = "/login.html";
+    if (window.router) {
+      window.router.navigate("/login");
+    } else {
+      window.location.href = "/login.html";
+    }
+  }
+
+  // 순수한 인증 상태 확인 (리다이렉트 없음)
+  static async checkAuth(): Promise<boolean> {
+    console.log("🔍 인증 상태 확인 시작");
+
+    // 토큰이 있고 유효한 경우
+    if (this.isTokenValid()) {
+      console.log("✅ 유효한 토큰 존재");
+      return true;
+    }
+
+    console.log("❌ 유효한 토큰 없음");
+
+    // 토큰은 있지만 만료된 경우 갱신 시도
+    const tokens = this.getTokens();
+    if (tokens) {
+      console.log("🔄 토큰 갱신 시도");
+      const refreshed = await this.refreshAccessToken();
+      if (refreshed) {
+        console.log("✅ 토큰 갱신 성공");
+        return true;
+      }
+      console.log("❌ 토큰 갱신 실패");
+    } else {
+      console.log("❌ 저장된 토큰 없음");
+    }
+
+    return false;
   }
 
   // 로그아웃

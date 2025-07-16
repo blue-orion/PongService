@@ -6,8 +6,8 @@ export abstract class Component {
     this.container = container;
   }
 
-  // 컴포넌트 렌더링
-  abstract render(): void;
+  // 컴포넌트 렌더링 (비동기 지원)
+  abstract render(): void | Promise<void>;
 
   // 컴포넌트 정리
   abstract destroy(): void;

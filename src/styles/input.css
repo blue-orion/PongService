@@ -28,15 +28,45 @@
   .login-container {
     @apply bg-white/95 backdrop-blur-xl rounded-3xl p-12 w-full max-w-md;
     @apply shadow-[0_32px_64px_rgba(123,155,209,0.3),0_16px_32px_rgba(168,136,194,0.2)];
-    @apply border border-white/30 transform transition-all duration-300 hover:-translate-y-2;
-    @apply hover:shadow-[0_40px_80px_rgba(123,155,209,0.4),0_20px_40px_rgba(168,136,194,0.3)];
+    @apply border border-white/30;
+  }
+
+  /* 로고 스타일 */
+  .logo {
+    @apply text-center mb-10;
+  }
+
+  .logo h1 {
+    @apply font-bold tracking-tight bg-gradient-primary;
+    font-size: 3rem; /* 48px */
+    font-weight: 700;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+
+  /* 더 큰 화면에서는 더 크게 */
+  @media (min-width: 640px) {
+    .logo h1 {
+      font-size: 3.5rem; /* 56px */
+    }
+  }
+
+  /* 브라우저 호환성을 위한 폴백 */
+  @supports not (-webkit-background-clip: text) {
+    .logo h1 {
+      background: none;
+      color: #7b9bd1;
+      -webkit-text-fill-color: unset;
+    }
   }
 
   /* 로그인 폼 요소들 */
   .login-input {
     @apply w-full p-4 rounded-xl border-2 border-primary-200 bg-white/80 backdrop-blur-sm;
     @apply focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-200/50;
-    @apply transition-all duration-300 text-primary-800 placeholder-primary-400;
+    @apply transition-all duration-300 text-primary-800 placeholder-gray-400;
   }
 
   .login-button {
@@ -105,5 +135,60 @@
   .btn-muted {
     @apply bg-muted-300 text-muted-800 px-6 py-3 rounded-xl font-medium;
     @apply hover:bg-muted-400 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
+  }
+
+  /* Divider 스타일 */
+  .divider {
+    @apply text-center my-6 relative flex items-center;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: "";
+    @apply flex-1 h-px bg-gray-300;
+  }
+
+  .divider span {
+    @apply px-2 text-gray-400 text-sm;
+  }
+
+  /* Social Login 스타일 */
+  .social-login {
+    @apply flex gap-3 mb-6;
+  }
+
+  .social-btn {
+    @apply flex-1 p-3 border-2 border-primary-200 rounded-xl bg-white/80 cursor-pointer;
+    @apply transition-all duration-300 text-sm font-medium text-primary-600;
+    @apply hover:border-primary-500 hover:bg-white hover:-translate-y-0.5;
+  }
+
+  /* Form Options 스타일 */
+  .form-options {
+    @apply flex justify-between items-center mb-6 text-sm;
+  }
+
+  .remember-me {
+    @apply flex items-center gap-2 text-primary-600;
+  }
+
+  .remember-me input[type="checkbox"] {
+    @apply w-4 h-4;
+    accent-color: #7b9bd1;
+  }
+
+  .forgot-password {
+    @apply text-primary-500 no-underline font-medium transition-colors duration-300;
+    @apply hover:text-secondary-500;
+  }
+
+  /* Signup Link 스타일 */
+  .signup-link {
+    @apply text-center text-sm text-gray-400;
+  }
+
+  .signup-link a {
+    @apply text-primary-500 no-underline font-semibold transition-colors duration-300;
+    @apply hover:text-secondary-500;
   }
 }

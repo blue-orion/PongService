@@ -1,6 +1,6 @@
 // 라우터 시스템
 export class Router {
-  private routes: Map<string, () => void> = new Map();
+  private routes: Map<string, () => void | Promise<void>> = new Map();
   private currentRoute: string = "";
 
   constructor() {
@@ -11,12 +11,12 @@ export class Router {
   }
 
   // 라우트 등록
-  addRoute(path: string, handler: () => void): void {
+  addRoute(path: string, handler: () => void | Promise<void>): void {
     this.routes.set(path, handler);
   }
 
   // 페이지 이동
-  navigate(path: string, pushState: boolean = true): void {
+  async navigate(path: string, pushState: boolean = true): Promise<void> {
     const handler = this.routes.get(path);
 
     if (handler) {
@@ -26,11 +26,11 @@ export class Router {
         window.history.pushState({}, "", path);
       }
 
-      handler();
+      await handler();
     } else {
       console.warn(`Route not found: ${path}`);
-      // 기본 페이지로 리다이렉트
-      this.navigate("/", pushState);
+      // 로그인 페이지로 리다이렉트 (기본 페이지 대신)
+      await this.navigate("/login", pushState);
     }
   }
 
@@ -40,8 +40,8 @@ export class Router {
   }
 
   // 초기화 - 현재 URL에 맞는 페이지 로드
-  init(): void {
+  async init(): Promise<void> {
     const currentPath = window.location.pathname;
-    this.navigate(currentPath, false);
+    await this.navigate(currentPath, false);
   }
 }

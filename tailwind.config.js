@@ -1,10 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./*.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: ["./*.html", "./src/**/*.{js,ts,jsx,tsx,html}"],
   theme: {
     extend: {
       fontFamily: {
-        noto: ["Noto Sans KR", "sans-serif"],
         pretendard: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       colors: {
@@ -106,6 +105,18 @@ module.exports = {
           900: "#644925",
         },
       },
+      gray: {
+        50: "#f9fafb",
+        100: "#f3f4f6",
+        200: "#e5e7eb",
+        300: "#d1d5db",
+        400: "#9ca3af",
+        500: "#6b7280", // 기본 회색
+        600: "#4b5563",
+        700: "#374151",
+        800: "#1f2937",
+        900: "#111827",
+      },
       backgroundColor: {
         glass: "rgba(255, 255, 255, 0.1)",
         "glass-light": "rgba(255, 255, 255, 0.05)",
@@ -149,6 +160,7 @@ module.exports = {
 - bg-info-500           // 정보 (윌로우)
 - bg-muted-500          // 회색톤 (코블스톤)
 - bg-accent-500         // 포인트 (모카 무스)
+- bg-gray-500           // 기본 회색
 
 그라데이션 사용법:
 - bg-gradient-primary   // 블루 → 보라
@@ -162,5 +174,6 @@ module.exports = {
 텍스트 색상:
 - text-primary-600      // 진한 블루 텍스트
 - text-secondary-700    // 진한 보라 텍스트
-- text-muted-600        // 회색 텍스트
+- text-muted-600        // 회색 텍스트 (코블스톤)
+- text-gray-600         // 기본 회색 텍스트
 */

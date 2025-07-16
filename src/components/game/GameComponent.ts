@@ -1,7 +1,8 @@
-import { Component } from "./Component";
-import { WebSocketManager } from "../utils/websocket";
-import { AuthManager } from "../utils/auth";
-import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "../types/game";
+import { Component } from "../Component";
+import { WebSocketManager } from "../../utils/websocket";
+import { AuthManager } from "../../utils/auth";
+import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "../../types/game";
+import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class GameComponent extends Component {
   private canvas!: HTMLCanvasElement;
@@ -16,49 +17,19 @@ export class GameComponent extends Component {
   private statusElement!: HTMLElement;
   private connectionStatusElement!: HTMLElement;
 
-  render(): void {
+  async render(): Promise<void> {
     this.clearContainer();
 
-    this.container.innerHTML = `
-      <div class="game-container">
-        <div id="gameStatus" class="game-status">
-          <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
-          <div class="mt-3 text-2xl font-bold text-primary-800">🏓 Pong Game</div>
-          <div class="mt-2 text-sm text-primary-600">실시간 멀티플레이어 핑퐁 게임</div>
-        </div>
-        <canvas id="gameCanvas" class="game-canvas" width="800" height="600"></canvas>
-        <div class="mt-6 text-center text-sm text-primary-600 glass-card p-4">
-          <p class="font-medium">게임 조작법</p>
-          <p class="mt-1">W/S 또는 ↑/↓ 키로 패들을 조작하세요</p>
-        </div>
-      </div>
-    `;
+    const template = await loadTemplate(TEMPLATE_PATHS.GAME);
+    this.container.innerHTML = template;
 
     this.canvas = this.container.querySelector("#gameCanvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
     this.statusElement = this.container.querySelector("#gameStatus")!;
     this.connectionStatusElement = this.container.querySelector("#connectionStatus")!;
 
-    // 인증 체크 후 게임 초기화
-    this.initializeWithAuth();
-  }
-
-  private async initializeWithAuth(): Promise<void> {
-    try {
-      // 인증 상태 확인
-      const isAuthenticated = await AuthManager.checkAuthAndRedirect();
-      if (!isAuthenticated) {
-        // 인증 실패 시 로그인 페이지로 이동
-        window.router.navigate("/login");
-        return;
-      }
-
-      // 인증 성공 시 게임 초기화
-      this.initializeGame();
-    } catch (error) {
-      console.error("인증 확인 중 오류:", error);
-      this.showError("인증 확인 중 오류가 발생했습니다.");
-    }
+    // 게임 초기화 (인증은 이미 앱 레벨에서 확인됨)
+    this.initializeGame();
   }
 
   private initializeGame(): void {
