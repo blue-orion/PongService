@@ -96,7 +96,7 @@ export class LobbyController {
       this.helpers._validateUserId(user_id);
 
       const joinedLobby = await this.lobbyService.joinLobby(id, user_id);
-      return ApiResponse.ok(res, joinedLobby);
+      return ApiResponse.ok(res, { lobby: joinedLobby }, 201);
     } catch (error) {
       return this._handleError(res, error);
     }

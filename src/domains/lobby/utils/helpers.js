@@ -119,11 +119,10 @@ export class Helpers {
     }
   }
 
-  async _validatePlayerInLobby(lobbyId, userId, customMessage = null) {
+  async _validatePlayerInLobby(lobbyId, userId) {
     const playerInLobby = await this.lobbyRepository.isPlayerAlreadyInLobby(lobbyId, userId);
     if (!playerInLobby) {
-      const message = customMessage || "해당 로비에 참가하지 않은 사용자입니다.";
-      throw PongException.FORBIDDEN(message);
+      throw PongException.TARGET_NOT_IN_LOBBY;
     }
   }
 

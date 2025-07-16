@@ -62,6 +62,8 @@ export class LobbyService {
   }
 
   async leaveLobby(lobbyId, userId) {
+    this.helpers._validateInput(lobbyId, userId);
+
     await this.helpers._getLobbyWithValidation(lobbyId);
     await this.helpers._validatePlayerInLobby(lobbyId, userId);
 
@@ -69,10 +71,12 @@ export class LobbyService {
   }
 
   async transferLeadership(lobbyId, currentLeaderId, targetUserId) {
+    this.helpers._validateInput(lobbyId, currentLeaderId, targetUserId);
+
     const lobby = await this.helpers._getLobbyWithValidation(lobbyId);
     this.helpers._validateLeadership(lobby, currentLeaderId);
 
-    await this.helpers._validatePlayerInLobby(lobbyId, targetUserId, ApiResponse.ERROR_MESSAGES.TARGET_NOT_IN_LOBBY);
+    await this.helpers._validatePlayerInLobby(lobbyId, targetUserId);
 
     // 방장 권한 이전
     return await this.lobbyRepository.transferLeadership(lobbyId, currentLeaderId, targetUserId);

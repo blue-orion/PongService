@@ -6,6 +6,7 @@ export class TournamentRepository {
       data: {
         tournament_type: type,
         tournament_status: "PENDING",
+        round: 1
       },
     });
   }
