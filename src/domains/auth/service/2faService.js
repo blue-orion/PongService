@@ -24,7 +24,7 @@ const twoFAService = {
     const user = await userRepo.getUserByUsername(username);
     if (!user.twoFASecret) throw PongException.BAD_REQUEST;
 
-    twoFAService.verify2FACode(username, token);
+    twoFAService.verify2FACode(user.twoFASecret, token);
     return true;
   },
 
