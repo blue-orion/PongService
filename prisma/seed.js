@@ -7,6 +7,7 @@ async function main() {
     data: {
       username: 'user1',
       passwd: 'password1',
+      nickname: 'hyuntaek',
       enabled: true,
     },
   });
@@ -15,6 +16,7 @@ async function main() {
     data: {
       username: 'user2',
       passwd: 'password2',
+      nickname: 'babo멍청이',
       enabled: true,
     },
   });

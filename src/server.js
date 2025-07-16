@@ -7,7 +7,7 @@ import oauthPlugin from '#shared/plugin/oauth.js';
 import domainRoutes from '#routes/index.js';
 import { ApiResponse } from '#shared/api/response.js';
 import config from '#shared/config/index.js';
-import encryptPlugin from "#shared/plugin/encrypt.js";
+import encryptPlugin from '#shared/plugin/encrypt.js';
 import fastifyIO from 'fastify-socket.io';
 import fastifyCors from '@fastify/cors';
 import './env.js';
@@ -35,13 +35,11 @@ app.register(fastifyCors, {
   credentials: true,
 });
 
-app.register(domainRoutes, { prefix: '/v1' });
-
 app.setErrorHandler((error, _req, res) => {
   ApiResponse.error(res, error);
 });
 
-app.register(domainRoutes, { prefix: "/v1" });
+app.register(domainRoutes, { prefix: '/v1' });
 
 const { host, port, nodeEnv } = config.server;
 

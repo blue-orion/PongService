@@ -5,7 +5,7 @@ export default async function gameRoutes(fastify, opts) {
   const io = fastify.io;
   const gameNamespace = io.of('/ws/game');
 
-  gameNamespace.on('connection', (socket) => {
+  gameNamespace.on('connect', (socket) => {
     // 소켓 연결 시 auth 필드를 통한 정보 전달
     const { playerId, tournamentId, gameId } = socket.handshake.auth;
     console.log('🎯 받은 playerId:', playerId);
