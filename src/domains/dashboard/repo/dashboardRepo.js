@@ -1,8 +1,10 @@
 import prisma from "#shared/database/prisma.js";
 
 const dashboardRepo = {
-  async getRankData() {
+  async getRankData(skip, take) {
     return prisma.user.findMany({
+      skip,
+      take,
       select: {
         id: true,
         username: true,

@@ -4,7 +4,8 @@ import { ApiResponse } from "#shared/api/response.js";
 const dashboardController = {
   // GET /v1/dashboard/rank
   async getRankHandler(request, reply) {
-    const userRanks = await dashboardService.getRankData();
+    const { page = 1, pageSize = 10 } = request.query;
+    const userRanks = await dashboardService.getRankData(Number(page), Number(pageSize));
     return ApiResponse.ok(reply, userRanks);
   },
 };
