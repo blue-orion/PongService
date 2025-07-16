@@ -1,10 +1,11 @@
-import { WebSocketManager } from "./utils/websocket.js";
-import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "./types/game.js";
+import { WebSocketManager } from "./utils/websocket";
+import { AuthManager } from "./utils/auth";
+import { GameState, KeyboardControls, ConnectionStatus, Player, Ball } from "./types/game";
 
 export class PongGame {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private wsManager: WebSocketManager;
+  private wsManager!: WebSocketManager; // 나중에 초기화됨을 명시
   private gameState: GameState | null = null;
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
@@ -20,6 +21,27 @@ export class PongGame {
     this.statusElement = document.getElementById("gameStatus")!;
     this.connectionStatusElement = document.getElementById("connectionStatus")!;
 
+    // 인증 체크 후 게임 초기화
+    this.initializeWithAuth();
+  }
+
+  private async initializeWithAuth(): Promise<void> {
+    try {
+      // 인증 상태 확인
+      const isAuthenticated = await AuthManager.checkAuthAndRedirect();
+      if (!isAuthenticated) {
+        return; // 인증 실패 시 로그인 페이지로 리다이렉트됨
+      }
+
+      // 인증 성공 시 게임 초기화
+      this.initializeGame();
+    } catch (error) {
+      console.error("인증 확인 중 오류:", error);
+      this.showError("인증 확인 중 오류가 발생했습니다.");
+    }
+  }
+
+  private initializeGame(): void {
     // WebSocket 매니저 초기화
     this.wsManager = new WebSocketManager();
     this.setupWebSocketEvents();
@@ -90,13 +112,29 @@ export class PongGame {
   }
 
   private setupUI(): void {
-    // 재연결 버튼 추가
+    // 컨트롤 버튼들 컨테이너
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "flex gap-3 mt-4";
+
+    // 재연결 버튼
     const reconnectBtn = document.createElement("button");
     reconnectBtn.textContent = "재연결";
-    reconnectBtn.className = "px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors";
+    reconnectBtn.className = "btn-primary";
     reconnectBtn.onclick = () => this.wsManager.connect();
 
-    this.statusElement.appendChild(reconnectBtn);
+    // 로그아웃 버튼
+    const logoutBtn = document.createElement("button");
+    logoutBtn.textContent = "로그아웃";
+    logoutBtn.className = "btn-muted";
+    logoutBtn.onclick = () => {
+      if (confirm("정말 로그아웃하시겠습니까?")) {
+        AuthManager.logout();
+      }
+    };
+
+    buttonsContainer.appendChild(reconnectBtn);
+    buttonsContainer.appendChild(logoutBtn);
+    this.statusElement.appendChild(buttonsContainer);
   }
 
   private sendPlayerMove(direction: "up" | "down"): void {

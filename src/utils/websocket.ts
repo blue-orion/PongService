@@ -1,8 +1,11 @@
-import { io, Socket } from "socket.io-client";
-import { GameMessage, GameState, ConnectionStatus } from "../types/game.js";
+import { io } from "socket.io-client";
+import { GameMessage, GameState, ConnectionStatus } from "../types/game";
+
+// Socket.IO 소켓 타입 정의
+type SocketIOSocket = ReturnType<typeof io>;
 
 export class WebSocketManager {
-  private socket: Socket | null = null;
+  private socket: SocketIOSocket | null = null;
   private connectionStatus: ConnectionStatus = "disconnected";
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;

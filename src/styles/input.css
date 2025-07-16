@@ -4,36 +4,106 @@
 
 @layer base {
   body {
-    @apply font-noto bg-game-bg text-white;
+    @apply font-pretendard bg-gradient-full text-primary-800 min-h-screen;
   }
 }
 
 @layer components {
+  /* 게임 컨테이너 */
   .game-container {
     @apply min-h-screen flex flex-col items-center justify-center p-4;
   }
 
+  /* 게임 상태 표시 */
   .game-status {
-    @apply text-center mb-4 p-4 bg-game-primary rounded-lg shadow-lg;
+    @apply text-center mb-4 p-6 bg-glass backdrop-blur-xl rounded-2xl shadow-2xl border border-glass;
   }
 
+  /* 게임 캔버스 */
   .game-canvas {
-    @apply border-2 border-game-accent rounded-lg shadow-2xl;
+    @apply border-2 border-primary-300 rounded-2xl shadow-2xl bg-neutral-50;
   }
 
+  /* 로그인 컨테이너 */
+  .login-container {
+    @apply bg-white/95 backdrop-blur-xl rounded-3xl p-12 w-full max-w-md;
+    @apply shadow-[0_32px_64px_rgba(123,155,209,0.3),0_16px_32px_rgba(168,136,194,0.2)];
+    @apply border border-white/30 transform transition-all duration-300 hover:-translate-y-2;
+    @apply hover:shadow-[0_40px_80px_rgba(123,155,209,0.4),0_20px_40px_rgba(168,136,194,0.3)];
+  }
+
+  /* 로그인 폼 요소들 */
+  .login-input {
+    @apply w-full p-4 rounded-xl border-2 border-primary-200 bg-white/80 backdrop-blur-sm;
+    @apply focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-200/50;
+    @apply transition-all duration-300 text-primary-800 placeholder-primary-400;
+  }
+
+  .login-button {
+    @apply w-full p-4 rounded-xl bg-gradient-primary text-white font-semibold;
+    @apply hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
+    @apply transition-all duration-300 border-none cursor-pointer;
+  }
+
+  .login-button:disabled {
+    @apply opacity-50 cursor-not-allowed transform-none;
+  }
+
+  /* 연결 상태 */
   .connection-status {
-    @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+    @apply inline-block px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm;
   }
 
   .status-connected {
-    @apply bg-green-500 text-white;
+    @apply bg-success-500/90 text-white shadow-lg;
   }
 
   .status-connecting {
-    @apply bg-yellow-500 text-black;
+    @apply bg-warning-500/90 text-primary-800 shadow-lg;
   }
 
   .status-disconnected {
-    @apply bg-red-500 text-white;
+    @apply bg-warning-600/90 text-white shadow-lg;
+  }
+
+  /* 오류 메시지 */
+  .error-message {
+    @apply bg-warning-500/90 text-white p-3 rounded-xl mt-4 text-sm backdrop-blur-sm;
+  }
+
+  /* 성공 메시지 */
+  .success-message {
+    @apply bg-success-500/90 text-white p-3 rounded-xl mt-4 text-sm backdrop-blur-sm;
+  }
+
+  /* 로딩 스피너 */
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500;
+  }
+
+  /* 플로팅 애니메이션 */
+  .floating {
+    @apply animate-float;
+  }
+
+  /* 글래스모피즘 카드 */
+  .glass-card {
+    @apply bg-glass backdrop-blur-xl rounded-2xl border border-glass shadow-xl;
+  }
+
+  /* 버튼 스타일들 */
+  .btn-primary {
+    @apply bg-gradient-primary text-white px-6 py-3 rounded-xl font-semibold;
+    @apply hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-secondary text-primary-800 px-6 py-3 rounded-xl font-semibold;
+    @apply hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
+  }
+
+  .btn-muted {
+    @apply bg-muted-300 text-muted-800 px-6 py-3 rounded-xl font-medium;
+    @apply hover:bg-muted-400 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
   }
 }
