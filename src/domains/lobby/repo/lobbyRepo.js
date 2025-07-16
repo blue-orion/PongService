@@ -44,7 +44,7 @@ export class LobbyRepository {
 
   async countPlayers(lobby_id) {
     return await prisma.lobbyPlayer.count({
-      where: { lobby_id, enabled: true },
+      where: { lobby_id },
     });
   }
 
@@ -159,6 +159,18 @@ export class LobbyRepository {
     });
   }
 
+  async checkUserExists(user_id) {
+    if (!user_id) {
+      return false; // 유효하지 않은 ID라면 false 반환
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: user_id },
+    });
+
+    return Boolean(!user);
+  }
+
   // 플레이어 준비 상태 토글
   async togglePlayerReadyState(lobby_id, user_id) {
     // 현재 준비 상태 조회
@@ -211,10 +223,30 @@ export class LobbyRepository {
     return players.every((player) => player.is_ready);
   }
 
-  // 초기 매칭 생성 (게임 도메인과 연동 필요)
-  async createInitialMatches(lobby_id) {
-    // 게임 도메인의 서비스와 연동하여 초기 매칭 생성
-    // 이 부분은 Game 도메인과 협력하여 구현 필요
-    throw new Error("매칭 생성 기능은 게임 도메인과 연동하여 구현 예정입니다.");
+  async findActivePlayersByLobbyId(lobby_id) {
+    return await prisma.lobbyPlayer.findMany({
+      where: {
+        lobby_id,
+        enabled: true,
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  async areWinnersReady(lobbyId, winners) {
+    const winnerIds = winners.map((w) => w.user_id);
+
+    const readyWinnersCount = await prisma.lobbyPlayer.count({
+      where: {
+        lobby_id: lobbyId,
+        user_id: { in: winnerIds },
+        is_ready: true,
+        enabled: true,
+      },
+    });
+
+    return readyWinnersCount === winners.length;
   }
 }

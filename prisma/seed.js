@@ -4,6 +4,7 @@ import { faker } from "@faker-js/faker";
 const prisma = new PrismaClient();
 
 const TOURNAMENT_TYPES = ["LAST_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
+
 const MAX_PLAYERS = {
   LAST_16: 16,
   QUARTERFINAL: 8,
@@ -67,7 +68,6 @@ function* generateLobbyPlayers(lobbies, availableUsers, usersPerLobby = 2) {
         lobby_id: lobby.id,
         user_id: user.id,
         is_leader: players.length === 0, // 첫 번째 유저가 방장으로 들어감
-        is_ready: players.length === 0,
       });
 
       usedUserIds.add(user.id);
@@ -99,38 +99,38 @@ async function main() {
   const users = await prisma.user.findMany();
   console.log(`Created ${users.length} users`);
 
-  // 2. 토너먼트 생성
-  const tournamentData = [...generateTournaments()];
-  await prisma.tournament.createMany({ data: tournamentData });
-  const tournaments = await prisma.tournament.findMany();
-  console.log(`Created ${tournaments.length} tournaments`);
+  // // 2. 토너먼트 생성
+  // const tournamentData = [...generateTournaments()];
+  // await prisma.tournament.createMany({ data: tournamentData });
+  // const tournaments = await prisma.tournament.findMany();
+  // console.log(`Created ${tournaments.length} tournaments`);
 
-  // 3. 로비 생성
-  const lobbyData = [...generateLobbies(tournaments, users)];
-  await prisma.lobby.createMany({ data: lobbyData });
-  const lobbies = await prisma.lobby.findMany();
-  console.log(`Created ${lobbies.length} lobbies`);
+  // // 3. 로비 생성
+  // const lobbyData = [...generateLobbies(tournaments, users)];
+  // await prisma.lobby.createMany({ data: lobbyData });
+  // const lobbies = await prisma.lobby.findMany();
+  // console.log(`Created ${lobbies.length} lobbies`);
 
-  // 4. 로비 플레이어 생성
-  const lobbyPlayers = [...generateLobbyPlayers(lobbies, users, 2)];
-  await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
-  console.log(`Added ${lobbyPlayers.length} players to lobbies`);
+  // // 4. 로비 플레이어 생성
+  // const lobbyPlayers = [...generateLobbyPlayers(lobbies, users, 2)];
+  // await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
+  // console.log(`Added ${lobbyPlayers.length} players to lobbies`);
 
-  const game = await prisma.game.create({
-    data: {
-      tournament_id: tournament.id,
-      player_one_id: user1.id,
-      player_two_id: user2.id,
-      player_one_score: 0,
-      player_two_score: 0,
-      round: 1,
-      match: 1,
-      game_status: "PENDING",
-      enabled: true,
-    },
-  });
+  // const game = await prisma.game.create({
+  //   data: {
+  //     tournament_id: tournament.id,
+  //     player_one_id: user1.id,
+  //     player_two_id: user2.id,
+  //     player_one_score: 0,
+  //     player_two_score: 0,
+  //     round: 1,
+  //     match: 1,
+  //     game_status: "PENDING",
+  //     enabled: true,
+  //   },
+  // });
 
-  console.log("Seed data created:", { game });
+  // console.log("Seed data created:", { game });
   console.log("Seeding complete");
 }
 

@@ -3,6 +3,7 @@ import { ApiResponse } from "#shared/api/response.js";
 import { LobbyController } from "#domains/lobby/controller/lobbyController.js";
 import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
+import PongException from "#shared/exception/pongException.js";
 
 const mockTournamentRepository = {
   findById: jest.fn(),
@@ -266,16 +267,22 @@ describe("로비 생성 Test 케이스", () => {
         user_id: user_id,
       };
 
+      // 토너먼트 조회 시 null을 반환하고, 예외가 발생해야 함
       mockTournamentRepository.findById.mockResolvedValue(null);
 
+      // 예외가 발생하는지 확인
       await expect(lobbyService.createLobby(tournament_id, max_player, user_id)).rejects.toThrow(
         "해당 토너먼트를 찾을 수 없습니다."
       );
 
+      // 토너먼트 조회 메서드가 호출된 적이 있는지 확인
       expect(mockTournamentRepository.findById).toHaveBeenCalledWith(tournament_id);
+
+      // 로비 생성 및 플레이어 추가 메서드가 호출되지 않았는지 확인
       expect(mockLobbyRepository.create).not.toHaveBeenCalled();
       expect(mockLobbyRepository.addOrReactivatePlayer).not.toHaveBeenCalled();
     });
+
     it("IN_PROGRESS (이미 시작한) 토너먼트", async () => {
       tournament_id = 2;
       tournament_type = "SEMIFINAL";

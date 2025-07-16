@@ -1,4 +1,5 @@
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
+import PongException from "#shared/exception/pongException.js";
 
 export class TournamentService {
   constructor(tournamentRepository = new TournamentRepository()) {
@@ -13,7 +14,7 @@ export class TournamentService {
     // 토너먼트 타입 유효성 검증
     const validTypes = ["LAST_16", "QUARTERFINAL", "SEMIFINAL", "FINAL"];
     if (!validTypes.includes(type)) {
-      throw new Error("유효하지 않은 토너먼트 타입입니다.");
+      throw PongException.INVALID_TOURNAMENT_TYPE;
     }
 
     return await this.tournamentRepository.create(type);

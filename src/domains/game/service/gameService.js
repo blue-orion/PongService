@@ -1,5 +1,5 @@
-import Game from '#domains/game/model/Game.js';
-import gameRepo from '#domains/game/repo/gameRepo.js';
+import Game from "#domains/game/model/Game.js";
+import { GameRepository } from "#domains/game/repo/gameRepo.js";
 
 export class GameService {
   /**
@@ -8,7 +8,7 @@ export class GameService {
    *
    * @constructor
    */
-  constructor() {
+  constructor(gameRepository = new GameRepository()) {
     /**
      * 활성화된 게임 목록
      * @type { Map<number, Game> } - key: gameId, value: Game instance
@@ -19,6 +19,8 @@ export class GameService {
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
+
+    this.gameRepository = gameRepository;
   }
 
   setBroadcastCallback(callback) {
@@ -42,8 +44,8 @@ export class GameService {
       const gameData = await gameRepo.loadGameDataById(gameId);
 
       let role = null;
-      if (playerId === gameData.player_one_id) role = 'left';
-      if (playerId === gameData.player_two_id) role = 'right';
+      if (playerId === gameData.player_one_id) role = "left";
+      if (playerId === gameData.player_two_id) role = "right";
       if (!role) {
         console.log("[GameService] Role isn't defined");
         //Throw
@@ -108,7 +110,7 @@ export class GameService {
   _sendGameState(gameId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
-      console.log('[Game] 해당하는 게임이 없음');
+      console.log("[Game] 해당하는 게임이 없음");
     }
 
     const gameState = game.getState();
@@ -118,7 +120,7 @@ export class GameService {
       score: game.getScore(),
     };
 
-    this.broadcastCallback(gameId, 'state', message);
+    this.broadcastCallback(gameId, "state", message);
   }
 
   /**

@@ -56,6 +56,7 @@ model Tournament {
   id                Int              @id @default(autoincrement())
   tournament_type   TournamentType
   tournament_status TournamentStatus
+  round             Int
   created_at        DateTime         @default(now())
   updated_at        DateTime         @updatedAt
   enabled           Boolean          @default(true)
