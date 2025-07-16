@@ -9,7 +9,7 @@ class GameRepository {
       console.log(`[GameRepo] ID: ${gameId}에 해당하는 game 데이터가 없습니다.`);
     } else console.log('Game state 불러옴:', game);
     return game;
-  },
+  }
 
   /** 게임 생성 */
   async createGame(tournamentId, playerOneId, playerTwoId, round = 1, match = 1) {
@@ -23,7 +23,7 @@ class GameRepository {
         player_two: { connect: { id: playerTwoId } },
       },
     });
-  },
+  }
 
   /** 게임 결과 업데이트 */
   async updateGameResult(gameId, score, winnerId, loserId) {
@@ -45,7 +45,7 @@ class GameRepository {
         game_status: GameStatus.COMPLETED,
       },
     });
-  },
-};
+  }
+}
 
 export default GameRepository;

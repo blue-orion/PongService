@@ -14,9 +14,13 @@ export default async function gameRoutes(fastify, opts) {
 
     gameController.handleConnection(socket, tournamentId, gameId, playerId);
 
-    socket.on('message', (raw) => {
-      gameController.handleMessage(socket, raw);
+    socket.on('move', (raw) => {
+      gameController.handleMoveEvent(socket, raw);
     });
+
+    // socket.on('message', (raw) => {
+    //   gameController.handleMessage(socket, raw);
+    // });
 
     socket.on('disconnect', async () => {
       //   console.log(JSON.stringify(await loadGameState()));

@@ -61,7 +61,7 @@ class GameController {
    * @param {string|object} raw - JSON 문자열 또는 객체
    * @returns {void}
    */
-  handleMessage(socket, raw) {
+  handleMoveEvent(socket, raw) {
     const { playerId } = socket.handshake.auth;
     let data;
     try {
@@ -71,15 +71,18 @@ class GameController {
       return;
     }
 
+    const { gameId, role, keycode } = data.payload;
+    if (!gameId || !role || !keycode) {
+      console.warn('알 수 없는 메시지:', data.payload);
+    }
+
     switch (data.type) {
-      case 'move':
-        const gameId = data.payload.gameId;
-        const role = data.payload.role;
-        const direction = data.payload.direction;
-        if (!direction) {
-          console.warn('알 수 없는 메시지:', data.payload);
-        }
-        gameService.handleMoveEvent(gameId, role, direction);
+      case 'keydown':
+        gameService.handleKeyDownEvent(gameId, role, keycode);
+        break;
+
+      case 'keyup':
+        gameService.handleKeyUpEvent(gameId, role, keycode);
         break;
 
       default:

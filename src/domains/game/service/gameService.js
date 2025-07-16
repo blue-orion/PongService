@@ -1,5 +1,5 @@
 import Game from '#domains/game/model/Game.js';
-import gameRepo from '#domains/game/repo/gameRepo.js';
+import GameRepository from '#domains/game/repo/gameRepo.js';
 
 export class GameService {
   /**
@@ -19,6 +19,8 @@ export class GameService {
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
+
+    this.gameRepo = new GameRepository();
   }
 
   setBroadcastCallback(callback) {
@@ -39,7 +41,7 @@ export class GameService {
         game = this._makeGameInstance(gameId);
       }
       console.log(`[GameService] ${gameId} game is loaded`);
-      const gameData = await gameRepo.loadGameDataById(gameId);
+      const gameData = await this.gameRepo.loadGameDataById(gameId);
 
       let role = null;
       if (playerId === gameData.player_one_id) role = 'left';
@@ -49,8 +51,9 @@ export class GameService {
         //Throw
       }
       game.addPlayer(role, playerId);
+      console.log(`game status: ${game.isStarted}`);
 
-      if (game.isFull()) {
+      if (game.isFull() && game.isStarted === false) {
         console.log(`[GameService] Start ! (Game Id = ${gameId}`);
         this._startGame(gameId);
       } else {
@@ -94,6 +97,7 @@ export class GameService {
     console.log(`[GameService] Start Game ID : ${gameId}`);
     const game = this.activeGames.get(gameId);
 
+    game.isStarted = true;
     game.start();
     const intervalId = setInterval(async () => {
       const game = this.activeGames.get(gameId);
@@ -135,12 +139,17 @@ export class GameService {
 
     const game = this.activeGames.get(gameId);
     const { score, winnerId, loserId } = game.getResult();
-    await gameRepo.updateGameResult(gameId, score, winnerId, loserId);
+    await this.gameRepo.updateGameResult(gameId, score, winnerId, loserId);
   }
 
-  handleMoveEvent(gameId, role, direction) {
+  handleKeyDownEvent(gameId, role, keycode) {
     const game = this.activeGames.get(gameId);
-    game.movePaddle(role, direction);
+    game.setKeyState(role, keycode, true);
+  }
+
+  handleKeyUpEvent(gameId, role, keycode) {
+    const game = this.activeGames.get(gameId);
+    game.setKeyState(role, keycode, false);
   }
 }
 

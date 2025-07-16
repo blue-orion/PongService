@@ -19,7 +19,12 @@ export default class Game {
 
     /** @type {GameState} - 볼의 위치, 패들의 위치 등을 가진 클래스 객체*/
     this.state = new GameState();
+    this.keyState = {
+      left: { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false },
+      right: { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false },
+    };
     this.score = { left: 0, right: 0 };
+    this.isStarted = false;
   }
 
   start() {
@@ -27,7 +32,7 @@ export default class Game {
       if (this.isGameOver()) {
         clearInterval(intervalId);
       } else {
-        const scoredRole = this.state.updateBall();
+        const scoredRole = this.state.updateState(this.keyState);
         if (scoredRole !== null) {
           this.score[scoredRole]++;
           this.state.resetBall();
@@ -60,16 +65,17 @@ export default class Game {
   /** Player 추가 */
   addPlayer(role, playerId) {
     // TODO: 이미 존재하는 유저 ID일 경우 오류 반환
+    for (let id in this.players) {
+      if (id === playerId) {
+        console.log('이미 존재하는 플레이어입니다.');
+        return;
+      }
+    }
     this.players.set(role, playerId);
   }
 
-  /**
-   * 패들 이동 요청 처리
-   * @param {"left" | "right"} role
-   * @param {"up" | "down"} direction
-   */
-  movePaddle(role, direction) {
-    this.state.movePaddle(role, direction);
+  setKeyState(role, keycode, mode) {
+    this.keyState[role][keycode] = mode;
   }
 
   getPlayers() {
