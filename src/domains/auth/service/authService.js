@@ -31,6 +31,7 @@ const authService = {
 
     const hashed = await encryptUtils.hashPasswd(passwd);
     registerDto.passwd = hashed;
+    console.log("Registering user:", registerDto);
     try {
       await userRepo.createUser(registerDto);
     } catch {
