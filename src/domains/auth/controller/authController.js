@@ -1,4 +1,5 @@
 import authService from "#domains/auth/service/authService.js";
+import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const authController = {
@@ -6,7 +7,8 @@ const authController = {
   async loginHandler(request, reply) {
     const { username, passwd, token } = request.body;
     const jwtUtils = request.server.jwtUtils;
-    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils);
+    const encryptUtils = await request.server.encryptUtils;
+    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils, encryptUtils);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -19,8 +21,10 @@ const authController = {
 
   // POST /v1/auth/register
   async registerHandler(request, reply) {
-    const { username, passwd } = request.body;
-    await authService.registerUser(username, passwd);
+    const registerDto = new RegisterDto(request.body);
+    console.log("Registering user:", registerDto);
+    const encryptUtils = await request.server.encryptUtils;
+    await authService.registerUser(registerDto, encryptUtils);
     return ApiResponse.ok(reply, { message: "User registered successfully" });
   },
 
@@ -28,8 +32,7 @@ const authController = {
   async refreshTokenHandler(request, reply) {
     const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
     const jwtUtils = request.server.jwtUtils;
-    const { userId } = request.user;
-    const jwt = await authService.refreshTokens(userId, refreshToken, jwtUtils);
+    const jwt = await authService.refreshTokens(jwtUtils, refreshToken);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -43,8 +46,3 @@ const authController = {
 };
 
 export default authController;
-
-/**
- * 회원 탈퇴 로직
- * enable colume 확인 로직/ 분기/ 필요한 부분 확인
- */

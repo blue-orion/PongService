@@ -1,0 +1,11 @@
+import userController from "#domains/user/controller/userController.js";
+
+export default async function userRoutes(fastify) {
+  fastify.addHook("preHandler", fastify.accessAuth);
+
+  fastify.get("/profile/id/:id", userController.getUserProfileByIdHandler);
+  fastify.get("/myinfo", userController.getMyInfoHandler);
+  fastify.put("/update", userController.updateMyPageHandler);
+  fastify.put("/update/password", userController.updatePasswordHandler);
+  fastify.delete("/disable", userController.disableUserHandler);
+}
