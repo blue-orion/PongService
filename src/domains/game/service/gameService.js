@@ -1,5 +1,6 @@
 import Game from '#domains/game/model/Game.js';
 import GameRepository from '#domains/game/repo/gameRepo.js';
+import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
 export class GameService {
   /**
@@ -69,7 +70,6 @@ export class GameService {
       return { success: true, status, role };
     } catch (err) {
       console.warn(`${err.message} (${err.fileName}:${err.lineNumber})`);
-      throw new Error(`[GameService] Unexpected Error`);
       return { success: false };
     }
   }
@@ -100,6 +100,7 @@ export class GameService {
    * @returns {void}
    */
   _startGame(gameId) {
+    this.gameRepo.updateGameStatus(gameId, GameStatus.IN_PROGRESS);
     console.log(`[GameService] Start Game ID : ${gameId}`);
     const game = this.activeGames.get(gameId);
     if (game.isStart()) return;

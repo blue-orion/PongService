@@ -1,7 +1,7 @@
 import prisma from "#shared/database/prisma.js";
 import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
-class GameRepository {
+export class GameRepository {
   /** 특정 게임 ID로 상태 불러오기 */
   async loadGameDataById(gameId) {
     const game = await prisma.game.findUnique({ where: { id: gameId } });
@@ -9,7 +9,6 @@ class GameRepository {
       throw new Error(`[GameRepo] ID: ${gameId}에 해당하는 game 데이터가 없습니다.`);
     }
     return game;
-  }
   }
 
   /** 게임 생성 */
@@ -25,6 +24,20 @@ class GameRepository {
       },
     });
   }
+
+  /** 게임 상태 업데이트 */
+  async updateGameStatus(gameId, game_status) {
+    const exists = await prisma.game.findUnique({ where: { id: gameId } });
+    if (!exists) {
+      throw new Error(`[GameRepo] Game ID ${gameId} not found in DB.`);
+    }
+
+    await prisma.game.update({
+      where: { id: gameId },
+      data: {
+        game_status,
+      }
+    })
   }
 
   /** 게임 결과 업데이트 */
@@ -81,10 +94,6 @@ class GameRepository {
         win_rate: winRate,
       },
     });
-  }
-}
-
-export default GameRepository;
   }
 
   // 초기 매칭들을 bulk insert
@@ -171,3 +180,5 @@ export default GameRepository;
     }));
   }
 }
+
+export default GameRepository;
