@@ -13,6 +13,33 @@ const userRepo = {
     });
   },
 
+  async getUserByNickname(nickname) {
+    return await prisma.user.findUniqueOrThrow({
+      where: { nickname },
+    });
+  },
+
+  async putNickname(userId, nickname) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { nickname: nickname },
+    });
+  },
+
+  async putProfileImage(userId, profileImage) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { profile_image: profileImage },
+    });
+  },
+
+  async putPassword(userId, hashedPassword) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { passwd: hashedPassword },
+    });
+  },
+
   async getUserByRefreshToken(refreshToken) {
     return await prisma.user.findUniqueOrThrow({
       where: { refresh_token: refreshToken },
@@ -26,9 +53,9 @@ const userRepo = {
     });
   },
 
-  async createUser({ username, passwd }) {
+  async createUser(registerDto) {
     return prisma.user.create({
-      data: { username, passwd },
+      data: registerDto,
     });
   },
 
@@ -36,6 +63,13 @@ const userRepo = {
     return prisma.user.update({
       where: { id: userId },
       data: { two_fa_secret: null },
+    });
+  },
+
+  async disableUser(userId) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { enabled: false },
     });
   },
 };

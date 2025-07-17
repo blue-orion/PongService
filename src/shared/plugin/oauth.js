@@ -12,8 +12,27 @@ async function oauthPlugin(fastify, _options) {
       },
       auth: fastifyOauth2.GOOGLE_CONFIGURATION,
     },
-    startRedirectPath: "/auth/google",
+    startRedirectPath: "/v1/auth/google",
     callbackUri: process.env.GOOGLE_REDIRECT_URI || "http://localhost:3333/v1/auth/google/callback",
+  });
+
+  fastify.register(fastifyOauth2, {
+    name: "fortyTwoOAuth",
+    scope: ["public"],
+    credentials: {
+      client: {
+        id: process.env.FORTY_TWO_CLIENT_ID,
+        secret: process.env.FORTY_TWO_CLIENT_SECRET,
+      },
+      auth: {
+        authorizeHost: "https://api.intra.42.fr",
+        authorizePath: "/oauth/authorize",
+        tokenHost: "https://api.intra.42.fr",
+        tokenPath: "/oauth/token",
+      },
+    },
+    startRedirectPath: "/v1/auth/42",
+    callbackUri: process.env.FORTY_TWO_REDIRECT_URI || "http://localhost:3333/v1/auth/42/callback",
   });
 }
 
