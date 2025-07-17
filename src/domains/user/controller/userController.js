@@ -6,7 +6,7 @@ const userController = {
   // GET /v1/users/profile/id/:id
   async getUserProfileByIdHandler(request, reply) {
     const { id } = request.params;
-    const profile = await userService.getProfileById(id);
+    const profile = await userService.getProfileById(parseInt(id));
     return ApiResponse.ok(reply, profile);
   },
 

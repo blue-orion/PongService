@@ -1,5 +1,6 @@
 // src/domains/game/controller/gameController.js
 import { gameService } from '#domains/game/service/gameService.js';
+import { ApiResponse } from '#shared/api/response.js'
 
 class GameController {
   /**
@@ -17,12 +18,24 @@ class GameController {
     gameService.setBroadcastCallback(this.broadcastMessage);
   }
 
+  // GET /v1/game/id/:id
+  async getGameByIdHandler(request, reply) {
+    try {
+      const { id } = request.params;
+      const game = await gameService.getGameById(parseInt(id));
+      return ApiResponse.ok(reply, game);
+    } catch (err) {
+      return ApiResponse.error(reply, err, 404);
+    }
+  }
+
   /**
    * 새로운 플레이어 연결 처리
    *
    * @returns {Promise<{ success: boolean, message: string }>}
    */
-  async handleConnection(socket, tournamentId, gameId, playerId) {
+  async handleConnect(socket) {
+    const { tournamentId, gameId, playerId } = socket.handshake.auth;
     try {
       const result = await gameService.newConnection(tournamentId, gameId, playerId);
 
@@ -48,6 +61,15 @@ class GameController {
       console.error(err.message);
       return socket.emit('error', { payload: { msg: err.message } });
     }
+  }
+
+  /**
+   * 플레이어 퇴장 처리
+   *
+   * @returns {Promise<{ success: boolean, message: string }>}
+   */
+  async handleDisconnect(socket) {
+
   }
 
   /**

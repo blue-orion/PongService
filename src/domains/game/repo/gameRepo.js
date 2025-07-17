@@ -1,12 +1,13 @@
 import prisma from "#shared/database/prisma.js";
+import PongException from "#shared/exception/pongException.js";
 import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
 export class GameRepository {
   /** 특정 게임 ID로 상태 불러오기 */
-  async loadGameDataById(gameId) {
-    const game = await prisma.game.findUnique({ where: { id: gameId } });
+  async getGameById(id) {
+    const game = await prisma.game.findUnique({ where: { id } });
     if (!game) {
-      throw new Error(`[GameRepo] ID: ${gameId}에 해당하는 game 데이터가 없습니다.`);
+      throw new PongException(`ID: ${id}에 해당하는 game 데이터가 없습니다.`, 404);
     }
     return game;
   }
@@ -29,7 +30,7 @@ export class GameRepository {
   async updateGameStatus(gameId, game_status) {
     const exists = await prisma.game.findUnique({ where: { id: gameId } });
     if (!exists) {
-      throw new Error(`[GameRepo] Game ID ${gameId} not found in DB.`);
+      throw new PongException(`Game ID ${gameId} not found in DB.`, 404);
     }
 
     await prisma.game.update({
@@ -46,7 +47,7 @@ export class GameRepository {
 
     const exists = await prisma.game.findUnique({ where: { id: gameId } });
     if (!exists) {
-      throw new Error(`[GameRepo] Game ID ${gameId} not found in DB.`);
+      throw new PongException(`Game ID ${gameId} not found in DB.`, 404);
     }
 
     // Game Update

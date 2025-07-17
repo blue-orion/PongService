@@ -1,4 +1,5 @@
 import Game from '#domains/game/model/Game.js';
+import GameDto from '#domains/game/model/GameDto.js'
 import GameRepository from '#domains/game/repo/gameRepo.js';
 import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
@@ -37,7 +38,6 @@ export class GameService {
    * @param { number } playerId
    */
   async newConnection(tournamentId, gameId, playerId) {
-    // const release = await this._acquireLock(gameId); // Lock 획득
 
     let game;
     let role = null;
@@ -49,7 +49,7 @@ export class GameService {
       } else {
         game = this._makeGameInstance(gameId);
       }
-      const gameData = await this.gameRepo.loadGameDataById(gameId);
+      const gameData = await this.gameRepo.getGameById(gameId);
 
       // DB에서 플레이어 role 가져오기
       if (playerId === gameData.player_one_id) role = 'left';
@@ -177,6 +177,11 @@ export class GameService {
     if (!game) return;
 
     game.setKeyState(role, keycode, false);
+  }
+
+  async getGameById(id) {
+    const game = await this.gameRepo.getGameById(id);
+    return new GameDto(game);
   }
 }
 
