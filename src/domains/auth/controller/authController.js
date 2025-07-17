@@ -1,6 +1,7 @@
 import authService from "#domains/auth/service/authService.js";
 import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
+import PongException from "#shared/exception/pongException.js";
 
 const authController = {
   // POST /v1/auth/login
@@ -15,6 +16,7 @@ const authController = {
   // POST /v1/auth/logout
   async logoutHandler(request, reply) {
     const userId = request.user.id;
+    if (!userId) throw PongException.BAD_REQUEST;
     await authService.signOutUser(userId);
     return ApiResponse.ok(reply, { message: "Logged out successfully" });
   },

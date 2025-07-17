@@ -3,18 +3,11 @@ import UpdatePasswordDto from "#domains/user/model/updatePasswordDto.js";
 import { ApiResponse } from "#shared/api/response.js";
 
 const userController = {
-  // GET /v1/users/profile/id/:id
+  // GET /v1/users/profile/:id
   async getUserProfileByIdHandler(request, reply) {
-    const { id } = request.params;
+    const id = Number(request.params.id);
     const profile = await userService.getProfileById(id);
     return ApiResponse.ok(reply, profile);
-  },
-
-  // GET /v1/users/myinfo
-  async getMyInfoHandler(request, reply) {
-    const userId = request.user.id;
-    const myInfo = await userService.getProfileById(userId);
-    return ApiResponse.ok(reply, myInfo);
   },
 
   // PUT /v1/users/update

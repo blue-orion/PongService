@@ -1,10 +1,10 @@
 import userRepo from "#domains/user/repo/userRepo.js";
-import MeUserDto from "#domains/user/model/meUserDto.js";
+import ProfileDto from "#domains/user/model/ProfileDto.js";
 
 const userService = {
   async getProfileById(userId) {
     const user = await userRepo.getUserById(userId);
-    return new MeUserDto(user);
+    return new ProfileDto(user);
   },
 
   async updateUserNickname(user, nickname) {

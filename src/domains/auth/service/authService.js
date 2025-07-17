@@ -20,23 +20,14 @@ const authService = {
   },
 
   async signOutUser(userId) {
-    if (!userId) throw PongException.BAD_REQUEST;
-
     await authRepo.removeUserRefreshToken(userId);
   },
 
   async registerUser(registerDto, encryptUtils) {
-    const { username, passwd, nickname } = registerDto;
-    if (!username || !passwd || !nickname) throw PongException.NOT_FOUND;
-
-    const hashed = await encryptUtils.hashPasswd(passwd);
+    const hashed = await encryptUtils.hashPasswd(registerDto.passwd);
     registerDto.passwd = hashed;
     console.log("Registering user:", registerDto);
-    try {
-      await userRepo.createUser(registerDto);
-    } catch {
-      throw PongException.ENTITY_NOT_FOUND;
-    }
+    await userRepo.createUser(registerDto);
   },
 
   async refreshTokens(jwtUtils, refreshToken) {
