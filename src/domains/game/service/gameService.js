@@ -8,7 +8,7 @@ export class GameService {
    *
    * @constructor
    */
-  constructor() {
+  constructor(gameRepository = new GameRepository()) {
     /**
      * 활성화된 게임 목록
      * @type { Map<number, Game> } - key: gameId, value: Game instance
@@ -22,7 +22,6 @@ export class GameService {
     this.broadcastCallback = null;
 
     this.gameRepo = new GameRepository();
-    this._locks = new Map();
   }
 
   setBroadcastCallback(callback) {
