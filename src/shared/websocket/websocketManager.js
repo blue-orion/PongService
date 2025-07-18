@@ -26,6 +26,8 @@ class WebSocketManager {
 
   // 사용자 소켓 등록
   addUserSocket(userId, type, socket) {
+    console.log(this.userSockets);
+
     if (!this.userSockets.has(userId)) {
       this.userSockets.set(userId, {});
     }

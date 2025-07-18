@@ -1,6 +1,6 @@
 import friendService from "#domains/friend/service/friendService.js";
 import { ApiResponse } from "#shared/api/response.js";
-import websocketManager from "#shared/websocket/websocketManger.js";
+import websocketManager from "#shared/websocket/websocketManager.js";
 import PageRequest from "#shared/page/PageRequest.js";
 import PageResponse from "#shared/page/PageResponse.js";
 
@@ -11,7 +11,7 @@ const friendController = {
     const senderId = request.user.id;
     const relationId = await friendService.requestFriend(receiverId, senderId);
     // 친구 추가 후, 친구 웹소켓 네임스페이스에 알림 전송
-    websocketManager.sendToNamespaceUser("friend", receiverId, "friendRequest", {
+    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
       payload: {
         relationId,
         message: "You have a new friend request",
