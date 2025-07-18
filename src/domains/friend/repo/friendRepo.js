@@ -2,6 +2,7 @@ import prisma from "#shared/database/prisma.js";
 import { FriendStatus } from "@prisma/client";
 
 const friendRepo = {
+  // 친구 요청 보내기
   async requestFriend(friendId, userId) {
     return prisma.friend.create({
       data: {
@@ -12,6 +13,7 @@ const friendRepo = {
     });
   },
 
+  // 친구 요청 수락
   async acceptFriendRequest(relationId) {
     return prisma.friend.update({
       where: { id: relationId },
@@ -19,12 +21,14 @@ const friendRepo = {
     });
   },
 
+  // 친구 삭제
   async deleteFriend(relationId) {
     return prisma.friend.delete({
       where: { id: relationId },
     });
   },
 
+  // 친구 관계 확인(존재 여부)
   async findRelation(senderId, receiverId) {
     return prisma.friend.findFirst({
       where: {
@@ -34,6 +38,7 @@ const friendRepo = {
     });
   },
 
+  // 친구 목록 조회
   async getFriends(userId, pageable) {
     return prisma.friend.findMany({
       skip: pageable.skip,
@@ -55,12 +60,35 @@ const friendRepo = {
     });
   },
 
+  // 받은 친구 요청 조회
   async getReceivedRequests(userId, pageable) {
     return prisma.friend.findMany({
       skip: pageable.skip,
       take: pageable.take,
       where: {
         receiver_id: userId,
+        status: FriendStatus.PENDING,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            profile_image: true,
+          },
+        },
+      },
+    });
+  },
+
+  // 보낸 친구 요청 조회
+  async getSentRequests(userId, pageable) {
+    return prisma.friend.findMany({
+      skip: pageable.skip,
+      take: pageable.take,
+      where: {
+        sender_id: userId,
         status: FriendStatus.PENDING,
       },
       include: {

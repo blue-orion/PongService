@@ -48,9 +48,15 @@ const websocketHandlers = {
 
       // 사용자 소켓 등록
       websocketManager.addUserSocket(userId, "friend", socket);
+      // 친구 요청 수신
       // 프론트에서 request ID를 보낸다.
       friendNamespace.on("acceptFriendRequest", async (data) => {
-        friendController.acceptFriendRequestHandler(data);
+        friendController.acceptFriendRequestSocketHandler(data);
+      });
+
+      // 친구요청 거절
+      friendNamespace.on("friendRequestRejected", async (data) => {
+        await friendController.rejectFriendRequestSocketHandler(data);
       });
 
       socket.on("disconnect", () => {
