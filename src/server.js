@@ -1,20 +1,23 @@
-import "#env";
+import '#env';
 
-import Fastify from "fastify";
+import Fastify from 'fastify';
 
-import domainRoutes from "#routes/index.js";
-import { ApiResponse } from "#shared/api/response.js";
-import config from "#shared/config/index.js";
-import jwtPlugin from "#shared/plugin/jwt.js";
-import oauthPlugin from "#shared/plugin/oauth.js";
-import fastifyIO from "fastify-socket.io";
-import fastifyCors from "@fastify/cors";
-import "./env.js";
-import routes from "./routes/index.js";
+import jwtPlugin from '#shared/plugin/jwt.js';
+import oauthPlugin from '#shared/plugin/oauth.js';
+import domainRoutes from '#routes/index.js';
+import { ApiResponse } from '#shared/api/response.js';
+import config from '#shared/config/index.js';
+import encryptPlugin from '#shared/plugin/encrypt.js';
+import fastifyIO from 'fastify-socket.io';
+import fastifyCors from '@fastify/cors';
+import './env.js';
+import routes from './routes/index.js';
+import websocketHandlers from "#shared/websocket/websocketHandlers.js";
 
 const app = Fastify({ logger: true });
 
 app.register(jwtPlugin);
+app.register(encryptPlugin);
 app.register(oauthPlugin);
 
 // 플러그인 등록 순서 중요!
@@ -33,11 +36,20 @@ app.register(fastifyCors, {
   credentials: true,
 });
 
-app.register(domainRoutes, { prefix: "/v1" });
+app.ready((err) => {
+  if (err) throw err;
+
+  // Socket.IO 네임스페이스 핸들러 등록
+  websocketHandlers.gameWebSocketHandler(app.io);
+  websocketHandlers.lobbyWebSocketHandler(app.io);
+  websocketHandlers.friendWebSocketHandler(app.io);
+});
 
 app.setErrorHandler((error, _req, res) => {
   ApiResponse.error(res, error);
 });
+
+app.register(domainRoutes, { prefix: '/v1' });
 
 const { host, port, nodeEnv } = config.server;
 

@@ -1,5 +1,7 @@
-import Game from "#domains/game/model/Game.js";
-import { GameRepository } from "#domains/game/repo/gameRepo.js";
+import Game from '#domains/game/model/Game.js';
+import GameDto from '#domains/game/model/GameDto.js'
+import GameRepository from '#domains/game/repo/gameRepo.js';
+import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
 export class GameService {
   /**
@@ -14,13 +16,14 @@ export class GameService {
      * @type { Map<number, Game> } - key: gameId, value: Game instance
      */
     this.activeGames = new Map();
+    this.playTimes = new Map();
     /**
      * gameController가 등록하는 callback 함수
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
 
-    this.gameRepository = gameRepository;
+    this.gameRepo = new GameRepository();
   }
 
   setBroadcastCallback(callback) {
@@ -35,33 +38,38 @@ export class GameService {
    * @param { number } playerId
    */
   async newConnection(tournamentId, gameId, playerId) {
-    let game = this.activeGames.get(gameId);
+
+    let game;
+    let role = null;
+    let status;
+
     try {
-      if (!game) {
+      if (this.activeGames.has(gameId)) {
+        game = this.activeGames.get(gameId);
+      } else {
         game = this._makeGameInstance(gameId);
       }
-      console.log(`[GameService] ${gameId} game is loaded`);
-      const gameData = await gameRepo.loadGameDataById(gameId);
+      const gameData = await this.gameRepo.getGameById(gameId);
 
-      let role = null;
-      if (playerId === gameData.player_one_id) role = "left";
-      if (playerId === gameData.player_two_id) role = "right";
-      if (!role) {
-        console.log("[GameService] Role isn't defined");
-        //Throw
+      // DB에서 플레이어 role 가져오기
+      if (playerId === gameData.player_one_id) role = 'left';
+      if (playerId === gameData.player_two_id) role = 'right';
+      if (role === null) {
+        throw new Error("[GameService] Role isn't defined");
       }
+
       game.addPlayer(role, playerId);
 
-      if (game.isFull()) {
-        console.log(`[GameService] Start ! (Game Id = ${gameId}`);
+      if (game.isFull() && game.isStart() === false) {
+        status = 'start';
         this._startGame(gameId);
       } else {
         console.log(`[GameService] Wating players (Game Id = ${gameId})`);
+        status = 'waiting';
       }
-      return { success: true };
+      return { success: true, status, role };
     } catch (err) {
-      console.log(`[GameService] Unexpected Error`);
-      console.error(err);
+      console.warn(`${err.message} (${err.fileName}:${err.lineNumber})`);
       return { success: false };
     }
   }
@@ -76,11 +84,10 @@ export class GameService {
    */
   _makeGameInstance(gameId) {
     const game = new Game(gameId);
-    this.activeGames.set(gameId, game);
-    console.log(`[GameService] ${gameId} game is created`);
     if (!game) {
-      // Throw Error
+      throw new Error(`[GameService] Unexpected Error`);
     }
+    this.activeGames.set(gameId, game);
     return game;
   }
 
@@ -93,16 +100,26 @@ export class GameService {
    * @returns {void}
    */
   _startGame(gameId) {
+    this.gameRepo.updateGameStatus(gameId, GameStatus.IN_PROGRESS);
     console.log(`[GameService] Start Game ID : ${gameId}`);
     const game = this.activeGames.get(gameId);
+    if (game.isStart()) return;
 
     game.start();
+    this.playTimes.set(gameId, { startTime: performance.now(), endTime: 0 });
+
     const intervalId = setInterval(async () => {
-      const game = this.activeGames.get(gameId);
-      if (game.isGameOver() === false) {
-        this._sendGameState(gameId);
-      } else {
-        await this._processEndGame(gameId, intervalId);
+      try {
+        const game = this.activeGames.get(gameId);
+
+        if (game.isGameOver() === false) {
+          this._sendGameState(gameId);
+        } else {
+          await this._processEndGame(gameId, intervalId);
+        }
+      } catch (err) {
+        clearInterval(intervalId);
+        throw new Error(err.message);
       }
     }, 1000 / 60);
   }
@@ -110,17 +127,17 @@ export class GameService {
   _sendGameState(gameId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
-      console.log("[Game] 해당하는 게임이 없음");
+      throw new Error('[Game] 해당하는 게임이 없음');
     }
 
     const gameState = game.getState();
-    const message = {
+    const payload = {
       ball: gameState.ball,
       paddles: gameState.paddles,
       score: game.getScore(),
     };
 
-    this.broadcastCallback(gameId, "state", message);
+    this.broadcastCallback(gameId, 'state', payload);
   }
 
   /**
@@ -135,14 +152,36 @@ export class GameService {
   async _processEndGame(gameId, intervalId) {
     clearInterval(intervalId);
 
+    const time = this.playTimes.get(gameId);
+    time.endTime = performance.now();
+    const playTime = (time.endTime - time.startTime) / 1000;
+
     const game = this.activeGames.get(gameId);
     const { score, winnerId, loserId } = game.getResult();
-    await gameRepo.updateGameResult(gameId, score, winnerId, loserId);
+    await this.gameRepo.updateGameResult(gameId, score, winnerId, loserId, playTime);
+
+    if (!this.activeGames.delete(gameId)) {
+      throw new Error(`[GameService] Unexpected Error`);
+    }
   }
 
-  handleMoveEvent(gameId, role, direction) {
+  handleKeyDownEvent(gameId, role, keycode) {
     const game = this.activeGames.get(gameId);
-    game.movePaddle(role, direction);
+    if (!game) return;
+
+    game.setKeyState(role, keycode, true);
+  }
+
+  handleKeyUpEvent(gameId, role, keycode) {
+    const game = this.activeGames.get(gameId);
+    if (!game) return;
+
+    game.setKeyState(role, keycode, false);
+  }
+
+  async getGameById(id) {
+    const game = await this.gameRepo.getGameById(id);
+    return new GameDto(game);
   }
 }
 

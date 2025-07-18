@@ -1,26 +1,32 @@
 import authService from "#domains/auth/service/authService.js";
+import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
+import PongException from "#shared/exception/pongException.js";
 
 const authController = {
   // POST /v1/auth/login
   async loginHandler(request, reply) {
     const { username, passwd, token } = request.body;
     const jwtUtils = request.server.jwtUtils;
-    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils);
+    const encryptUtils = await request.server.encryptUtils;
+    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils, encryptUtils);
     return ApiResponse.ok(reply, jwt);
   },
 
   // POST /v1/auth/logout
   async logoutHandler(request, reply) {
     const userId = request.user.id;
+    if (!userId) throw PongException.BAD_REQUEST;
     await authService.signOutUser(userId);
     return ApiResponse.ok(reply, { message: "Logged out successfully" });
   },
 
   // POST /v1/auth/register
   async registerHandler(request, reply) {
-    const { username, passwd } = request.body;
-    await authService.registerUser(username, passwd);
+    const registerDto = new RegisterDto(request.body);
+    console.log("Registering user:", registerDto);
+    const encryptUtils = await request.server.encryptUtils;
+    await authService.registerUser(registerDto, encryptUtils);
     return ApiResponse.ok(reply, { message: "User registered successfully" });
   },
 
@@ -28,8 +34,7 @@ const authController = {
   async refreshTokenHandler(request, reply) {
     const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
     const jwtUtils = request.server.jwtUtils;
-    const { userId } = request.user;
-    const jwt = await authService.refreshTokens(userId, refreshToken, jwtUtils);
+    const jwt = await authService.refreshTokens(jwtUtils, refreshToken);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -40,11 +45,14 @@ const authController = {
     const jwt = await authService.googleOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
+
+  // GET /v1/auth/42/callback
+  async fortyOAuthCallbackHandler(request, reply) {
+    const jwtUtils = request.server.jwtUtils;
+    const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+    const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
+    return ApiResponse.ok(reply, jwt);
+  },
 };
 
 export default authController;
-
-/**
- * 회원 탈퇴 로직
- * enable colume 확인 로직/ 분기/ 필요한 부분 확인
- */

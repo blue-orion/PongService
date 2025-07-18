@@ -1,5 +1,6 @@
 // src/domains/game/controller/gameController.js
 import { gameService } from '#domains/game/service/gameService.js';
+import { ApiResponse } from '#shared/api/response.js'
 
 class GameController {
   /**
@@ -17,26 +18,58 @@ class GameController {
     gameService.setBroadcastCallback(this.broadcastMessage);
   }
 
+  // GET /v1/game/id/:id
+  async getGameByIdHandler(request, reply) {
+    try {
+      const { id } = request.params;
+      const game = await gameService.getGameById(parseInt(id));
+      return ApiResponse.ok(reply, game);
+    } catch (err) {
+      return ApiResponse.error(reply, err, 404);
+    }
+  }
+
   /**
    * 새로운 플레이어 연결 처리
    *
    * @returns {Promise<{ success: boolean, message: string }>}
    */
-  async handleConnection(socket, tournamentId, gameId, playerId) {
+  async handleConnect(socket) {
+    const { tournamentId, gameId, playerId } = socket.handshake.auth;
     try {
-      const status = await gameService.newConnection(tournamentId, gameId, playerId);
-      console.log(`[Game Controller] player ${playerId} joined game ${gameId}`);
+      const result = await gameService.newConnection(tournamentId, gameId, playerId);
 
       // 연결이 성공하면 소켓 등록
       if (!this.sockets.has(gameId)) {
         this.sockets.set(gameId, []);
       }
       this.sockets.get(gameId).push(socket);
-      return { success: true, message: 'Game connection successed' };
+
+      console.log(`[Game Controller] player ${playerId} joined game ${gameId}`);
+
+      socket.emit('status', { payload: { status: result.status || 'waiting' } });
+      return socket.emit('connected', {
+        payload: {
+          tournamentId,
+          gameId,
+          playerId,
+          success: result.success,
+          role: result.role,
+        },
+      });
     } catch (err) {
-      console.error('[Game Controller] ❌ 연결 오류:', err);
-      return { success: false, message: 'Game connection failed' };
+      console.error(err.message);
+      return socket.emit('error', { payload: { msg: err.message } });
     }
+  }
+
+  /**
+   * 플레이어 퇴장 처리
+   *
+   * @returns {Promise<{ success: boolean, message: string }>}
+   */
+  async handleDisconnect(socket) {
+
   }
 
   /**
@@ -50,7 +83,7 @@ class GameController {
     const room = this.sockets.get(gameId);
 
     room.forEach((socket) => {
-      socket.emit(event, msg);
+      socket.emit(event, { payload: msg });
     });
   };
 
@@ -61,29 +94,29 @@ class GameController {
    * @param {string|object} raw - JSON 문자열 또는 객체
    * @returns {void}
    */
-  handleMessage(socket, raw) {
-    const { playerId } = socket.handshake.auth;
-    let data;
+  handleMoveEvent(socket, raw) {
     try {
-      data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    } catch {
-      console.warn('⚠️ Invalid message format');
-      return;
-    }
+      const { playerId } = socket.handshake.auth;
+      let data = typeof raw === 'string' ? JSON.parse(raw) : raw;
 
-    switch (data.type) {
-      case 'move':
-        const gameId = data.payload.gameId;
-        const role = data.payload.role;
-        const direction = data.payload.direction;
-        if (!direction) {
-          console.warn('알 수 없는 메시지:', data.payload);
-        }
-        gameService.handleMoveEvent(gameId, role, direction);
-        break;
+      const { gameId, role, keycode } = data.payload;
+      if (!playerId || !gameId || !role || !keycode) {
+        throw new Error('playerId, gameId, role, keycode 필드가 누락됨');
+      }
 
-      default:
-        console.warn('알 수 없는 메시지 타입:', data.type);
+      switch (data.type) {
+        case 'keydown':
+          gameService.handleKeyDownEvent(gameId, role, keycode);
+          break;
+        case 'keyup':
+          gameService.handleKeyUpEvent(gameId, role, keycode);
+          break;
+        default:
+          throw new Error('Undefined event type');
+      }
+    } catch (err) {
+      console.warn(`${err.message} (${err.fileName}:${err.lineNumber})`);
+      return socket.emit('error', { payload: err.message });
     }
   }
 }
