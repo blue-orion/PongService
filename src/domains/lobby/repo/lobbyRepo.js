@@ -1,6 +1,10 @@
 import prisma from "#shared/database/prisma.js";
 
 export class LobbyRepository {
+  getCount() {
+    return prisma.lobby.count();
+  }
+
   async findAll(skip, take) {
     return await prisma.lobby.findMany({
       skip,

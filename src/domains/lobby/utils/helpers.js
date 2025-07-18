@@ -83,7 +83,7 @@ export class Helpers {
   // === 상태 검증 메서드 ===
   _validateTournamentStatus(tournament, expectedStatus) {
     if (tournament.tournament_status !== expectedStatus) {
-      throw PongException.LOBBY_ALREADY_STARTED();
+      throw PongException.LOBBY_ALREADY_STARTED;
     }
   }
 
