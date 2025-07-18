@@ -12,6 +12,7 @@ import fastifyIO from 'fastify-socket.io';
 import fastifyCors from '@fastify/cors';
 import './env.js';
 import routes from './routes/index.js';
+import websocketHandlers from "#shared/websocket/websocketHandlers.js";
 
 const app = Fastify({ logger: true });
 
@@ -33,6 +34,15 @@ app.register(fastifyCors, {
   origin: "*", // 또는 구체적인 도메인
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
+});
+
+app.ready((err) => {
+  if (err) throw err;
+
+  // Socket.IO 네임스페이스 핸들러 등록
+  websocketHandlers.gameWebSocketHandler(app.io);
+  websocketHandlers.lobbyWebSocketHandler(app.io);
+  websocketHandlers.friendWebSocketHandler(app.io);
 });
 
 app.setErrorHandler((error, _req, res) => {

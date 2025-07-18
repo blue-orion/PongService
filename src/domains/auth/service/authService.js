@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import TokenDto from "#domains/auth/model/tokenDto.js";
-import RegisterDto from "#domains/user/model/registerDto.js";
+import RegisterOAuthDto from "#domains/user/model/registerOAuthDto.js";
 import authRepo from "#domains/auth/repo/authRepo.js";
 import userRepo from "#domains/user/repo/userRepo.js";
 import twoFAService from "#domains/auth/service/2faService.js";
@@ -20,23 +20,14 @@ const authService = {
   },
 
   async signOutUser(userId) {
-    if (!userId) throw PongException.BAD_REQUEST;
-
     await authRepo.removeUserRefreshToken(userId);
   },
 
   async registerUser(registerDto, encryptUtils) {
-    const { username, passwd, nickname } = registerDto;
-    if (!username || !passwd || !nickname) throw PongException.NOT_FOUND;
-
-    const hashed = await encryptUtils.hashPasswd(passwd);
+    const hashed = await encryptUtils.hashPasswd(registerDto.passwd);
     registerDto.passwd = hashed;
     console.log("Registering user:", registerDto);
-    try {
-      await userRepo.createUser(registerDto);
-    } catch {
-      throw PongException.ENTITY_NOT_FOUND;
-    }
+    await userRepo.createUser(registerDto);
   },
 
   async refreshTokens(jwtUtils, refreshToken) {
@@ -47,7 +38,7 @@ const authService = {
 
   async googleOAuth(jwtUtils, token) {
     const userRes = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: { Authorization: `Bearer ${token.access_token}` },
+      headers: { Authorization: `Bearer ${token.token?.access_token}` },
     });
     const { email, picture } = userRes.data;
 
@@ -55,7 +46,23 @@ const authService = {
     try {
       user = await userRepo.getUserByUsername(email);
     } catch {
-      user = await userRepo.createUser(new RegisterDto(email, null, email, picture));
+      user = await userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
+    }
+
+    return await generateTokens(jwtUtils, user);
+  },
+
+  async fortyTwoOAuth(jwtUtils, token) {
+    const userRes = await axios.get("https://api.intra.42.fr/v2/me", {
+      headers: { Authorization: `Bearer ${token.token?.access_token}` },
+    });
+    const { login, image_url } = userRes.data;
+
+    let user;
+    try {
+      user = await userRepo.getUserByUsername(login);
+    } catch {
+      user = await userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
     }
 
     return await generateTokens(jwtUtils, user);

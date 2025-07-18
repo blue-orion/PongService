@@ -40,6 +40,12 @@ enum UserStatus {
   PLAYING
 }
 
+enum friendStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id            Int         @id @default(autoincrement())
   passwd        String?
@@ -61,6 +67,20 @@ model User {
   gamesAsWinner    Game[]        @relation("Winner")
   gamesAsLoser     Game[]        @relation("Loser")
   lobby_players    LobbyPlayer[]
+  friends          Friendship[] @relation("UserFriends")
+  friendOf         Friendship[] @relation("FriendOfUser")
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  friend_id   Int
+  status      friendStatus   @default(PENDING)
+  created_at  DateTime @default(now())
+
+  // Relations
+  user       User     @relation("UserFriends", fields: [userId], references: [id])
+  friend     User     @relation("FriendOfUser", fields: [friendId], references: [id])
 }
 
 model Tournament {

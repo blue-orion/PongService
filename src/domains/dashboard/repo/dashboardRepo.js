@@ -1,10 +1,10 @@
 import prisma from "#shared/database/prisma.js";
 
 const dashboardRepo = {
-  async getRankData(skip, take) {
+  async getRankData(pageable) {
     return prisma.user.findMany({
-      skip,
-      take,
+      skip: pageable.skip,
+      take: pageable.take,
       select: {
         id: true,
         username: true,
@@ -15,7 +15,7 @@ const dashboardRepo = {
         win_rate: true,
       },
       orderBy: {
-        win_rate: "desc",
+        [pageable.sort]: pageable.order,
       },
     });
   },

@@ -137,4 +137,41 @@ root
    npm run dev # package.json에 선언된 스크립트 실행
    npm start # 시작 예약어, 'npm run start' 와 동일
    ```
-   
+
+---
+
+### 주요 기능
+
+#### 1. 사용자 인증
+
+- **기능**: 로그인, 로그아웃, 회원가입, 토큰 갱신, Google OAuth 지원
+- **경로**:
+  - `POST /v1/auth/login`
+  - `POST /v1/auth/logout`
+  - `POST /v1/auth/register`
+  - `POST /v1/auth/refresh`
+  - `GET /v1/auth/google/callback` -> `GET /v1/auth/google` 요청 콜백 URL
+  - `GET /v1/auth/42/callback` -> `GET /v1/auth/42` 요청 콜백 URL
+
+#### 2. 2FA (Two-Factor Authentication)
+
+- **기능**: 2FA 설정 및 인증
+- **경로**:
+  - `POST /v1/auth/2fa/setup`
+  - `POST /v1/auth/2fa/verify`
+
+#### 3. 대시보드
+
+- **기능**: 사용자 순위 조회
+- **경로**:
+  - `GET /v1/dashboard/rank`
+
+#### 4. 사용자 관리
+
+- **기능**: 사용자 프로필 조회, 내 정보 조회, 프로필 수정, 비밀번호 변경, 계정 비활성화
+- **경로**:
+  - `GET /v1/users/profile/id/:id` - 특정 사용자 프로필 조회
+  - `GET /v1/users/myinfo` - 내 정보 조회
+  - `PUT /v1/users/update` - 사용자 프로필 수정
+  - `PUT /v1/users/update/password` - 비밀번호 변경
+  - `DELETE /v1/users/disable` - 계정 비활성화

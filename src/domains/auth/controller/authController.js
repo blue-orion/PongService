@@ -1,6 +1,7 @@
 import authService from "#domains/auth/service/authService.js";
 import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
+import PongException from "#shared/exception/pongException.js";
 
 const authController = {
   // POST /v1/auth/login
@@ -15,6 +16,7 @@ const authController = {
   // POST /v1/auth/logout
   async logoutHandler(request, reply) {
     const userId = request.user.id;
+    if (!userId) throw PongException.BAD_REQUEST;
     await authService.signOutUser(userId);
     return ApiResponse.ok(reply, { message: "Logged out successfully" });
   },
@@ -41,6 +43,14 @@ const authController = {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
     const jwt = await authService.googleOAuth(jwtUtils, token);
+    return ApiResponse.ok(reply, jwt);
+  },
+
+  // GET /v1/auth/42/callback
+  async fortyOAuthCallbackHandler(request, reply) {
+    const jwtUtils = request.server.jwtUtils;
+    const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
+    const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
 };
