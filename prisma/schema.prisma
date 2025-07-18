@@ -40,7 +40,7 @@ enum UserStatus {
   PLAYING
 }
 
-enum friendStatus {
+enum FriendStatus {
   PENDING
   ACCEPTED
   REJECTED
@@ -67,20 +67,22 @@ model User {
   gamesAsWinner    Game[]       @relation("Winner")
   gamesAsLoser     Game[]       @relation("Loser")
   lobby_players    LobbyPlayer[]
-  friends          Friendship[] @relation("UserFriends")
-  friendOf         Friendship[] @relation("FriendOfUser")
+  sentFriendRequests     Friendship[] @relation("SentRequests")
+  receivedFriendRequests Friendship[] @relation("ReceivedRequests")
 }
 
 model Friendship {
-  id          Int      @id @default(autoincrement())
-  user_id     Int
-  friend_id   Int
-  status      friendStatus   @default(PENDING)
-  created_at  DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      FriendStatus @default(PENDING)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
 
   // Relations
-  user       User     @relation("UserFriends", fields: [userId], references: [id])
-  friend     User     @relation("FriendOfUser", fields: [friendId], references: [id])
+  sender   User @relation("SentRequests", fields: [sender_id], references: [id])
+  receiver User @relation("ReceivedRequests", fields: [receiver_id], references: [id])
+  @@unique([sender_id, receiver_id])
 }
 
 model Tournament {
