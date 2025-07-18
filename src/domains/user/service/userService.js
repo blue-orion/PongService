@@ -1,23 +1,27 @@
-import userRepo from "#domains/user/repo/userRepo.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
 import ProfileDto from "#domains/user/model/ProfileDto.js";
 
-const userService = {
+class UserService {
+  constructor(userRepo = new UserRepo()) {
+    this.userRepo = userRepo;
+  }
+
   async getProfileById(userId) {
-    const user = await userRepo.getUserById(userId);
+    const user = await this.userRepo.getUserById(userId);
     return new ProfileDto(user);
-  },
+  }
 
   async updateUserNickname(user, nickname) {
-    await userRepo.putNickname(user.id, nickname);
-  },
+    await this.userRepo.putNickname(user.id, nickname);
+  }
 
   async updateUserProfileImage(user, profileImage) {
-    await userRepo.putProfileImage(user.id, profileImage);
-  },
+    await this.userRepo.putProfileImage(user.id, profileImage);
+  }
 
   async updateUserPassword(user, passwordDto, encryptUtils) {
     const { currentPassword, newPassword, confirmNewPassword } = passwordDto;
-    const targetUser = await userRepo.getUserById(user.id);
+    const targetUser = await this.userRepo.getUserById(user.id);
     if (!currentPassword || !newPassword || !confirmNewPassword) {
       throw new Error("Current password and new password are required");
     }
@@ -28,11 +32,11 @@ const userService = {
       throw new Error("New password and confirmation do not match");
     }
     const hashedPassword = await encryptUtils.hashPasswd(newPassword);
-    await userRepo.putPassword(user.id, hashedPassword);
-  },
+    await this.userRepo.putPassword(user.id, hashedPassword);
+  }
 
   async disableUser(userId) {
-    await userRepo.disableUser(userId);
-  },
-};
-export default userService;
+    await this.userRepo.disableUser(userId);
+  }
+}
+export default UserService;
