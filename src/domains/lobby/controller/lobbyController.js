@@ -3,12 +3,14 @@ import { ApiResponse } from "#shared/api/response.js";
 import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
 import { Helpers } from "#domains/lobby/utils/helpers.js";
+import websocketHandlers from "#shared/websocket/websocketHandlers.js";
 
 export class LobbyController {
-  constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService(), helpers = new Helpers()) {
+  constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService(), io) {
     this.lobbyService = lobbyService;
     this.tournamentService = tournamentService;
-    this.helpers = helpers;
+    this.helpers = new Helpers();
+    this.io = io;
 
     Object.getOwnPropertyNames(Object.getPrototypeOf(this))
       .filter((prop) => typeof this[prop] === "function" && prop !== "constructor")
@@ -26,7 +28,7 @@ export class LobbyController {
       const { page = 1, size = 6 } = req.query;
       const lobbies = await this.lobbyService.getAllLobbies({
         page,
-        size
+        size,
       });
       return ApiResponse.ok(res, lobbies);
     } catch (error) {
@@ -42,7 +44,7 @@ export class LobbyController {
     try {
       const { id } = req.params;
       const lobby = await this.lobbyService.getLobbyById({ id });
-      
+
       return ApiResponse.ok(res, lobby);
     } catch (error) {
       return ApiResponse.error(res, error);
@@ -67,7 +69,7 @@ export class LobbyController {
       const newLobby = await this.lobbyService.createLobby({
         tournament_id,
         max_player,
-        user_id
+        creator_id: user_id,
       });
 
       return ApiResponse.ok(res, { lobby: newLobby }, 201);
@@ -87,12 +89,18 @@ export class LobbyController {
 
       const joinedLobby = await this.lobbyService.joinLobby({
         lobby_id: id,
-        user_id
+        user_id,
       });
-      
+
+      this.io.to(`lobby-${id}`).emit("lobby:join", {
+        user_id,
+        lobby_id: id,
+        type: "join",
+      });
+
       return ApiResponse.ok(res, { lobby: joinedLobby }, 201);
     } catch (error) {
-      return this._handleError(res, error);
+      return ApiResponse.error(res, error);
     }
   }
 
@@ -107,9 +115,15 @@ export class LobbyController {
 
       const leftLobby = await this.lobbyService.leaveLobby({
         lobby_id: id,
-        user_id
+        user_id,
       });
-      
+
+      this.io.to(`lobby-${id}`).emit("lobby:left", {
+        user_id,
+        lobby_id: id,
+        type: "left",
+      });
+
       return ApiResponse.ok(res, leftLobby);
     } catch (error) {
       return ApiResponse.error(res, error);
@@ -128,7 +142,12 @@ export class LobbyController {
       const authorizedLobby = await this.lobbyService.transferLeadership({
         lobby_id: id,
         current_leader_id,
-        target_user_id
+        target_user_id,
+      });
+
+      this.io.to(`lobby-${id}`).emit("lobby:authorize", {
+        lobby_id: id,
+        new_leader_id: target_user_id,
       });
 
       return ApiResponse.ok(res, authorizedLobby);
@@ -145,10 +164,16 @@ export class LobbyController {
     try {
       const { id } = req.params;
       const { user_id } = req.body;
-      
+
       const readyState = await this.lobbyService.toggleReadyState({
         lobby_id: id,
-        user_id
+        user_id,
+      });
+
+      this.io.to(`lobby-${id}`).emit("lobby:ready", {
+        lobby_id: id,
+        user_id,
+        is_read: readyState.is_read,
       });
 
       return ApiResponse.ok(res, readyState);
@@ -168,8 +193,44 @@ export class LobbyController {
 
       const createdMatch = await this.lobbyService.createMatch({
         lobby_id: id,
-        user_id
+        user_id,
       });
+
+      const matches = [];
+
+      for (const match of createdMatch.matches) {
+        const { id: gameId, player_one_id, player_two_id } = match;
+        const players = [player_one_id, player_two_id];
+
+        players.forEach((uid) => {
+          const socket = websocketHandlers.userSocketMap.get(uid);
+          if (socket) {
+            // 게임 룸 조인
+            socket.join(`game-${gameId}`);
+
+            // 게임 할당 이벤트 전송
+            socket.emit("game:assigned", {
+              game_id: gameId,
+              opponent_id: uid === player_one_id ? player_two_id : player_one_id,
+              match_info: match,
+            });
+          } else {
+            console.warn(`Socket not found for user ${uid}`);
+          }
+        });
+
+        matches.push({
+          match_id: match.id,
+          players,
+        });
+
+        this.io.to(`lobby-${id}`).emit("lobby:matchCreated", {
+          lobby_id: id,
+          game_id: gameId,
+          matches: matches,
+        });
+      }
+
       return ApiResponse.ok(res, createdMatch);
     } catch (error) {
       return ApiResponse.error(res, error);

@@ -36,8 +36,6 @@ const websocketManager = {
         return this.gameNamespace;
       case "lobby":
         return this.lobbyNamespace;
-      case "friend":
-        return this.friendNamespace;
       default:
         return null;
     }

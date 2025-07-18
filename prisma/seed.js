@@ -103,10 +103,10 @@ async function main() {
   console.log(`Created ${users.length} users`);
 
   // 2. 토너먼트 생성
-  const tournamentData = [...generateTournaments()];
-  await prisma.tournament.createMany({ data: tournamentData });
-  const tournaments = await prisma.tournament.findMany();
-  console.log(`Created ${tournaments.length} tournaments`);
+  // const tournamentData = [...generateTournaments()];
+  // await prisma.tournament.createMany({ data: tournamentData });
+  // const tournaments = await prisma.tournament.findMany();
+  // console.log(`Created ${tournaments.length} tournaments`);
 
   // // 3. 로비 생성
   // const lobbyData = [...generateLobbies(tournaments, users)];
@@ -119,20 +119,20 @@ async function main() {
   // await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
   // console.log(`Added ${lobbyPlayers.length} players to lobbies`);
 
-  const game = await prisma.game.create({
-    data: {
-      tournament_id: tournaments[0].id,
-      player_one_id: users[0].id,
-      player_two_id: users[1].id,
-      player_one_score: 0,
-      player_two_score: 0,
-      round: 1,
-      match: 1,
-      game_status: "PENDING",
-      enabled: true,
-    },
-  });
-  console.log(`Created 1 games`);
+  // const game = await prisma.game.create({
+  //   data: {
+  //     tournament_id: tournaments[0].id,
+  //     player_one_id: users[0].id,
+  //     player_two_id: users[1].id,
+  //     player_one_score: 0,
+  //     player_two_score: 0,
+  //     round: 1,
+  //     match: 1,
+  //     game_status: "PENDING",
+  //     enabled: true,
+  //   },
+  // });
+  // console.log(`Created 1 games`);
 
   // console.log("Seed data created:", { game });
   console.log("Seeding complete");

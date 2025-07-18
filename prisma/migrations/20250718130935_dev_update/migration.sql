@@ -1,13 +1,19 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "passwd" TEXT NOT NULL,
+    "passwd" TEXT,
+    "two_fa_secret" TEXT,
     "username" TEXT NOT NULL,
+    "nickname" TEXT NOT NULL,
     "profile_image" TEXT,
     "refresh_token" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
-    "enabled" BOOLEAN NOT NULL DEFAULT true
+    "status" TEXT NOT NULL DEFAULT 'LOGGED_OUT',
+    "enabled" BOOLEAN NOT NULL DEFAULT true,
+    "total_wins" INTEGER NOT NULL DEFAULT 0,
+    "total_loses" INTEGER NOT NULL DEFAULT 0,
+    "win_rate" REAL NOT NULL DEFAULT 0
 );
 
 -- CreateTable
@@ -15,6 +21,7 @@ CREATE TABLE "Tournament" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "tournament_type" TEXT NOT NULL,
     "tournament_status" TEXT NOT NULL,
+    "round" INTEGER NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT true
@@ -48,6 +55,7 @@ CREATE TABLE "Game" (
 CREATE TABLE "Lobby" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "tournament_id" INTEGER NOT NULL,
+    "creator_id" INTEGER NOT NULL,
     "max_player" INTEGER NOT NULL,
     "lobby_status" TEXT NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,6 +69,8 @@ CREATE TABLE "LobbyPlayer" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "lobby_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
+    "is_ready" BOOLEAN NOT NULL DEFAULT false,
+    "is_leader" BOOLEAN NOT NULL DEFAULT false,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT true,
@@ -70,3 +80,9 @@ CREATE TABLE "LobbyPlayer" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_refresh_token_key" ON "User"("refresh_token");

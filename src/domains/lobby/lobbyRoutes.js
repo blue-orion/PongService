@@ -5,18 +5,22 @@ import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
 import { LobbyRepository } from "#domains/lobby/repo/lobbyRepo.js";
 
 export default async function lobbyRoutes(fastify, _opts) {
+  const io = fastify.io;
+
   const lobbyRepository = new LobbyRepository();
   const tournamentRepository = new TournamentRepository();
 
   const lobbyService = new LobbyService(lobbyRepository);
   const tournamentService = new TournamentService(tournamentRepository);
 
-  const controller = new LobbyController(lobbyService, tournamentService);
+  const controller = new LobbyController(lobbyService, tournamentService, io);
 
   fastify.get("/", controller.getAll); // 로비 전체 조회
   fastify.get("/:id", controller.getById); // 단일 로비 조회
 
   fastify.post("/", controller.create); // 로비 생성
+
+  // 소켓 처리
   fastify.post("/:id/join", controller.join); // 유저 로비 입장
   fastify.post("/:id/left", controller.left); // 유저 로비 퇴장
   fastify.post("/:id/authorize", controller.authorize); // 방장 위임

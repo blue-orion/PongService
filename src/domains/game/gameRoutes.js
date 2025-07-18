@@ -1,23 +1,23 @@
-import { gameController } from '#domains/game/controller/gameController.js';
+import { gameController } from "#domains/game/controller/gameController.js";
 
 // WS /ws/game
 export default async function gameRoutes(fastify, opts) {
-  const gameNamespace = fastify.io.of('/ws/game');
+  const gameNamespace = fastify.io.of("/ws/game");
 
-  gameNamespace.on('connect', (socket) => {
+  gameNamespace.on("connect", (socket) => {
     // 소켓 연결 시 auth 필드를 통한 정보 전달
     gameController.handleConnect(socket);
 
-    socket.on('move', (raw) => {
+    socket.on("move", (raw) => {
       gameController.handleMoveEvent(socket, raw);
     });
 
-    socket.on('disconnect', async () => {
+    socket.on("disconnect", async () => {
       gameController.handleDisconnect(socket);
       //   console.log(JSON.stringify(await loadGameState()));
-      console.log('클라이언트 연결 종료');
+      console.log("클라이언트 연결 종료");
     });
   });
 
-  fastify.get('/id/:id', gameController.getGameByIdHandler);
+  fastify.get("/id/:id", gameController.getGameByIdHandler);
 }
