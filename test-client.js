@@ -4,10 +4,13 @@ import readline from "readline";
 
 const PLAYER_ID = 2;
 const TOURNAMENT_ID = 1;
+const GAME_ID = 1;
 
-const socket = io("ws://localhost:3003/ws/game", {
-  transports: ["websocket"],
+const socket = io("http://localhost:3333/ws/game", {
+	withCredentials: true,
+	transports: ['websocket', 'polling'],
   auth: {
+		gameId: 1,
     playerId: PLAYER_ID,
     tournamentId: TOURNAMENT_ID,
   },

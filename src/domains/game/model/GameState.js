@@ -131,9 +131,9 @@ class GameState {
 
       if (role === 'left') {
         if (paddle.x < 0) paddle.x = 1;
-        if (paddle.x > halfWidth - 11) paddle.x = halfWidth - 11;
+        if (paddle.x > halfWidth - 11 - this.ball.radius * 2) paddle.x = halfWidth - 11 - this.ball.radius * 2;
       } else if (role === 'right') {
-        if (paddle.x < halfWidth) paddle.x = halfWidth + 2;
+        if (paddle.x < halfWidth + 2 + this.ball.radius * 2) paddle.x = halfWidth + 2 + this.ball.radius * 2;
         if (paddle.x > this.canvasWidth - 10) paddle.x = this.canvasWidth - 10;
       }
 

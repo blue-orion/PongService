@@ -18,7 +18,7 @@ class GameController {
     gameService.setBroadcastCallback(this.broadcastMessage);
   }
 
-  // GET /v1/game/id/:id
+  // GET /v1/game/:id
   async getGameByIdHandler(request, reply) {
     try {
       const { id } = request.params;

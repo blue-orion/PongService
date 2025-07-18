@@ -1,4 +1,5 @@
 import { gameController } from '#domains/game/controller/gameController.js';
+import util from 'util';
 
 // WS /ws/game
 export default async function gameRoutes(fastify, opts) {
@@ -8,6 +9,7 @@ export default async function gameRoutes(fastify, opts) {
     // 소켓 연결 시 auth 필드를 통한 정보 전달
     gameController.handleConnect(socket);
 
+		console.log('WebSocket 상세:', util.inspect(socket, { depth: 2, colors: true })); 
     socket.on('move', (raw) => {
       gameController.handleMoveEvent(socket, raw);
     });
@@ -19,5 +21,5 @@ export default async function gameRoutes(fastify, opts) {
     });
   });
 
-  fastify.get('/id/:id', gameController.getGameByIdHandler);
+  fastify.get('/:id', gameController.getGameByIdHandler);
 }

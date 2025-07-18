@@ -79,8 +79,8 @@ model Friendship {
   created_at  DateTime @default(now())
 
   // Relations
-  user       User     @relation("UserFriends", fields: [userId], references: [id])
-  friend     User     @relation("FriendOfUser", fields: [friendId], references: [id])
+  user       User     @relation("UserFriends", fields: [user_id], references: [id])
+  friend     User     @relation("FriendOfUser", fields: [friend_id], references: [id])
 }
 
 model Tournament {
