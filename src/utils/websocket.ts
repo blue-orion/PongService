@@ -16,7 +16,7 @@ export class WebSocketManager {
   private onError?: (error: string) => void;
 
   constructor(
-    private serverUrl: string = "http://localhost:3003/ws/game",
+    private serverUrl: string = "http://localhost:3333/ws/game",
     private options = {
       withCredentials: true,
       transports: ["websocket", "polling"] as ["websocket", "polling"],

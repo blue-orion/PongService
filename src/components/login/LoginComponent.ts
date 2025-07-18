@@ -87,8 +87,10 @@ export class LoginComponent extends Component {
   }
 
   private setLoading(loading: boolean): void {
-    const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     const inputs = this.container.querySelectorAll("input") as NodeListOf<HTMLInputElement>;
+
+    if (!submitButton) return;
 
     if (loading) {
       submitButton.disabled = true;

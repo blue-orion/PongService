@@ -21,7 +21,7 @@
 
   /* 게임 캔버스 */
   .game-canvas {
-    @apply border-2 border-primary-300 rounded-2xl shadow-2xl bg-neutral-50;
+    @apply border-2 border-white/30 rounded-2xl shadow-2xl bg-glass backdrop-blur-xl;
   }
 
   /* 로그인 컨테이너 */

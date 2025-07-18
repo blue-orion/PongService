@@ -4,22 +4,20 @@ export interface AuthTokens {
   refreshToken: string;
   expiresAt: number;
 }
-
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
+  success: boolean;
+  data: {
+    accessToken: string;
+    refreshToken: string;
   };
+  error: string | null;
 }
 
 export class AuthManager {
   private static readonly ACCESS_TOKEN_KEY = "pong_access_token";
   private static readonly REFRESH_TOKEN_KEY = "pong_refresh_token";
   private static readonly EXPIRES_AT_KEY = "pong_expires_at";
-  private static readonly API_BASE_URL = "http://localhost:3003"; // 백엔드 서버 URL
+  private static readonly API_BASE_URL = "http://localhost:3333/v1"; // 백엔드 서버 URL
 
   // 토큰 저장
   static saveTokens(tokens: AuthTokens): void {
@@ -62,14 +60,14 @@ export class AuthManager {
   }
 
   // 로그인
-  static async login(username: string, password: string): Promise<LoginResponse> {
+  static async login(username: string, passwd: string): Promise<LoginResponse> {
     try {
       const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, passwd }),
       });
 
       if (!response.ok) {
@@ -83,8 +81,8 @@ export class AuthManager {
       const expiresAt = Date.now() + 60 * 60 * 1000;
 
       this.saveTokens({
-        accessToken: loginData.accessToken,
-        refreshToken: loginData.refreshToken,
+        accessToken: loginData.data.accessToken,
+        refreshToken: loginData.data.refreshToken,
         expiresAt,
       });
 
