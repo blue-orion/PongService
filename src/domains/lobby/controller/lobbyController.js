@@ -122,9 +122,6 @@ export class LobbyController {
    */
   async authorize(req, res) {
     try {
-      // const lobbyId = this.helpers._validatePositiveInteger(req.params.id, "로비 ID");
-      // const { current_user_id, target_user_id } = req.body;
-
       const { id } = req.params;
       const { current_leader_id, target_user_id } = req.body;
 
@@ -146,8 +143,6 @@ export class LobbyController {
    */
   async ready_state(req, res) {
     try {
-      // const lobbyId = this.helpers._validatePositiveInteger(req.params.id, "로비 ID");
-      // const { user_id } = req.body;
       const { id } = req.params;
       const { user_id } = req.body;
       
