@@ -37,8 +37,8 @@ export class GameRepository {
       where: { id: gameId },
       data: {
         game_status,
-      }
-    })
+      },
+    });
   }
 
   /** 게임 결과 업데이트 */
@@ -99,9 +99,8 @@ export class GameRepository {
 
   // 초기 매칭들을 bulk insert
   async createInitialMatches(matchesData) {
-    return await prisma.game.createMany({
-      data: matchesData,
-    });
+    const createdGames = await Promise.all(matchesData.map((match) => prisma.game.create({ data: match })));
+    return createdGames;
   }
 
   // 현재 라운드 가져오기

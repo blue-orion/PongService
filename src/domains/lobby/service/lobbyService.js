@@ -240,13 +240,14 @@ export class LobbyService {
     const round = this.helpers._getRoundNumber(tournament.round);
     const matches = this.helpers._generateMatches(shuffled, tournament, round);
 
-    await this.gameRepository.createInitialMatches(matches);
+    const games = await this.gameRepository.createInitialMatches(matches);
 
     return {
       tournament_id: tournament.id,
       lobby_id: lobby.id,
+      round: tournament.round,
       total_matches: matches.length,
-      matches,
+      matches: games,
     };
   }
 

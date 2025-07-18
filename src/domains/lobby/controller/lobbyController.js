@@ -196,41 +196,6 @@ export class LobbyController {
         user_id,
       });
 
-      const matches = [];
-
-      for (const match of createdMatch.matches) {
-        const { id: gameId, player_one_id, player_two_id } = match;
-        const players = [player_one_id, player_two_id];
-
-        players.forEach((uid) => {
-          const socket = websocketHandlers.userSocketMap.get(uid);
-          if (socket) {
-            // 게임 룸 조인
-            socket.join(`game-${gameId}`);
-
-            // 게임 할당 이벤트 전송
-            socket.emit("game:assigned", {
-              game_id: gameId,
-              opponent_id: uid === player_one_id ? player_two_id : player_one_id,
-              match_info: match,
-            });
-          } else {
-            console.warn(`Socket not found for user ${uid}`);
-          }
-        });
-
-        matches.push({
-          match_id: match.id,
-          players,
-        });
-
-        this.io.to(`lobby-${id}`).emit("lobby:matchCreated", {
-          lobby_id: id,
-          game_id: gameId,
-          matches: matches,
-        });
-      }
-
       return ApiResponse.ok(res, createdMatch);
     } catch (error) {
       return ApiResponse.error(res, error);
