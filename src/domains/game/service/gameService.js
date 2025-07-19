@@ -1,7 +1,7 @@
 import Game from '#domains/game/model/Game.js';
-import GameDto from '#domains/game/model/GameDto.js'
+import GameDto from '#domains/game/model/GameDto.js';
 import GameRepository from '#domains/game/repo/gameRepo.js';
-import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
+import { GameStatus, TournamentStatus, TournamentType } from '@prisma/client';
 
 export class GameService {
   /**
@@ -38,7 +38,6 @@ export class GameService {
    * @param { number } playerId
    */
   async newConnection(tournamentId, gameId, playerId) {
-
     let game;
     let role = null;
     let status;
@@ -49,6 +48,11 @@ export class GameService {
       } else {
         game = this._makeGameInstance(gameId);
       }
+
+      // TODO: 같은 게임 아이디로 여러 접속이 들어올 경우
+      // 먼저 들어왔던 한명만 접속하게 해야 함
+      // if (game.isExistPlayer(playerId))
+
       const gameData = await this.gameRepo.getGameById(gameId);
 
       // DB에서 플레이어 role 가져오기
