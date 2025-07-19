@@ -1,4 +1,5 @@
 import friendRepo from "#domains/friend/repo/friendRepo.js";
+import websocketManager from "#shared/websocket/websocketManager.js";
 
 const friendService = {
   // 친구요청
@@ -13,6 +14,15 @@ const friendService = {
     }
     // 친구 요청 생성
     const friendRelation = await friendRepo.requestFriend(senderId, receiverId);
+
+    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
+      type: "request",
+      payload: {
+        relationId: friendRelation.id,
+        message: "You have a new friend request",
+      },
+    });
+
     return friendRelation.id;
   },
 
@@ -21,7 +31,19 @@ const friendService = {
     if (!relationId) {
       throw new Error("Relation ID is required");
     }
-    await friendRepo.acceptFriendRequest(relationId);
+    // socket을 통해 친구 요청 수락 알림 전송
+    const relation = await friendRepo.acceptFriendRequest(relationId);
+
+    websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
+      type: "accepted",
+      payload: {
+        message: "Friend request accepted",
+        relationId: relation.id,
+        userId: relation.sender_id,
+      },
+    });
+
+    return relation;
   },
 
   // 친구 삭제
@@ -61,7 +83,18 @@ const friendService = {
     if (!relationId) {
       throw new Error("Relation ID is required");
     }
-    return friendRepo.deleteFriend(relationId);
+    const relation = await friendRepo.deleteFriend(relationId);
+
+    websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
+      type: "rejected",
+      payload: {
+        message: "Friend request rejected",
+        relationId: relation.id,
+        userId: relation.sender_id,
+      },
+    });
+
+    return relation;
   },
 
   // 친구 요청 취소
@@ -73,6 +106,16 @@ const friendService = {
     if (!relation) {
       throw new Error("Friend request does not exist");
     }
+
+    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
+      type: "cancelled",
+      payload: {
+        message: "Friend request cancelled",
+        relationId: relation.id,
+        userId: senderId,
+      },
+    });
+
     return friendRepo.deleteFriend(relation.id);
   },
 };
