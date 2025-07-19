@@ -23,20 +23,20 @@ const friendController = {
   // socket에서 친구 요청 수락 핸들러
   async acceptFriendRequestSocketHandler(data) {
     const { relationId } = data.payload;
-    await friendService.acceptFriendRequest(relationId);
+    await friendService.acceptFriendRequest(parseInt(relationId));
   },
 
   // PUT /v1/friends/accept-request
   async acceptFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
-    await friendService.acceptFriendRequest(relationId);
+    await friendService.acceptFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request accepted successfully" });
   },
 
   // DELETE /v1/friends/delete/:relationId
   async deleteFriendHandler(request, reply) {
     const relationId = request.params.relationId;
-    await friendService.deleteFriend(relationId);
+    await friendService.deleteFriend(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend deleted successfully" });
   },
 
@@ -67,14 +67,21 @@ const friendController = {
   // DELETE /v1/friends/reject-request
   async rejectFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
-    await friendService.rejectFriendRequest(relationId);
+    await friendService.rejectFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request rejected successfully" });
   },
 
   // socket에서 친구 요청 거절 핸들러
   async rejectFriendRequestSocketHandler(data) {
     const { relationId } = data.payload;
-    await friendService.rejectFriendRequest(relationId);
+    const relation = await friendService.rejectFriendRequest(parseInt(relationId));
+    console.log(`Friend request rejected for relation ID: ${relation.sender_id}`);
+    websocketManager.sendToNamespaceUser("friend", relation.sender_id, "friend_request_received", {
+      payload: {
+        message: "Your friend request has been rejected",
+        relationId: relation.id,
+      },
+    });
   },
 
   // DELETE /v1/friends/cancel-request/:receiverId

@@ -48,15 +48,16 @@ const websocketHandlers = {
 
       // 사용자 소켓 등록
       websocketManager.addUserSocket(userId, "friend", socket);
+      console.log(`User ${userId} connected to friend namespace.`);
       // 친구 요청 수신
       // 프론트에서 request ID를 보낸다.
-      friendNamespace.on("acceptFriendRequest", async (data) => {
+      socket.on("acceptFriendRequest", async (data) => {
         friendController.acceptFriendRequestSocketHandler(data);
         console.log(`User ${userId} accepting friend request:`, data);
       });
 
       // 친구요청 거절
-      friendNamespace.on("friendRequestRejected", async (data) => {
+      socket.on("friendRequestRejected", async (data) => {
         await friendController.rejectFriendRequestSocketHandler(data);
         console.log(`User ${userId} rejecting friend request:`, data);
       });

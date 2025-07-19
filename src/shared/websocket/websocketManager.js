@@ -26,13 +26,12 @@ class WebSocketManager {
 
   // 사용자 소켓 등록
   addUserSocket(userId, type, socket) {
-    console.log(this.userSockets);
-
     if (!this.userSockets.has(userId)) {
-      this.userSockets.set(userId, {});
+      this.userSockets.set(userId, []);
     }
     this.userSockets.get(userId)[type] = socket;
     console.log(`User ${userId} connected to ${type} namespace`);
+    console.log(this.userSockets);
   }
 
   // 사용자 소켓 제거
@@ -89,10 +88,10 @@ class WebSocketManager {
     if (namespace) {
       // Socket.IO에서는 소켓 ID로 찾아야 함
       const userSocketInfo = this.userSockets.get(userId);
+      console.log(userSocketInfo);
       if (userSocketInfo) {
         // 해당 네임스페이스의 소켓 찾기
-        const namespaceType = this.getNamespaceType(namespace);
-        const socket = userSocketInfo[namespaceType];
+        const socket = userSocketInfo[namespace];
         if (socket) {
           socket.emit(event, message);
           return true;
@@ -143,10 +142,10 @@ class WebSocketManager {
   }
 
   // 네임스페이스로 타입 가져오기
-  getNamespaceType(namespace) {
-    if (namespace === this.gameNamespace) return "game";
-    if (namespace === this.lobbyNamespace) return "lobby";
-    if (namespace === this.friendNamespace) return "friend";
+  getNamespaceType(socket) {
+    if (socket === this.gameNamespace) return "game";
+    if (socket === this.lobbyNamespace) return "lobby";
+    if (socket === this.friendNamespace) return "friend";
     return null;
   }
 
