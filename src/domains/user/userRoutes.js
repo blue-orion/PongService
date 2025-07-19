@@ -7,4 +7,6 @@ export default async function userRoutes(fastify) {
   fastify.put("/update", userController.updateMyPageHandler);
   fastify.put("/update/password", userController.updatePasswordHandler);
   fastify.delete("/disable", userController.disableUserHandler);
+  fastify.get("/status/:userId", userController.getUserStatusHandler);
+  fastify.put("/status/:userId", userController.updateUserStatusHandler);
 }

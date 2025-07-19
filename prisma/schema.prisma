@@ -60,6 +60,7 @@ model User {
   total_wins    Int         @default(0)
   total_loses   Int         @default(0)
   win_rate      Float       @default(0)
+  friends       String?     @default("[]")
   // Relations
   gamesAsPlayerOne Game[]       @relation("PlayerOne")
   gamesAsPlayerTwo Game[]       @relation("PlayerTwo")

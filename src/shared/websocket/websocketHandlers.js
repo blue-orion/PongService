@@ -1,5 +1,4 @@
 import websocketManager from "#shared/websocket/websocketManager.js";
-import friendController from "#domains/friend/controller/freindController.js";
 
 const websocketHandlers = {
   gameWebSocketHandler: (io) => {
@@ -48,18 +47,9 @@ const websocketHandlers = {
 
       // 사용자 소켓 등록
       websocketManager.addUserSocket(userId, "friend", socket);
-      console.log(`User ${userId} connected to friend namespace.`);
-      // 친구 요청 수신
-      // 프론트에서 request ID를 보낸다.
-      socket.on("friend_request", async (data) => {
-        if (data.type === "accept") {
-          friendController.acceptFriendRequestSocketHandler(data);
-          console.log(`User ${userId} accepting friend request:`, data.type);
-        } else if (data.type === "reject") {
-          friendController.rejectFriendRequestSocketHandler(data);
-          console.log(`User ${userId} rejecting friend request:`, data.type);
-        }
-      });
+      // socket.on("friend_status", (data) => {
+
+      // })
 
       socket.on("disconnect", () => {
         websocketManager.removeUserSocket(userId, "friend");

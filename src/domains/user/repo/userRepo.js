@@ -72,6 +72,21 @@ const userRepo = {
       data: { enabled: false },
     });
   },
+
+  async getUserStatus(userId) {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { status: true },
+    });
+    return user.status;
+  },
+
+  async updateUserStatus(userId, status) {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { status },
+    });
+  },
 };
 
 export default userRepo;

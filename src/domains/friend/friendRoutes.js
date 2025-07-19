@@ -1,4 +1,4 @@
-import friendController from "#domains/friend/controller/freindController.js";
+import friendController from "#domains/friend/controller/friendController.js";
 
 export default async function friendRoutes(fastify) {
   fastify.addHook("preHandler", fastify.accessAuth);

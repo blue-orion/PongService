@@ -1,3 +1,5 @@
+import friendService from "#domains/friend/service/friendService.js";
+
 class WebSocketManager {
   constructor() {
     this.gameNamespace = null;
@@ -171,6 +173,14 @@ class WebSocketManager {
       users[userId] = Object.keys(sockets);
     });
     return users;
+  }
+
+  sendToAllUsersFriend(namespace, userId, event, message) {
+    friendService.getFriends(userId).then((friends) => {
+      friends.forEach((friend) => {
+        this.sendToNamespaceUser(namespace, friend.id, event, message);
+      });
+    });
   }
 }
 

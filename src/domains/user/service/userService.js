@@ -1,5 +1,6 @@
 import userRepo from "#domains/user/repo/userRepo.js";
 import ProfileDto from "#domains/user/model/ProfileDto.js";
+import websocketManager from "#shared/websocket/websocketManager.js";
 
 const userService = {
   async getProfileById(userId) {
@@ -33,6 +34,29 @@ const userService = {
 
   async disableUser(userId) {
     await userRepo.disableUser(userId);
+  },
+
+  async getUserStatus(userId) {
+    const user = await userRepo.getUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user.status;
+  },
+
+  async updateUserStatus(userId, status) {
+    const user = await userRepo.getUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    await userRepo.updateUserStatus(userId, status);
+    websocketManager.sendToAllUsersFriend("friend", userId, "user_status", {
+      type: "status_update",
+      payload: {
+        userId,
+        status,
+      },
+    });
   },
 };
 export default userService;

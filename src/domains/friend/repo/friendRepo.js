@@ -39,21 +39,29 @@ const friendRepo = {
   },
 
   // 친구 목록 조회
-  async getFriends(userId, pageable) {
+  async getFriends(userId) {
     return prisma.friendship.findMany({
-      skip: pageable.skip,
-      take: pageable.take,
       where: {
         status: FriendStatus.ACCEPTED,
         OR: [{ sender_id: userId }, { receiver_id: userId }],
       },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             username: true,
             nickname: true,
             profile_image: true,
+            status: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            profile_image: true,
+            status: true,
           },
         },
       },

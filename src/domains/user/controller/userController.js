@@ -34,5 +34,20 @@ const userController = {
     await userService.disableUser(userId);
     return ApiResponse.ok(reply, { message: "User account disabled successfully" });
   },
+
+  // GET /v1/users/status/:userId
+  async getUserStatusHandler(request, reply) {
+    const userId = Number(request.params.userId);
+    const status = await userService.getUserStatus(userId);
+    return ApiResponse.ok(reply, { status });
+  },
+
+  // PUT /v1/users/status/:userId
+  async updateUserStatusHandler(request, reply) {
+    const userId = Number(request.params.userId);
+    const { status } = request.body;
+    await userService.updateUserStatus(userId, status);
+    return ApiResponse.ok(reply, { message: "User status updated successfully" });
+  },
 };
 export default userController;

@@ -55,11 +55,11 @@ const friendService = {
   },
 
   // 친구 목록 조회
-  async getFriends(userId, pageable) {
+  async getFriends(userId) {
     if (!userId) {
       throw new Error("User ID is required");
     }
-    return friendRepo.getFriends(userId, pageable);
+    return friendRepo.getFriends(userId);
   },
 
   // 받은 친구 요청 조회
