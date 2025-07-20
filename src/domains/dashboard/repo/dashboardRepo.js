@@ -1,6 +1,6 @@
 import prisma from "#shared/database/prisma.js";
 
-const dashboardRepo = {
+class DashboardRepo {
   async getRankData(pageable) {
     return prisma.user.findMany({
       skip: pageable.skip,
@@ -18,7 +18,7 @@ const dashboardRepo = {
         [pageable.sort]: pageable.order,
       },
     });
-  },
-};
+  }
+}
 
-export default dashboardRepo;
+export default DashboardRepo;
