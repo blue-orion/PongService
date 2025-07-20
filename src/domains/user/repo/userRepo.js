@@ -1,4 +1,5 @@
 import prisma from "#shared/database/prisma.js";
+import FriendsUtils from "#domains/friend/util/friendsUtils.js";
 
 const userRepo = {
   async getUserByUsername(username) {
@@ -86,6 +87,89 @@ const userRepo = {
       where: { id: userId },
       data: { status },
     });
+  },
+
+  async getUserFriendIds(userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { friends: true },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return FriendsUtils.parseIds(user.friends);
+  },
+
+  async addFriendToList(userId, friendId) {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { friends: true },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const updatedFriends = FriendsUtils.addFriend(user.friends, friendId);
+
+    await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: {
+        friends: updatedFriends,
+      },
+    });
+
+    return FriendsUtils.parseIds(updatedFriends);
+  },
+
+  async removeFriendFromList(userId, friendId) {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { friends: true },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const updatedFriends = FriendsUtils.removeFriend(user.friends, friendId);
+
+    await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: {
+        friends: updatedFriends,
+      },
+    });
+
+    return FriendsUtils.parseIds(updatedFriends);
+  },
+
+  async getFriendsWithDetails(userId, pageable) {
+    const friendIds = await this.getUserFriendIds(userId);
+
+    if (friendIds.length === 0) {
+      return [];
+    }
+
+    const friends = await prisma.user.findMany({
+      skip: pageable.skip,
+      take: pageable.take,
+      where: {
+        id: { in: friendIds },
+        enabled: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        nickname: true,
+        profile_image: true,
+        status: true,
+      },
+    });
+
+    return friends;
   },
 };
 

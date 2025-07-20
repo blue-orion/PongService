@@ -29,7 +29,8 @@ const friendController = {
   // GET /v1/friends/list
   async getFriendsHandler(request, reply) {
     const userId = request.user.id;
-    const friends = await friendService.getFriends(userId);
+    const pageable = PageRequest.of(request.query);
+    const friends = await friendService.getFriends(userId, pageable);
     return ApiResponse.ok(reply, { friends });
   },
 

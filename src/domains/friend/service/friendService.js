@@ -1,5 +1,6 @@
 import friendRepo from "#domains/friend/repo/friendRepo.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
+import userRepo from "#domains/user/repo/userRepo.js";
 
 const friendService = {
   // 친구요청
@@ -31,9 +32,12 @@ const friendService = {
     if (!relationId) {
       throw new Error("Relation ID is required");
     }
-    // socket을 통해 친구 요청 수락 알림 전송
     const relation = await friendRepo.acceptFriendRequest(relationId);
 
+    await userRepo.addFriendToList(relation.sender_id, relation.receiver_id);
+    await userRepo.addFriendToList(relation.receiver_id, relation.sender_id);
+
+    // socket을 통해 친구 요청 수락 알림 전송
     websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
       type: "accepted",
       payload: {
@@ -51,15 +55,21 @@ const friendService = {
     if (!relationId) {
       throw new Error("Relation ID is required");
     }
+    const relation = await friendRepo.findRelation(relationId);
+    if (!relation) {
+      throw new Error("Friend relation does not exist");
+    }
+
+    await userRepo.removeFriendFromList(relation.sender_id, relation.receiver_id);
+    await userRepo.removeFriendFromList(relation.receiver_id, relation.sender_id);
+
     return friendRepo.deleteFriend(relationId);
   },
 
   // 친구 목록 조회
-  async getFriends(userId) {
-    if (!userId) {
-      throw new Error("User ID is required");
-    }
-    return friendRepo.getFriends(userId);
+  async getFriends(userId, pageable) {
+    const friendsData = await userRepo.getFriendsWithDetails(userId, pageable);
+    return friendsData;
   },
 
   // 받은 친구 요청 조회

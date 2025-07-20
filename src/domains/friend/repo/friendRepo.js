@@ -38,36 +38,6 @@ const friendRepo = {
     });
   },
 
-  // 친구 목록 조회
-  async getFriends(userId) {
-    return prisma.friendship.findMany({
-      where: {
-        status: FriendStatus.ACCEPTED,
-        OR: [{ sender_id: userId }, { receiver_id: userId }],
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            username: true,
-            nickname: true,
-            profile_image: true,
-            status: true,
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            username: true,
-            nickname: true,
-            profile_image: true,
-            status: true,
-          },
-        },
-      },
-    });
-  },
-
   // 받은 친구 요청 조회
   async getReceivedRequests(userId, pageable) {
     return prisma.friendship.findMany({
