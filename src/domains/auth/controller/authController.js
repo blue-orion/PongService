@@ -1,4 +1,4 @@
-import authService from "#domains/auth/service/authService.js";
+import AuthService from "#domains/auth/service/authService.js";
 import RegisterDto from "#domains/user/model/registerDto.js";
 import { ApiResponse } from "#shared/api/response.js";
 import PongException from "#shared/exception/pongException.js";
@@ -9,7 +9,7 @@ const authController = {
     const { username, passwd, token } = request.body;
     const jwtUtils = request.server.jwtUtils;
     const encryptUtils = await request.server.encryptUtils;
-    const jwt = await authService.authenticateUser(username, passwd, token, jwtUtils, encryptUtils);
+    const jwt = await AuthService.authenticateUser(username, passwd, token, jwtUtils, encryptUtils);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -17,7 +17,7 @@ const authController = {
   async logoutHandler(request, reply) {
     const userId = request.user.id;
     if (!userId) throw PongException.BAD_REQUEST;
-    await authService.signOutUser(userId);
+    await AuthService.signOutUser(userId);
     return ApiResponse.ok(reply, { message: "Logged out successfully" });
   },
 
@@ -26,7 +26,7 @@ const authController = {
     const registerDto = new RegisterDto(request.body);
     console.log("Registering user:", registerDto);
     const encryptUtils = await request.server.encryptUtils;
-    await authService.registerUser(registerDto, encryptUtils);
+    await AuthService.registerUser(registerDto, encryptUtils);
     return ApiResponse.ok(reply, { message: "User registered successfully" });
   },
 
@@ -34,7 +34,7 @@ const authController = {
   async refreshTokenHandler(request, reply) {
     const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
     const jwtUtils = request.server.jwtUtils;
-    const jwt = await authService.refreshTokens(jwtUtils, refreshToken);
+    const jwt = await AuthService.refreshTokens(jwtUtils, refreshToken);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -42,7 +42,7 @@ const authController = {
   async googleOAuthCallbackHandler(request, reply) {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
-    const jwt = await authService.googleOAuth(jwtUtils, token);
+    const jwt = await AuthService.googleOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
 
@@ -50,7 +50,7 @@ const authController = {
   async fortyOAuthCallbackHandler(request, reply) {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
-    const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
+    const jwt = await AuthService.fortyTwoOAuth(jwtUtils, token);
     return ApiResponse.ok(reply, jwt);
   },
 };
