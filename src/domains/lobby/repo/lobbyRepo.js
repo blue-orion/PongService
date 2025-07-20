@@ -1,6 +1,10 @@
 import prisma from "#shared/database/prisma.js";
 
 export class LobbyRepository {
+  getCount() {
+    return prisma.lobby.count();
+  }
+
   async findAll(skip, take) {
     return await prisma.lobby.findMany({
       skip,
@@ -44,7 +48,7 @@ export class LobbyRepository {
 
   async countPlayers(lobby_id) {
     return await prisma.lobbyPlayer.count({
-      where: { lobby_id },
+      where: { lobby_id, enabled: true },
     });
   }
 
@@ -108,14 +112,13 @@ export class LobbyRepository {
     });
   }
 
-  async transferLeadership(lobbyId, currentLeaderId, targetUserId) {
+  async transferLeadership(lobby_id, current_leader_id, target_user_id) {
     return await prisma.$transaction(async (tx) => {
       // 1. 현재 방장의 is_leader를 false로 변경
       await tx.lobbyPlayer.updateMany({
         where: {
-          lobby_id: lobbyId,
-          user_id: currentLeaderId,
-          enabled: true,
+          lobby_id,
+          user_id: current_leader_id,
         },
         data: {
           is_leader: false,
@@ -126,9 +129,8 @@ export class LobbyRepository {
       // 2. 새로운 방장의 is_leader를 true로 변경
       await tx.lobbyPlayer.updateMany({
         where: {
-          lobby_id: lobbyId,
-          user_id: targetUserId,
-          enabled: true,
+          lobby_id,
+          user_id: target_user_id,
         },
         data: {
           is_leader: true,
@@ -138,23 +140,16 @@ export class LobbyRepository {
 
       // 3. 로비의 creator_id도 변경
       await tx.lobby.update({
-        where: { id: lobbyId },
+        where: { id: lobby_id },
         data: {
-          creator_id: targetUserId,
+          creator_id: target_user_id,
           updated_at: new Date(),
         },
       });
 
       // 4. 업데이트된 로비 정보 반환
       return await tx.lobby.findUnique({
-        where: { id: lobbyId },
-        include: {
-          lobby_players: {
-            where: { enabled: true },
-            include: { user: true },
-          },
-          tournament: true,
-        },
+        where: { id: lobby_id },
       });
     });
   }
@@ -187,7 +182,7 @@ export class LobbyRepository {
     }
 
     // 준비 상태 반전
-    return await prisma.lobbyPlayer.updateMany({
+    await prisma.lobbyPlayer.updateMany({
       where: {
         lobby_id,
         user_id,
@@ -196,6 +191,14 @@ export class LobbyRepository {
       data: {
         is_ready: !currentPlayer.is_ready,
         updated_at: new Date(),
+      },
+    });
+
+    return await prisma.lobbyPlayer.findFirst({
+      where: {
+        lobby_id,
+        user_id,
+        enabled: true,
       },
     });
   }
@@ -226,8 +229,8 @@ export class LobbyRepository {
   async findActivePlayersByLobbyId(lobby_id) {
     return await prisma.lobbyPlayer.findMany({
       where: {
-        lobby_id
-      }
+        lobby_id,
+      },
     });
   }
 

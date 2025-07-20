@@ -1,5 +1,7 @@
 import websocketManager from "#shared/websocket/websocketManager.js";
 
+import { LobbyController } from "#domains/lobby/controller/lobbyController.js";
+
 const websocketHandlers = {
   gameWebSocketHandler: (io) => {
     const gameNamespace = io.of("/ws/game"); // 게임 네임스페이스 생성
@@ -24,11 +26,15 @@ const websocketHandlers = {
     websocketManager.registerNamespace("lobby", lobbyNamespace);
 
     lobbyNamespace.on("connection", (socket) => {
-      const userId = socket.handshake.auth["userId"];
-      console.log(`Lobby WebSocket connected: ${userId}`);
+      const userId = socket.handshake.query["user-id"];
+      const lobbyId = socket.handshake.query["lobby-id"];
 
-      // 사용자 소켓 등록
-      websocketManager.addUserSocket(userId, "lobby", socket);
+      console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
+
+      if (lobbyId) {
+        socket.join(`lobby-${lobbyId}`);
+        console.log(`User ${userId} joined room lobby-${lobbyId}`);
+      }
 
       socket.on("disconnect", () => {
         websocketManager.removeUserSocket(userId, "lobby");
