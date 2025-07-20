@@ -1,4 +1,4 @@
-import GameState from './GameState.js';
+import GameState from "./GameState.js";
 
 const END_SCORE = 10;
 
@@ -25,14 +25,17 @@ export default class Game {
     };
     this.score = { left: 0, right: 0 };
 
+    this.stoped = false;
     this.started = false;
+    this.intervalId = null;
   }
 
   start() {
     this.started = true;
-    const intervalId = setInterval(async () => {
+
+    this.intervalId = setInterval(async () => {
       if (this.isGameOver()) {
-        clearInterval(intervalId);
+        clearInterval(this.intervalId);
       } else {
         const scoredRole = this.state.updateState(this.keyState);
         if (scoredRole !== null) {
@@ -44,16 +47,54 @@ export default class Game {
     }, 1000 / 60);
   }
 
-  isStart() {
+  restart(sec) {
+    if (this.stoped === false) return;
+    this.stoped = false;
+
+    this.timeoutId = setTimeout(() => {
+      if (this.stoped) return;
+
+      this.intervalId = setInterval(async () => {
+        if (this.isGameOver()) {
+          clearInterval(this.intervalId);
+        } else {
+          const scoredRole = this.state.updateState(this.keyState);
+          if (scoredRole !== null) {
+            this.score[scoredRole]++;
+            this.state.ball = this.state.resetBall();
+            console.log(this.score);
+          }
+        }
+      }, 1000 / 60);
+    }, sec * 1000);
+  }
+
+  stop() {
+    this.stoped = true;
+
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+  }
+
+  isStarted() {
     return this.started;
   }
 
+  isStoped() {
+    return this.stoped;
+  }
+
   isFull() {
-    console.log(`Player Number in gameID(${this.id}): ${this.players.size}`);
-    console.log(this.players);
-    if (this.players.size === 2) {
-      return true;
-    }
+    console.log(`[Game] Player Number in gameID(${this.id}): ${this.players.size}`);
+    const count = [...this.players.values()].filter((p) => p.status === true);
+    if (count.length === 2) return true;
     return false;
   }
 
@@ -63,19 +104,23 @@ export default class Game {
    */
   isGameOver() {
     const score = this.score;
-    if (score.left >= END_SCORE) return 'left';
-    if (score.right >= END_SCORE) return 'right';
+    if (score.left >= END_SCORE) return "left";
+    if (score.right >= END_SCORE) return "right";
     return false;
   }
 
   /** Player 추가 */
   addPlayer(role, playerId) {
-    for (const id in this.players) {
-      if (id === playerId) {
-        throw new Error('이미 존재하는 플레이어입니다.');
+    this.players.set(role, { id: playerId, status: true });
+  }
+
+  removePlayer(playerId) {
+    for (const [role, player] of this.players) {
+      if (player.id === playerId) {
+        player.status = false;
+        break;
       }
     }
-    this.players.set(role, playerId);
   }
 
   setKeyState(role, keycode, mode) {
@@ -83,7 +128,7 @@ export default class Game {
   }
 
   getPlayers() {
-    return [...this.players];
+    return this.players;
   }
 
   /** 현재 게임 상태 반환 */
@@ -107,14 +152,14 @@ export default class Game {
     if (score.left >= END_SCORE)
       return {
         score,
-        winnerId: this.players.get('left'),
-        loserId: this.players.get('right'),
+        winnerId: this.players.get("left").id,
+        loserId: this.players.get("right").id,
       };
     if (score.right >= END_SCORE)
       return {
         score,
-        winnerId: this.players.get('right'),
-        loserId: this.players.get('left'),
+        winnerId: this.players.get("right").id,
+        loserId: this.players.get("left").id,
       };
   }
 }

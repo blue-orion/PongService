@@ -6,9 +6,15 @@ const websocketHandlers = {
     const gameNamespace = io.of("/ws/game"); // 게임 네임스페이스 생성
     websocketManager.registerNamespace("game", gameNamespace);
 
-    gameNamespace.on("connection", (socket) => {
+    gameNamespace.on("connection", async (socket) => {
       const userId = socket.handshake.auth["playerId"];
-      gameController.handleConnect(socket); // 클라이언트에서 보낸 사용자 ID
+      const result = await gameController.handleConnect(socket); // 클라이언트에서 보낸 사용자 ID
+
+      if (result === false) {
+        socket.disconnect("io client disconnect");
+        return;
+      }
+
       console.log(`Game WebSocket connected: ${userId}`);
 
       // 사용자 소켓 등록
