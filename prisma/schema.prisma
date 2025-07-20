@@ -107,7 +107,7 @@ model Game {
   player_two_score Int?
   winner_id        Int?
   loser_id         Int?
-  play_time        Int?
+  play_time        String?
   round            Int
   match            Int
   game_status      GameStatus
