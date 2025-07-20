@@ -1,16 +1,17 @@
 // testClient.js
 import { io } from "socket.io-client";
 import readline from "readline";
+import userController from "#domains/user/controller/userController.js";
 
-const PLAYER_ID = 2;
+const PLAYER_ID = 1; // id가 아닌 닉네임으로 받아서 해야하는거 아닌가
 const TOURNAMENT_ID = 1;
 const GAME_ID = 1;
 
 const socket = io("http://localhost:3333/ws/game", {
-	withCredentials: true,
-	transports: ['websocket', 'polling'],
+  withCredentials: true,
+  transports: ["websocket", "polling"],
   auth: {
-		gameId: 1,
+    gameId: 1,
     playerId: PLAYER_ID,
     tournamentId: TOURNAMENT_ID,
   },

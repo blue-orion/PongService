@@ -1,6 +1,5 @@
 import websocketManager from "#shared/websocket/websocketManager.js";
-
-import { LobbyController } from "#domains/lobby/controller/lobbyController.js";
+import { gameController } from "#domains/game/controller/gameController.js";
 
 const websocketHandlers = {
   gameWebSocketHandler: (io) => {
@@ -8,14 +7,20 @@ const websocketHandlers = {
     websocketManager.registerNamespace("game", gameNamespace);
 
     gameNamespace.on("connection", (socket) => {
-      const userId = socket.handshake.auth["userId"]; // 클라이언트에서 보낸 사용자 ID
+      const userId = socket.handshake.auth["playerId"];
+      gameController.handleConnect(socket); // 클라이언트에서 보낸 사용자 ID
       console.log(`Game WebSocket connected: ${userId}`);
 
       // 사용자 소켓 등록
       websocketManager.addUserSocket(userId, "game", socket);
 
+      socket.on("move", (raw) => {
+        gameController.handleMoveEvent(socket, raw);
+      });
+
       socket.on("disconnect", () => {
         websocketManager.removeUserSocket(userId, "game");
+        gameController.handleDisconnect(socket);
         console.log(`Game WebSocket disconnected: ${userId}`);
       });
     });

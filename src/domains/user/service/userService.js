@@ -54,12 +54,15 @@ class UserService {
       throw new Error("User not found");
     }
     await this.userRepo.updateUserStatus(userId, status);
-    websocketManager.sendToAllUsersFriend("friend", userId, "user_status", {
-      type: "status_update",
-      payload: {
-        userId,
-        status,
-      },
+    const friendIds = await this.userRepo.getUserFriendIds(userId);
+    friendIds.forEach((friendId) => {
+      websocketManager.sendToNamespaceUser("friend", friendId, "user_status", {
+        type: "status_update",
+        payload: {
+          userId,
+          status,
+        },
+      });
     });
   }
 }
