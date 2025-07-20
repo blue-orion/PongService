@@ -1,11 +1,11 @@
 import axios from "axios";
-
-import TokenDto from "#domains/auth/model/tokenDto.js";
-import RegisterOAuthDto from "#domains/user/model/registerOAuthDto.js";
-import AuthRepo from "#domains/auth/repo/authRepo.js";
-import UserRepo from "#domains/user/repo/userRepo.js";
-import TwoFAService from "#domains/auth/service/2faService.js";
 import PongException from "#shared/exception/pongException.js";
+
+import AuthRepo from "#domains/auth/repo/authRepo.js";
+import RegisterOAuthDto from "#domains/auth/model/registerOAuthDto.js";
+import TokenDto from "#domains/auth/model/tokenDto.js";
+import TwoFAService from "#domains/auth/service/2faService.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
 
 class AuthService {
   constructor(authRepo = new AuthRepo(), userRepo = new UserRepo(), twoFAService = new TwoFAService()) {
@@ -14,13 +14,15 @@ class AuthService {
     this.twoFAService = twoFAService;
   }
 
-  async authenticateUser(username, passwd, token, jwtUtils, encryptUtils) {
-    const user = await this.userRepo.getUserByUsername(username);
+  async authenticateUser(loginDto, jwtUtils, encryptUtils) {
+    const user = await this.userRepo.getUserByUsername(loginDto.username);
 
-    if (!(await encryptUtils.comparePasswd(passwd, user.passwd))) throw new PongException("invalid password", 400);
+    if (!(await encryptUtils.comparePasswd(loginDto.passwd, user.passwd))) {
+      throw new PongException("invalid password", 400);
+    }
     if (!user.enabled) throw PongException.UNAUTHORIZED;
 
-    this.twoFAService.verify2FACode(user.twoFASecret, token);
+    this.twoFAService.verify2FACode(user.twoFASecret, loginDto.token);
 
     return await this.generateTokens(jwtUtils, user);
   }
