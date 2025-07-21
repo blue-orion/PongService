@@ -11,7 +11,9 @@ export async function loadTemplate(templatePath: string): Promise<string> {
   try {
     const response = await fetch(templatePath);
     if (!response.ok) {
-      throw new Error(`템플릿 로드 실패: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `템플릿 로드 실패: ${response.status} ${response.statusText}`,
+      );
     }
     return await response.text();
   } catch (error) {
@@ -25,7 +27,9 @@ export async function loadTemplate(templatePath: string): Promise<string> {
  * @param templatePaths 템플릿 파일 경로들
  * @returns Promise<string[]> HTML 문자열 배열
  */
-export async function loadTemplates(templatePaths: string[]): Promise<string[]> {
+export async function loadTemplates(
+  templatePaths: string[],
+): Promise<string[]> {
   const promises = templatePaths.map((path) => loadTemplate(path));
   return await Promise.all(promises);
 }
@@ -34,8 +38,8 @@ export async function loadTemplates(templatePaths: string[]): Promise<string[]> 
  * 컴포넌트별 템플릿 경로 상수
  */
 export const TEMPLATE_PATHS = {
-  LOGIN: "/src/components/login/login.template.html",
-  GAME: "/src/components/game/game.template.html",
+  LOGIN: "/components/login/login.template.html",
+  GAME: "/components/game/game.template.html",
   FRIEND: "/src/components/friend/friend.template.html",
   HEADER: "/src/components/header/header.template.html",
   FRIENDSLIST: "/src/components/friendsList/firendsList.template.html",

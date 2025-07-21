@@ -1,10 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./*.html", "./src/**/*.{js,ts,jsx,tsx,html}"],
+  content: [
+    "./*.html",
+    "./src/**/*.{js,ts,jsx,tsx,html}",
+    "./public/components/**/*.html",
+  ],
   theme: {
     extend: {
       fontFamily: {
-        pretendard: ["Pretendard", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        pretendard: [
+          "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "sans-serif",
+        ],
       },
       colors: {
         // 메인 브랜드 컬러 (Primary Palette)
@@ -128,8 +137,10 @@ module.exports = {
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(135deg, #7B9BD1 0%, #A888C2 100%)",
-        "gradient-secondary": "linear-gradient(135deg, #A888C2 0%, #F5F5DC 100%)",
-        "gradient-full": "linear-gradient(135deg, #7B9BD1 0%, #A888C2 35%, #F5F5DC 100%)",
+        "gradient-secondary":
+          "linear-gradient(135deg, #A888C2 0%, #F5F5DC 100%)",
+        "gradient-full":
+          "linear-gradient(135deg, #7B9BD1 0%, #A888C2 35%, #F5F5DC 100%)",
         "gradient-success": "linear-gradient(135deg, #8FBC8F 0%, #7B9BD1 100%)",
         "gradient-warning": "linear-gradient(135deg, #D4A5A5 0%, #A888C2 100%)",
         "gradient-muted": "linear-gradient(135deg, #A69B8B 0%, #F5F5DC 100%)",

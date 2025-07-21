@@ -17,7 +17,8 @@ export class AuthManager {
   private static readonly ACCESS_TOKEN_KEY = "pong_access_token";
   private static readonly REFRESH_TOKEN_KEY = "pong_refresh_token";
   private static readonly EXPIRES_AT_KEY = "pong_expires_at";
-  private static readonly API_BASE_URL = "http://localhost:3333/v1"; // 백엔드 서버 URL
+  // private static readonly API_BASE_URL = "http://localhost:3333/v1"; // 백엔드 서버 URL
+  private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // 토큰 저장
   static saveTokens(tokens: AuthTokens): void {
@@ -130,7 +131,10 @@ export class AuthManager {
   }
 
   // 인증이 필요한 API 요청
-  static async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  static async authenticatedFetch(
+    url: string,
+    options: RequestInit = {},
+  ): Promise<Response> {
     let tokens = this.getTokens();
 
     // 토큰이 없으면 로그인 페이지로 리다이렉트
