@@ -90,11 +90,11 @@ async function main() {
   console.log("Seeding start...");
 
   // 삭제
-  // await prisma.lobbyPlayer.deleteMany();
-  // await prisma.lobby.deleteMany();
-  // await prisma.game.deleteMany();
-  // await prisma.tournament.deleteMany();
-  // await prisma.user.deleteMany();
+  await prisma.lobbyPlayer.deleteMany();
+  await prisma.lobby.deleteMany();
+  await prisma.game.deleteMany();
+  await prisma.tournament.deleteMany();
+  await prisma.user.deleteMany();
   //
   // 1. 유저 생성
   const userData = [...generateUsers(10)];

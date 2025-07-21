@@ -97,6 +97,20 @@ export class LobbyRepository {
     });
   }
 
+  async findActiveLobbyByUserId(user_id) {
+    return await prisma.lobbyPlayer.findFirst({
+      where: {
+        user_id: user_id,
+        lobby: {
+          enabled: true,
+        },
+      },
+      include: {
+        lobby: true,
+      },
+    });
+  }
+
   // 활성화된 플레이어만 확인
   async isPlayerAlreadyInLobby(lobby_id, user_id) {
     const existing = await prisma.lobbyPlayer.findFirst({
