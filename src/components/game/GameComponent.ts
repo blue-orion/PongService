@@ -31,6 +31,12 @@ export class GameComponent extends Component {
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
   private animationId: number | null = null;
+  private keyState = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+  };
 
   // UI 요소들
   private statusElement!: HTMLElement;
@@ -78,7 +84,7 @@ export class GameComponent extends Component {
   }
 
   private initializeGame(): void {
-    this.setupUI();
+    // this.setupUI();
     this.connectWebSocket();
     this.setupKeyboardControls();
     this.startGameLoop();
@@ -155,7 +161,11 @@ export class GameComponent extends Component {
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
       if (keycode === "KeyS") keycode = "ArrowDown";
-      if (["ArrowUp", "ArrowDown"].includes(keycode)) {
+      if (keycode === "KeyA") keycode = "ArrowLeft";
+      if (keycode === "KeyD") keycode = "ArrowRight";
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
+        if (this.keyState[keycode] === true) return;
+        this.keyState[keycode] = true;
         this.socket.emit("move", {
           type: "keydown",
           payload: {
@@ -174,7 +184,10 @@ export class GameComponent extends Component {
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
       if (keycode === "KeyS") keycode = "ArrowDown";
-      if (["ArrowUp", "ArrowDown"].includes(keycode)) {
+      if (keycode === "KeyA") keycode = "ArrowLeft";
+      if (keycode === "KeyD") keycode = "ArrowRight";
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
+        this.keyState[keycode] = false;
         this.socket.emit("move", {
           type: "keyup",
           payload: {
@@ -195,32 +208,32 @@ export class GameComponent extends Component {
     (this as any)._keyupHandler = keyupHandler;
   }
 
-  private setupUI(): void {
-    // 컨트롤 버튼들 컨테이너
-    const buttonsContainer = document.createElement("div");
-    buttonsContainer.className = "flex gap-3 mt-4";
-
-    // 재연결 버튼
-    const reconnectBtn = document.createElement("button");
-    reconnectBtn.textContent = "재연결";
-    reconnectBtn.className = "btn-primary";
-    reconnectBtn.onclick = () => this.connectWebSocket();
-
-    // 로그아웃 버튼
-    const logoutBtn = document.createElement("button");
-    logoutBtn.textContent = "로그아웃";
-    logoutBtn.className = "btn-muted";
-    logoutBtn.onclick = () => {
-      if (confirm("정말 로그아웃하시겠습니까?")) {
-        AuthManager.logout();
-        window.router.navigate("/login");
-      }
-    };
-
-    buttonsContainer.appendChild(reconnectBtn);
-    buttonsContainer.appendChild(logoutBtn);
-    this.statusElement.appendChild(buttonsContainer);
-  }
+  // private setupUI(): void {
+  //   // 컨트롤 버튼들 컨테이너
+  //   const buttonsContainer = document.createElement("div");
+  //   buttonsContainer.className = "flex gap-3 mt-4";
+  //
+  //   // 재연결 버튼
+  //   const reconnectBtn = document.createElement("button");
+  //   reconnectBtn.textContent = "재연결";
+  //   reconnectBtn.className = "btn-primary";
+  //   reconnectBtn.onclick = () => this.connectWebSocket();
+  //
+  //   // 로그아웃 버튼
+  //   const logoutBtn = document.createElement("button");
+  //   logoutBtn.textContent = "로그아웃";
+  //   logoutBtn.className = "btn-muted";
+  //   logoutBtn.onclick = () => {
+  //     if (confirm("정말 로그아웃하시겠습니까?")) {
+  //       AuthManager.logout();
+  //       window.router.navigate("/login");
+  //     }
+  //   };
+  //
+  //   buttonsContainer.appendChild(reconnectBtn);
+  //   buttonsContainer.appendChild(logoutBtn);
+  //   this.statusElement.appendChild(buttonsContainer);
+  // }
 
   private sendPlayerMove(direction: "up" | "down"): void {
     // socket.io 기반에서는 키 이벤트에서 직접 emit 처리하므로 이 메서드는 더 이상 사용하지 않음
@@ -249,11 +262,6 @@ export class GameComponent extends Component {
     if (!state || !state.score) return;
     const scores = `LEFT: ${state.score.left} | RIGHT: ${state.score.right}`;
     let scoresDiv = this.statusElement.querySelector(".scores") as HTMLElement;
-    if (!scoresDiv) {
-      scoresDiv = document.createElement("div");
-      scoresDiv.className = "scores mt-2 text-sm";
-      this.statusElement.appendChild(scoresDiv);
-    }
     scoresDiv.textContent = scores;
   }
 
@@ -352,7 +360,7 @@ export class GameComponent extends Component {
     // 공 렌더링 - 글래스 효과와 함께
     const ball = this.gameState.ball;
     this.ctx.beginPath();
-    this.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    this.ctx.arc(ball.x, ball.y, ball.radius * 2, 0, Math.PI * 2);
     this.ctx.fillStyle = "#1f2937";
     this.ctx.fill();
 

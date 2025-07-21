@@ -70,6 +70,9 @@ test-results/
 *.swo
 *~
 
+# prettier 설정 파일
+.prettierrc
+
 # Package manager lockfiles (팀에서 사용하는 것만 유지)
 # package-lock.json  # npm 사용시 주석 해제
 # yarn.lock          # yarn 사용시 주석 해제
