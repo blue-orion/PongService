@@ -56,11 +56,7 @@ const websocketHandlers = {
       const userId = socket.handshake.auth["userId"];
       console.log(`Friend WebSocket connected: ${userId}`);
 
-      // 사용자 소켓 등록
       websocketManager.addUserSocket(userId, "friend", socket);
-      // socket.on("friend_status", (data) => {
-
-      // })
 
       socket.on("disconnect", () => {
         websocketManager.removeUserSocket(userId, "friend");
