@@ -53,7 +53,8 @@ const authController = {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
     const jwt = await authService.googleOAuth(jwtUtils, token);
-    return ApiResponse.ok(reply, jwt);
+    const redirectUrl = `http://localhost:8080/social-callback?jwt=${encodeURIComponent(JSON.stringify(jwt))}`;
+    return reply.redirect(redirectUrl);
   },
 
   // GET /v1/auth/42/callback
@@ -61,7 +62,8 @@ const authController = {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
     const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
-    return ApiResponse.ok(reply, jwt);
+    const redirectUrl = `http://localhost:8080/social-callback?jwt=${encodeURIComponent(JSON.stringify(jwt))}`;
+    return reply.redirect(redirectUrl);
   },
 };
 
