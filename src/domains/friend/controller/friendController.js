@@ -8,10 +8,16 @@ const friendService = new FriendService();
 const friendController = {
   // POST /v1/friends/request
   async requestFriendHandler(request, reply) {
-    const { receiverId } = request.body;
-    const senderId = request.user.id;
-    await friendService.requestFriend(receiverId, senderId);
-    return ApiResponse.ok(reply, { message: "Friend request sent successfully" });
+    try {
+      const { receiverId } = request.body;
+      const senderId = request.user.id;
+
+      await friendService.requestFriend(receiverId, parseInt(senderId));
+      return ApiResponse.ok(reply, { message: "Friend request sent successfully" });
+    } catch (error) {
+      console.error("Error in requestFriendHandler:", error);
+      throw new Error("Failed to process friend request");
+    }
   },
 
   // PUT /v1/friends/accept-request
@@ -21,10 +27,12 @@ const friendController = {
     return ApiResponse.ok(reply, { message: "Friend request accepted successfully" });
   },
 
-  // DELETE /v1/friends/delete/:relationId
+  // DELETE /v1/friends/delete
   async deleteFriendHandler(request, reply) {
-    const relationId = request.params.relationId;
-    await friendService.deleteFriend(parseInt(relationId));
+    const { deleteFriendId } = request.body;
+    const userId = request.user.id;
+    console.log(`[Friend Controller] User ${userId} deleted friend ${deleteFriendId}`);
+    await friendService.deleteFriend(userId, deleteFriendId);
     return ApiResponse.ok(reply, { message: "Friend deleted successfully" });
   },
 
@@ -40,8 +48,8 @@ const friendController = {
   async getReceivedRequestsHandler(request, reply) {
     const userId = request.user.id;
     const pageable = PageRequest.of(request.query);
-    const requests = await friendService.getReceivedRequests(userId, pageable);
-    return ApiResponse.ok(reply, PageResponse.of(pageable, requests));
+    const response = await friendService.getReceivedRequests(userId, pageable);
+    return ApiResponse.ok(reply, response);
   },
 
   // GET /v1/friends/sent-requests

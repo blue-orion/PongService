@@ -9,19 +9,24 @@ class FriendService {
     this.userRepo = userRepo;
   }
   // 친구요청
-  async requestFriend(senderId, receiverId) {
-    if (!senderId || !receiverId) {
-      throw new PongException("Sender ID and Receiver ID are required", 400);
+  async requestFriend(receiverName, senderId) {
+    if (!senderId || !receiverName) {
+      throw new PongException("Sender ID and Receiver Name are required", 400);
     }
 
-    const existingRelation = await this.friendRepo.findRelation(senderId, receiverId);
+    const receiver = await this.userRepo.getUserByUsername(receiverName);
+    if (!receiver) {
+      throw new PongException("Receiver not found", 404);
+    }
+
+    const existingRelation = await this.friendRepo.findRelation(senderId, receiver.id);
     if (existingRelation) {
       throw new PongException("Friend request already exists", 400);
     }
 
-    const friendRelation = await this.friendRepo.requestFriend(senderId, receiverId);
+    const friendRelation = await this.friendRepo.requestFriend(senderId, receiver.id);
 
-    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
+    websocketManager.sendToNamespaceUser("friend", receiver.id, "friend_request", {
       type: "request",
       payload: {
         relationId: friendRelation.id,
@@ -60,11 +65,11 @@ class FriendService {
   }
 
   // 친구 삭제
-  async deleteFriend(relationId) {
+  async deleteFriend(relationId, deleteFriendId) {
     if (!relationId) {
       throw new PongException("Relation ID is required", 400);
     }
-    const relation = await this.friendRepo.findRelation(relationId);
+    const relation = await this.friendRepo.findRelation(relationId, deleteFriendId);
     if (!relation) {
       throw new PongException("Friend relation does not exist", 404);
     }
@@ -72,12 +77,12 @@ class FriendService {
     await this.userRepo.removeFriendFromList(relation.sender_id, relation.receiver_id);
     await this.userRepo.removeFriendFromList(relation.receiver_id, relation.sender_id);
 
-    return this.friendRepo.deleteFriend(relationId);
+    return await this.friendRepo.deleteFriend(relation.id);
   }
 
   // 친구 목록 조회
   async getFriends(userId, pageable) {
-    const friendsData = await this.friendRepo.userRepo.getFriendsWithDetails(userId, pageable);
+    const friendsData = await this.userRepo.getFriendsWithDetails(userId, pageable);
     return friendsData;
   }
 

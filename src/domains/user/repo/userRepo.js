@@ -141,17 +141,19 @@ class UserRepo {
   }
 
   async getFriendsWithDetails(userId, pageable) {
-    const friendIds = await this.getUserFriendIds(userId);
-
-    if (friendIds.length === 0) {
-      return [];
+    // friends 값을 배열로 변환
+    const friends = await this.getFriendIds(userId); // 친구 ID 배열을 가져오는 메서드
+    if (!Array.isArray(friends)) {
+      throw new Error("Friends must be an array of integers");
     }
 
-    const friends = await prisma.user.findMany({
+    return prisma.user.findMany({
       skip: pageable.skip,
       take: pageable.take,
       where: {
-        id: { in: friendIds },
+        id: {
+          in: friends, // 배열로 전달
+        },
         enabled: true,
       },
       select: {
@@ -162,8 +164,6 @@ class UserRepo {
         status: true,
       },
     });
-
-    return friends;
   }
 
   async getUserGameRecords(userId, pageable) {
@@ -179,6 +179,22 @@ class UserRepo {
         [pageable.sort]: pageable.order,
       },
     });
+  }
+
+  async getFriendIds(userId) {
+    const friendships = await prisma.friendship.findMany({
+      where: {
+        OR: [{ sender_id: userId }, { receiver_id: userId }],
+        status: "ACCEPTED",
+      },
+      select: {
+        sender_id: true,
+        receiver_id: true,
+      },
+    });
+
+    // 친구 ID 배열 생성
+    return friendships.map((f) => (f.sender_id === userId ? f.receiver_id : f.sender_id));
   }
 }
 

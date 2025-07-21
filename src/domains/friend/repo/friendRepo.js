@@ -3,7 +3,11 @@ import { FriendStatus } from "@prisma/client";
 
 class FriendRepo {
   // 친구 요청 보내기
-  async requestFriend(friendId, userId) {
+  async requestFriend(userId, friendId) {
+    if (!Number.isInteger(friendId) || !Number.isInteger(userId)) {
+      throw new Error("Invalid input: friendId and userId must be integers");
+    }
+
     return prisma.friendship.create({
       data: {
         sender_id: userId,
@@ -29,18 +33,20 @@ class FriendRepo {
   }
 
   // 친구 관계 확인(존재 여부)
-  async findRelation(senderId, receiverId) {
+  async findRelation(userId1, userId2) {
     return prisma.friendship.findFirst({
       where: {
-        sender_id: senderId,
-        receiver_id: receiverId,
+        OR: [
+          { sender_id: userId1, receiver_id: userId2 },
+          { sender_id: userId2, receiver_id: userId1 },
+        ],
       },
     });
   }
 
   // 받은 친구 요청 조회
   async getReceivedRequests(userId, pageable) {
-    return prisma.friendship.findMany({
+    const result = await prisma.friendship.findMany({
       skip: pageable.skip,
       take: pageable.take,
       where: {
@@ -48,7 +54,7 @@ class FriendRepo {
         status: FriendStatus.PENDING,
       },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             username: true,
@@ -59,6 +65,7 @@ class FriendRepo {
         },
       },
     });
+    return result;
   }
 
   // 보낸 친구 요청 조회
@@ -71,7 +78,7 @@ class FriendRepo {
         status: FriendStatus.PENDING,
       },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             username: true,
