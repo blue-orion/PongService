@@ -1,4 +1,6 @@
 // JWT 토큰 관리 유틸리티
+import { UserManager } from "./user";
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -25,6 +27,19 @@ export class AuthManager {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
     localStorage.setItem(this.EXPIRES_AT_KEY, tokens.expiresAt.toString());
+    
+    // JWT에서 사용자 정보 추출하여 UserManager로 저장
+    try {
+      const payload = this.decodeJWT(tokens.accessToken);
+      if (payload?.id && payload?.username) {
+        UserManager.saveUserInfo({
+          id: payload.id,
+          username: payload.username
+        });
+      }
+    } catch (e) {
+      console.error('JWT에서 사용자 정보 추출 실패:', e);
+    }
   }
 
   // 토큰 가져오기
@@ -76,6 +91,8 @@ export class AuthManager {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.EXPIRES_AT_KEY);
+    // 사용자 정보도 함께 삭제
+    UserManager.clearUserInfo();
   }
 
   // 토큰 유효성 검사
