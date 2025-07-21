@@ -27,17 +27,35 @@ export class LoginComponent extends Component {
     socialButtons.forEach((button) => {
       button.addEventListener("click", this.handleSocialLogin.bind(this));
     });
+
+    // 회원가입 버튼 이벤트 리스너 추가
+    const signupLink = this.container.querySelector('.signup-link a');
+    if (signupLink) {
+      signupLink.addEventListener('click', this.handleSignup.bind(this));
+    }
   }
 
   private handleSocialLogin(event: Event): void {
+    event.preventDefault();
     const button = event.target as HTMLButtonElement;
     const provider = button.textContent?.trim();
 
-    if (provider) {
-      console.log(`${provider} 소셜 로그인 시도`);
-      // TODO: 실제 소셜 로그인 로직 구현
+    let socialUrl = "";
+    if (provider === "Google") {
+      socialUrl = "http://localhost:3333/v1/auth/google";
+    } else if (provider === "42") {
+      socialUrl = "http://localhost:3333/v1/auth/42";
+    } else {
       this.showError(`${provider} 로그인은 준비 중입니다.`);
+      return;
     }
+    window.location.href = socialUrl;
+  }
+  
+  private handleSignup(event: Event): void {
+    event.preventDefault();
+    // 예시: 회원가입 페이지로 이동
+    window.router.navigate('/signup');
   }
 
   private async handleLogin(event: Event): Promise<void> {

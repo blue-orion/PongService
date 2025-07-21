@@ -78,8 +78,8 @@ export class AuthManager {
 
       const loginData: LoginResponse = await response.json();
 
-      // 토큰 만료 시간 계산 (1시간 후)
-      const expiresAt = Date.now() + 60 * 60 * 1000;
+      // 토큰 만료 시간 계산 (15분 후)
+      const expiresAt = Date.now() + 15 * 60 * 1000;
 
       this.saveTokens({
         accessToken: loginData.data.accessToken,
@@ -114,7 +114,7 @@ export class AuthManager {
       }
 
       const { accessToken, refreshToken } = await response.json();
-      const expiresAt = Date.now() + 60 * 60 * 1000;
+      const expiresAt = Date.now() + 15 * 60 * 1000;
 
       this.saveTokens({
         accessToken,
