@@ -36,6 +36,8 @@ export class FriendComponent {
     this.container.innerHTML = template;
 
     this.loadStyles();
+
+    // 사용자 프로필 설정
     this.setupUserProfile();
     await this.loadFriendsData();
     this.setupEventListeners();

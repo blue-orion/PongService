@@ -1,0 +1,33 @@
+<div class="signup-container w-full max-w-md mx-auto p-8 bg-white/95 rounded-3xl shadow-xl border border-white/30">
+  <h2 class="text-2xl font-bold mb-6 text-center">회원가입</h2>
+  <form id="signupForm" class="space-y-6">
+    <div>
+      <label for="username" class="block text-sm font-medium mb-2">사용자명</label>
+      <input type="text" id="username" name="username" required class="login-input" placeholder="사용자명을 입력하세요" />
+    </div>
+    <div>
+      <label for="nickname" class="block text-sm font-medium mb-2">닉네임</label>
+      <input type="text" id="nickname" name="nickname" required class="login-input" placeholder="닉네임을 입력하세요" />
+    </div>
+    <div>
+      <label for="password" class="block text-sm font-medium mb-2">비밀번호</label>
+      <input type="password" id="password" name="password" required class="login-input" placeholder="비밀번호를 입력하세요" />
+    </div>
+    <div>
+      <label for="confirmPassword" class="block text-sm font-medium mb-2">비밀번호 확인</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" required class="login-input" placeholder="비밀번호를 다시 입력하세요" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-2">프로필 이미지 (선택)</label>
+      <div id="profileImageArea" class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+        <span id="profileImageText" class="text-gray-400">이미지를 클릭하여 업로드</span>
+        <img id="profileImagePreview" src="" alt="미리보기" class="hidden h-full object-contain" />
+        <input type="file" id="profileImage" name="profileImage" accept="image/*" class="hidden" />
+      </div>
+    </div>
+    <button type="submit" class="btn-primary w-full">회원가입</button>
+  </form>
+  <div class="mt-4 text-center text-sm">
+    이미 계정이 있으신가요? <a href="/login" class="text-primary-500">로그인</a>
+  </div>
+</div>

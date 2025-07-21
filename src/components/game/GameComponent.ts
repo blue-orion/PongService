@@ -65,6 +65,7 @@ export class GameComponent extends Component {
     // tournamentId, gameId는 임시로 1
     this.tournamentId = 1;
     this.gameId = 1;
+    this.playerId = "test-player";
   }
 
   async render(): Promise<void> {

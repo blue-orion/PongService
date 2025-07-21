@@ -34,7 +34,14 @@ export async function loadTemplates(templatePaths: string[]): Promise<string[]> 
  * 컴포넌트별 템플릿 경로 상수
  */
 export const TEMPLATE_PATHS = {
-  LOGIN: "/src/components/login/login.template.html",
-  GAME: "/src/components/game/game.template.html",
+  LOGIN: "/components/login/login.template.html",
+  GAME: "/components/game/game.template.html",
   FRIEND: "/src/components/friend/friend.template.html",
+  HEADER: "/src/components/header/header.template.html",
+  CHATTING_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
+  LAYOUT: "/src/pages/layout.template.html",
+  LOBBY_LIST: "/src/components/lobby/lobbyList/lobbyList.template.html",
+  LOBBY_DETAIL: "/src/components/lobby/lobbyDetail.template.html",
+  CHAT_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
+  CHAT_INPUT: "/src/components/lobby/chattingRoom/chatInput.template.html",
 } as const;
