@@ -1,12 +1,16 @@
 class FriendsUtils {
   // JSON 문자열을 정수 배열로 파싱
   static parseIds(jsonString) {
-    if (!jsonString || jsonString.trim() === "") return [];
-    const parsed = JSON.parse(jsonString);
-    if (!Array.isArray(parsed)) return [];
+    if (!jsonString || typeof jsonString !== "string" || jsonString.trim() === "") return [];
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!Array.isArray(parsed)) return [];
 
-    // 정수로 변환하고 유효한 값만 필터링
-    return parsed.map((id) => parseInt(id)).filter((id) => Number.isInteger(id) && id > 0);
+      // 정수로 변환하고 유효한 값만 필터링
+      return parsed.map((id) => parseInt(id)).filter((id) => Number.isInteger(id) && id > 0);
+    } catch {
+      return [];
+    }
   }
 
   // 정수 배열을 JSON 문자열로 변환

@@ -7,18 +7,21 @@ import RegisterOAuthDto from "#domains/auth/model/registerOAuthDto.js";
 import TokenDto from "#domains/auth/model/tokenDto.js";
 import TwoFAService from "#domains/auth/service/2faService.js";
 import UserRepo from "#domains/user/repo/userRepo.js";
+import UserService from "#domains/user/service/userService.js";
 
 class AuthService {
   constructor(
     authHelpers = new AuthHelpers(),
     authRepo = new AuthRepo(),
     userRepo = new UserRepo(),
-    twoFAService = new TwoFAService()
+    twoFAService = new TwoFAService(),
+    userService = new UserService()
   ) {
     this.authHelpers = authHelpers;
     this.authRepo = authRepo;
     this.userRepo = userRepo;
     this.twoFAService = twoFAService;
+    this.userService = userService;
   }
 
   async authenticateUser(loginDto, jwtUtils, encryptUtils) {
@@ -29,10 +32,14 @@ class AuthService {
 
     this.twoFAService.verify2FACode(user.twoFASecret, loginDto.token);
 
+    await this.userService.updateUserStatus(user.id, "ONLINE");
+
     return await this.generateTokens(jwtUtils, user);
   }
 
   async signOutUser(userId) {
+    await this.userService.updateUserStatus(Number(userId), "OFFLINE");
+
     await this.authRepo.removeUserRefreshToken(userId);
   }
 
@@ -63,6 +70,8 @@ class AuthService {
       user = await this.userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
     }
 
+    await this.userService.updateUserStatus(user.id, "ONLINE");
+
     return await this.generateTokens(jwtUtils, user);
   }
 
@@ -78,6 +87,8 @@ class AuthService {
     } catch {
       user = await this.userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
     }
+
+    await this.userService.updateUserStatus(user.id, "ONLINE");
 
     return await this.generateTokens(jwtUtils, user);
   }

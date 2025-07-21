@@ -8,14 +8,8 @@ import UserHelpers from "#domains/user/utils/userHelpers.js";
 import UserRepo from "#domains/user/repo/userRepo.js";
 
 class UserService {
-  constructor(
-    authHelpers = new AuthHelpers(),
-    friendsUtils = new FriendsUtils(),
-    userHelpers = new UserHelpers(),
-    userRepo = new UserRepo()
-  ) {
+  constructor(authHelpers = new AuthHelpers(), userHelpers = new UserHelpers(), userRepo = new UserRepo()) {
     this.authHelpers = authHelpers;
-    this.friendsUtils = friendsUtils;
     this.userHelpers = userHelpers;
     this.userRepo = userRepo;
   }
@@ -59,8 +53,8 @@ class UserService {
     this.userHelpers.validateExistingUser(user);
 
     await this.userRepo.updateUserStatus(userId, status);
-    const friends = await this.userRepo.getUserFriendIds(userId);
-    const friendIds = this.friendsUtils.parseIds(friends);
+    const friendsData = await this.userRepo.getUserFriendIds(userId);
+    const friendIds = FriendsUtils.parseIds(friendsData?.friends || "[]");
     friendIds.forEach((friendId) => {
       websocketManager.sendToNamespaceUser("friend", friendId, "user_status", {
         type: "status_update",
