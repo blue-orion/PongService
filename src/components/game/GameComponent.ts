@@ -8,14 +8,14 @@ interface Paddle {
   y: number;
 }
 interface GameState {
-  ball: { x: number; y: number; vx: number; vy: number; radius: number; };
+  ball: { x: number; y: number; vx: number; vy: number; radius: number };
   paddles: {
     width: number;
     height: number;
     left: Paddle;
     right: Paddle;
   };
-  score: { left: number; right: number; };
+  score: { left: number; right: number };
   status?: "waiting" | "playing" | "finished" | "paused";
   winner?: "left" | "right" | null;
 }
@@ -31,6 +31,12 @@ export class GameComponent extends Component {
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
   private animationId: number | null = null;
+  private keyState = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+  };
 
   // UI 요소들
   private statusElement!: HTMLElement;
@@ -74,7 +80,7 @@ export class GameComponent extends Component {
   }
 
   private initializeGame(): void {
-    this.setupUI();
+    // this.setupUI();
     this.connectWebSocket();
     this.setupKeyboardControls();
     this.startGameLoop();
@@ -102,7 +108,7 @@ export class GameComponent extends Component {
       const payload = msg?.payload;
       this.gameState = payload;
       this.updateGameStatus(payload);
-      
+
       // 게임 종료 상태 체크 - 점수로도 확인
       if (payload?.status === "finished" || this.checkGameEndByScore(payload)) {
         this.showGameResult(payload);
@@ -141,11 +147,9 @@ export class GameComponent extends Component {
 
   private setupWebSocketEvents(): void {
     // 연결 상태 변화 감지
-
   }
 
   private setupKeyboardControls(): void {
-
     const keydownHandler = (event: KeyboardEvent) => {
       if (!this.socket) return;
       let keycode = event.code;
@@ -153,7 +157,11 @@ export class GameComponent extends Component {
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
       if (keycode === "KeyS") keycode = "ArrowDown";
-      if (["ArrowUp", "ArrowDown"].includes(keycode)) {
+      if (keycode === "KeyA") keycode = "ArrowLeft";
+      if (keycode === "KeyD") keycode = "ArrowRight";
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
+        if (this.keyState[keycode] === true) return;
+        this.keyState[keycode] = true;
         this.socket.emit("move", {
           type: "keydown",
           payload: {
@@ -172,7 +180,10 @@ export class GameComponent extends Component {
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
       if (keycode === "KeyS") keycode = "ArrowDown";
-      if (["ArrowUp", "ArrowDown"].includes(keycode)) {
+      if (keycode === "KeyA") keycode = "ArrowLeft";
+      if (keycode === "KeyD") keycode = "ArrowRight";
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
+        this.keyState[keycode] = false;
         this.socket.emit("move", {
           type: "keyup",
           payload: {
@@ -193,32 +204,32 @@ export class GameComponent extends Component {
     (this as any)._keyupHandler = keyupHandler;
   }
 
-  private setupUI(): void {
-    // 컨트롤 버튼들 컨테이너
-    const buttonsContainer = document.createElement("div");
-    buttonsContainer.className = "flex gap-3 mt-4";
-
-    // 재연결 버튼
-    const reconnectBtn = document.createElement("button");
-    reconnectBtn.textContent = "재연결";
-    reconnectBtn.className = "btn-primary";
-    reconnectBtn.onclick = () => this.connectWebSocket();
-
-    // 로그아웃 버튼
-    const logoutBtn = document.createElement("button");
-    logoutBtn.textContent = "로그아웃";
-    logoutBtn.className = "btn-muted";
-    logoutBtn.onclick = () => {
-      if (confirm("정말 로그아웃하시겠습니까?")) {
-        AuthManager.logout();
-        window.router.navigate("/login");
-      }
-    };
-
-    buttonsContainer.appendChild(reconnectBtn);
-    buttonsContainer.appendChild(logoutBtn);
-    this.statusElement.appendChild(buttonsContainer);
-  }
+  // private setupUI(): void {
+  //   // 컨트롤 버튼들 컨테이너
+  //   const buttonsContainer = document.createElement("div");
+  //   buttonsContainer.className = "flex gap-3 mt-4";
+  //
+  //   // 재연결 버튼
+  //   const reconnectBtn = document.createElement("button");
+  //   reconnectBtn.textContent = "재연결";
+  //   reconnectBtn.className = "btn-primary";
+  //   reconnectBtn.onclick = () => this.connectWebSocket();
+  //
+  //   // 로그아웃 버튼
+  //   const logoutBtn = document.createElement("button");
+  //   logoutBtn.textContent = "로그아웃";
+  //   logoutBtn.className = "btn-muted";
+  //   logoutBtn.onclick = () => {
+  //     if (confirm("정말 로그아웃하시겠습니까?")) {
+  //       AuthManager.logout();
+  //       window.router.navigate("/login");
+  //     }
+  //   };
+  //
+  //   buttonsContainer.appendChild(reconnectBtn);
+  //   buttonsContainer.appendChild(logoutBtn);
+  //   this.statusElement.appendChild(buttonsContainer);
+  // }
 
   private sendPlayerMove(direction: "up" | "down"): void {
     // socket.io 기반에서는 키 이벤트에서 직접 emit 처리하므로 이 메서드는 더 이상 사용하지 않음
@@ -247,11 +258,6 @@ export class GameComponent extends Component {
     if (!state || !state.score) return;
     const scores = `LEFT: ${state.score.left} | RIGHT: ${state.score.right}`;
     let scoresDiv = this.statusElement.querySelector(".scores") as HTMLElement;
-    if (!scoresDiv) {
-      scoresDiv = document.createElement("div");
-      scoresDiv.className = "scores mt-2 text-sm";
-      this.statusElement.appendChild(scoresDiv);
-    }
     scoresDiv.textContent = scores;
   }
 
@@ -278,7 +284,7 @@ export class GameComponent extends Component {
         gameData.winner = "right";
       }
     }
-    
+
     // 결과 메시지 생성
     let resultMessage = "게임 종료!";
     if (gameData.winner) {
@@ -286,7 +292,7 @@ export class GameComponent extends Component {
       const isWinner = gameData.winner === this.myRole;
       resultMessage = isWinner ? `승리! ${winnerText} 승!` : `패배! ${winnerText} 승!`;
     }
-    
+
     // 결과 표시
     const resultDiv = document.createElement("div");
     resultDiv.className = "game-result glass-card p-6 mt-4 text-center";
@@ -295,7 +301,7 @@ export class GameComponent extends Component {
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${this.gameState?.score.right || 0}</p>
       <button class="btn-primary" onclick="location.reload()">다시 게임</button>
     `;
-    
+
     this.statusElement.appendChild(resultDiv);
   }
 
@@ -336,25 +342,25 @@ export class GameComponent extends Component {
     if (!this.gameState || !this.gameState.paddles || !this.gameState.ball) return;
 
     const { left, right, width, height } = this.gameState.paddles;
-    
+
     // P1 패들 렌더링 (left) - primary-600 색상
     this.ctx.fillStyle = "#6182b8";
     this.ctx.fillRect(left.x, left.y, width, height);
-    
-    // P2 패들 렌더링 (right) - secondary-600 색상  
+
+    // P2 패들 렌더링 (right) - secondary-600 색상
     this.ctx.fillStyle = "#9070aa";
     this.ctx.fillRect(right.x, right.y, width, height);
 
     // 공 렌더링 - 글래스 효과와 함께
     const ball = this.gameState.ball;
     this.ctx.beginPath();
-    this.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    this.ctx.arc(ball.x, ball.y, ball.radius * 2, 0, Math.PI * 2);
     this.ctx.fillStyle = "#1f2937";
     this.ctx.fill();
-    
+
     // 공에 글래스 하이라이트 효과
     this.ctx.beginPath();
-    this.ctx.arc(ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/3, 0, Math.PI * 2);
+    this.ctx.arc(ball.x - ball.radius / 3, ball.y - ball.radius / 3, ball.radius / 3, 0, Math.PI * 2);
     this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
     this.ctx.fill();
 
@@ -374,15 +380,15 @@ export class GameComponent extends Component {
     this.ctx.fillStyle = "rgba(77, 106, 159, 0.9)"; // primary-700 with opacity
     this.ctx.font = '28px "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif';
     this.ctx.textAlign = "center";
-    
+
     // 텍스트 그림자 효과
     this.ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
     this.ctx.shadowBlur = 4;
     this.ctx.shadowOffsetX = 2;
     this.ctx.shadowOffsetY = 2;
-    
+
     this.ctx.fillText("게임 서버에 연결 중...", this.canvas.width / 2, this.canvas.height / 2);
-    
+
     // 그림자 효과 초기화
     this.ctx.shadowColor = "transparent";
     this.ctx.shadowBlur = 0;
