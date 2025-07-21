@@ -17,6 +17,7 @@ class AuthHelpers {
     this.validateUsername(formData.username);
     this.validatePasswd(formData.passwd, formData.confirmPasswd);
     this.validateNickname(formData.nickname);
+    this.validateProfileImage(formData.profile_image);
   }
 
   validateUsername(username) {
@@ -30,6 +31,7 @@ class AuthHelpers {
       throw new PongException("Username can only contain letters, numbers, and underscores", 400);
     }
   }
+
   validatePasswd(passwd, confirmPasswd) {
     if (!passwd) {
       throw new PongException("Password is required", 400);
@@ -44,6 +46,7 @@ class AuthHelpers {
       throw new PongException("Passwords do not match", 400);
     }
   }
+
   validateNickname(nickname) {
     if (!nickname) {
       throw new PongException("Nickname is required", 400);
@@ -53,6 +56,18 @@ class AuthHelpers {
     }
     if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
       throw new PongException("Nickname can only contain letters, numbers, and underscores", 400);
+    }
+  }
+
+  validateProfileImage(profileImage) {
+    if (!profileImage) {
+      return;
+    }
+    if (typeof profileImage !== "string") {
+      throw new PongException("Profile image must be a string URL", 400);
+    }
+    if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(profileImage)) {
+      throw new PongException("Profile image must be a valid URL ending with .jpg, .jpeg, .png, or .gif", 400);
     }
   }
 

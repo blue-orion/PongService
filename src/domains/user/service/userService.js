@@ -1,8 +1,12 @@
+import AuthHelpers from "#domains/auth/utils/authHelpers.js";
+import UserHelpers from "#domains/user/utils/userHelpers";
 import UserRepo from "#domains/user/repo/userRepo.js";
-import ProfileDto from "#domains/user/model/ProfileDto.js";
+import ProfileDto from "#domains/user/model/profileDto.js";
 
 class UserService {
-  constructor(userRepo = new UserRepo()) {
+  constructor(authHelpers = new AuthHelpers(), userHelpers = new UserHelpers(), userRepo = new UserRepo()) {
+    this.authHelpers = authHelpers;
+    this.userHelpers = userHelpers;
     this.userRepo = userRepo;
   }
 
@@ -20,18 +24,10 @@ class UserService {
   }
 
   async updateUserPassword(user, passwordDto, encryptUtils) {
-    const { currentPassword, newPassword, confirmNewPassword } = passwordDto;
     const targetUser = await this.userRepo.getUserById(user.id);
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      throw new Error("Current password and new password are required");
-    }
-    if (!(await encryptUtils.comparePasswd(currentPassword, targetUser.passwd))) {
-      throw new Error("Current password is incorrect");
-    }
-    if (newPassword !== confirmNewPassword) {
-      throw new Error("New password and confirmation do not match");
-    }
-    const hashedPassword = await encryptUtils.hashPasswd(newPassword);
+    this.authHelpers.validateHashedPasswd(passwordDto.currentPassword, targetUser.passwd, encryptUtils);
+
+    const hashedPassword = await encryptUtils.hashPasswd(passwordDto.newPassword);
     await this.userRepo.putPassword(user.id, hashedPassword);
   }
 
