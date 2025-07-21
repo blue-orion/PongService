@@ -36,4 +36,5 @@ export async function loadTemplates(templatePaths: string[]): Promise<string[]> 
 export const TEMPLATE_PATHS = {
   LOGIN: "/src/components/login/login.template.html",
   GAME: "/src/components/game/game.template.html",
+  FRIEND: "/src/components/friend/friend.template.html",
 } as const;
