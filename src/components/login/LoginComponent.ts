@@ -14,7 +14,9 @@ export class LoginComponent extends Component {
   }
 
   private setupEventListeners(): void {
-    this.formElement = this.container.querySelector("#loginForm") as HTMLFormElement;
+    this.formElement = this.container.querySelector(
+      "#loginForm",
+    ) as HTMLFormElement;
 
     if (this.formElement) {
       this.formElement.addEventListener("submit", this.handleLogin.bind(this));
@@ -58,7 +60,9 @@ export class LoginComponent extends Component {
         // 로그인 성공 시 메인 페이지로 이동
         window.router.navigate("/");
       } else {
-        this.showError("로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.");
+        this.showError(
+          "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.",
+        );
       }
     } catch (error) {
       console.error("로그인 오류:", error);
@@ -77,7 +81,8 @@ export class LoginComponent extends Component {
 
     // 새 에러 메시지 표시
     const errorDiv = document.createElement("div");
-    errorDiv.className = "error-message bg-red-500/10 border border-red-500/20 text-red-700 p-3 rounded-lg mt-4";
+    errorDiv.className =
+      "error-message bg-red-500/10 border border-red-500/20 text-red-700 p-3 rounded-lg mt-4";
     errorDiv.textContent = message;
 
     this.formElement?.appendChild(errorDiv);
@@ -87,8 +92,12 @@ export class LoginComponent extends Component {
   }
 
   private setLoading(loading: boolean): void {
-    const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-    const inputs = this.container.querySelectorAll("input") as NodeListOf<HTMLInputElement>;
+    const submitButton = this.container.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement | null;
+    const inputs = this.container.querySelectorAll(
+      "input",
+    ) as NodeListOf<HTMLInputElement>;
 
     if (!submitButton) return;
 
@@ -105,7 +114,10 @@ export class LoginComponent extends Component {
 
   destroy(): void {
     if (this.formElement) {
-      this.formElement.removeEventListener("submit", this.handleLogin.bind(this));
+      this.formElement.removeEventListener(
+        "submit",
+        this.handleLogin.bind(this),
+      );
     }
   }
 }

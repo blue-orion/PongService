@@ -2,6 +2,7 @@ import { Router } from "./router";
 import { LoginComponent } from "./components/login/LoginComponent";
 import { GameComponent } from "./components/game/GameComponent";
 import { AuthManager } from "./utils/auth";
+import "./styles/input.css";
 import "./types/global"; // 글로벌 타입 선언
 
 class App {
