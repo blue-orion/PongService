@@ -34,9 +34,6 @@ export class FriendComponent {
     const template = await loadTemplate(TEMPLATE_PATHS.FRIEND);
     this.container.innerHTML = template;
 
-    // CSS 로드
-    this.loadStyles();
-
     // 사용자 프로필 설정
     this.setupUserProfile();
 
@@ -131,16 +128,6 @@ export class FriendComponent {
     const nicknameElement = this.container.querySelector("#userNickname") as HTMLElement;
     if (nicknameElement) {
       nicknameElement.textContent = username;
-    }
-  }
-
-  private loadStyles(): void {
-    // 이미 로드되었는지 확인
-    if (!document.querySelector('link[href*="friend.css"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "/src/styles/friend.css";
-      document.head.appendChild(link);
     }
   }
 

@@ -38,7 +38,7 @@ export class Layout extends Component {
 
     private async initializeComponents(): Promise<void> {
         const headerContainer = this.container.querySelector('#header') as HTMLElement;
-        const friendsContainer = this.container.querySelector('#friends-list') as HTMLElement;
+        const friendsContainer = this.container.querySelector('#friend-area') as HTMLElement;
 
         if (headerContainer) {
             this.headerComponent = new HeaderComponents(headerContainer);

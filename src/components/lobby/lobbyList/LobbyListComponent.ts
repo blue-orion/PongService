@@ -5,12 +5,11 @@ export class LobbyListComponent extends Component {
     private currentPage: number = 1;
     private pageSize: number = 12;
     private totalItems: number = 0;
-    private filteredLobbies: any[] = [];
-    private allLobbies: any[] = [];
+    private lobbies: any[] = [];
+    private isLoading: boolean = false;
 
     constructor(container: HTMLElement) {
         super(container);
-        this.generateMockData();
     }
 
     async render(): Promise<void> {
@@ -21,10 +20,70 @@ export class LobbyListComponent extends Component {
         const template = await loadTemplate(TEMPLATE_PATHS.LOBBY_LIST);
         this.container.innerHTML = template;
 
-        // 로비 데이터 렌더링
-        this.renderLobbyData();
+        // 로비 데이터 로드 및 렌더링
+        await this.loadLobbyData();
         this.setupEventListeners();
         console.log('로비리스트 컴포넌트 렌더링 완료');
+    }
+
+    private async loadLobbyData(): Promise<void> {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        this.showLoadingState();
+
+        try {
+            const response = await fetch(`http://localhost:3333/v1/lobbies?page=${this.currentPage}&size=${this.pageSize}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            this.lobbies = data.lobbies.map((lobby: any) => ({
+                id: lobby.id,
+                name: lobby.name || `로비 ${lobby.id}`,
+                host: lobby.lobby_players?.find((p: any) => p.is_host)?.user?.username || 'Unknown',
+                status: lobby.status === 'waiting' ? 'waiting' : 'playing',
+                statusText: lobby.status === 'waiting' ? '대기 중' : '게임 중',
+                currentPlayers: lobby.lobby_players?.length || 0,
+                maxPlayers: lobby.max_players || 2,
+                createdAt: new Date(lobby.created_at).toLocaleString('ko-KR')
+            }));
+            
+            this.totalItems = data.total;
+            this.renderLobbyData();
+            
+        } catch (error) {
+            console.error('로비 데이터 로드 실패:', error);
+            this.showErrorState();
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    private showLoadingState(): void {
+        const lobbyGrid = this.container.querySelector('#lobby-grid');
+        if (lobbyGrid) {
+            lobbyGrid.innerHTML = `
+                <div class="loading-state">
+                    <p>로비 목록을 불러오는 중...</p>
+                </div>
+            `;
+        }
+    }
+
+    private showErrorState(): void {
+        const lobbyGrid = this.container.querySelector('#lobby-grid');
+        if (lobbyGrid) {
+            lobbyGrid.innerHTML = `
+                <div class="error-state">
+                    <p>로비 목록을 불러오는데 실패했습니다.</p>
+                    <button class="retry-btn" onclick="this.loadLobbyData()">다시 시도</button>
+                </div>
+            `;
+        }
     }
 
     private setupEventListeners(): void {
@@ -36,19 +95,21 @@ export class LobbyListComponent extends Component {
             });
         }
 
-        // 필터 이벤트
+        // 필터 이벤트 (향후 서버 사이드 필터링으로 구현 예정)
         const statusFilter = this.container.querySelector('.status-filter');
         const searchInput = this.container.querySelector('.search-input');
 
         if (statusFilter) {
-            statusFilter.addEventListener('change', () => {
-                this.applyFilters();
+            statusFilter.addEventListener('change', async () => {
+                this.currentPage = 1;
+                await this.loadLobbyData();
             });
         }
 
         if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                this.applyFilters();
+            searchInput.addEventListener('input', async () => {
+                this.currentPage = 1;
+                await this.loadLobbyData();
             });
         }
 
@@ -58,65 +119,33 @@ export class LobbyListComponent extends Component {
         const pageSizeSelect = this.container.querySelector('#page-size');
 
         if (prevBtn) {
-            prevBtn.addEventListener('click', () => {
-                this.goToPreviousPage();
+            prevBtn.addEventListener('click', async () => {
+                await this.goToPreviousPage();
             });
         }
 
         if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-                this.goToNextPage();
+            nextBtn.addEventListener('click', async () => {
+                await this.goToNextPage();
             });
         }
 
         if (pageSizeSelect) {
-            pageSizeSelect.addEventListener('change', (e) => {
+            pageSizeSelect.addEventListener('change', async (e) => {
                 const target = e.target as HTMLSelectElement;
                 this.pageSize = parseInt(target.value);
                 this.currentPage = 1;
-                this.renderLobbyData();
+                await this.loadLobbyData();
             });
         }
-    }
-
-    private generateMockData(): void {
-        // 더미 로비 데이터 생성
-        this.allLobbies = [];
-        const statuses = ['waiting', 'playing'];
-        const hostNames = ['Player1', 'GamerPro', 'ProGamer99', 'NewPlayer', 'SkillPlayer', 'Master123', 'Rookie456'];
-
-        for (let i = 1; i <= 47; i++) {
-            const status = statuses[Math.floor(Math.random() * statuses.length)];
-            const host = hostNames[Math.floor(Math.random() * hostNames.length)];
-            const currentPlayers = status === 'playing' ? 2 : Math.floor(Math.random() * 2) + 1;
-            
-            this.allLobbies.push({
-                id: i,
-                name: `게임 ${i}`,
-                host: host,
-                status: status,
-                statusText: status === 'waiting' ? '대기 중' : '게임 중',
-                currentPlayers: currentPlayers,
-                maxPlayers: 2,
-                createdAt: new Date(Date.now() - Math.random() * 3600000).toLocaleString('ko-KR')
-            });
-        }
-
-        this.filteredLobbies = [...this.allLobbies];
-        this.totalItems = this.filteredLobbies.length;
     }
 
     private renderLobbyData(): void {
         const lobbyGrid = this.container.querySelector('#lobby-grid');
         if (!lobbyGrid) return;
 
-        // 현재 페이지의 데이터 계산
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        const endIndex = startIndex + this.pageSize;
-        const currentPageData = this.filteredLobbies.slice(startIndex, endIndex);
-
         // 로비 카드들 생성
-        lobbyGrid.innerHTML = currentPageData.map(lobby => `
+        lobbyGrid.innerHTML = this.lobbies.map((lobby: any) => `
             <div class="lobby-card ${lobby.status}" data-lobby-id="${lobby.id}">
                 <div class="lobby-header">
                     <h3>${lobby.name}</h3>
@@ -212,62 +241,29 @@ export class LobbyListComponent extends Component {
             
             // 페이지 번호 클릭 이벤트
             pageNumbers.querySelectorAll('.page-number').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', async (e) => {
                     const target = e.target as HTMLElement;
                     const page = parseInt(target.getAttribute('data-page') || '1');
                     this.currentPage = page;
-                    this.renderLobbyData();
+                    await this.loadLobbyData();
                 });
             });
         }
     }
 
-    private goToPreviousPage(): void {
+    private async goToPreviousPage(): Promise<void> {
         if (this.currentPage > 1) {
             this.currentPage--;
-            this.renderLobbyData();
+            await this.loadLobbyData();
         }
     }
 
-    private goToNextPage(): void {
+    private async goToNextPage(): Promise<void> {
         const totalPages = Math.ceil(this.totalItems / this.pageSize);
         if (this.currentPage < totalPages) {
             this.currentPage++;
-            this.renderLobbyData();
+            await this.loadLobbyData();
         }
-    }
-
-    private applyFilters(): void {
-        const gameTypeFilter = this.container.querySelector('.game-type-filter') as HTMLSelectElement;
-        const statusFilter = this.container.querySelector('.status-filter') as HTMLSelectElement;
-        const searchInput = this.container.querySelector('.search-input') as HTMLInputElement;
-
-        this.filteredLobbies = this.allLobbies.filter(lobby => {
-            // 게임 타입 필터
-            if (gameTypeFilter?.value !== 'all' && lobby.gameType !== gameTypeFilter?.value) {
-                return false;
-            }
-
-            // 상태 필터
-            if (statusFilter?.value !== 'all' && lobby.status !== statusFilter?.value) {
-                return false;
-            }
-
-            // 검색 필터
-            if (searchInput?.value.trim()) {
-                const searchTerm = searchInput.value.toLowerCase();
-                if (!lobby.name.toLowerCase().includes(searchTerm) && 
-                    !lobby.host.toLowerCase().includes(searchTerm)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        this.totalItems = this.filteredLobbies.length;
-        this.currentPage = 1; // 필터 적용 시 첫 페이지로 이동
-        this.renderLobbyData();
     }
 
     private createNewLobby(): void {
