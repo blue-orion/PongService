@@ -5,8 +5,8 @@ export default async function friendRoutes(fastify) {
 
   // POST /v1/friends/request
   fastify.post("/request", friendController.requestFriendHandler);
-  // DELETE /v1/friends/delete/:relationId
-  fastify.delete("/delete/:relationId", friendController.deleteFriendHandler);
+  // DELETE /v1/friends/delete
+  fastify.delete("/delete", friendController.deleteFriendHandler);
   // GET /v1/friends/list
   fastify.get("/list", friendController.getFriendsHandler);
   // GET /v1/friends/received-requests
