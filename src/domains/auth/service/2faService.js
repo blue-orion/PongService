@@ -35,6 +35,9 @@ class TwoFAService {
   }
 
   verify2FACode(secret, token) {
+    if (!secret) {
+      return;
+    }
     const verified = speakeasy.totp.verify({
       secret,
       encoding: "base32",
