@@ -59,6 +59,7 @@ export class FriendService {
       }
 
       const data = await response.json();
+      console.log("API 원본 응답:", data);
       return { success: true, data };
     } catch (error) {
       console.error("Friend API error:", error);

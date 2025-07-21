@@ -27,7 +27,8 @@ export class FriendComponent {
 
   constructor(container: HTMLElement) {
     this.container = container;
-    this.initializeWebSocket();
+    // 웹소켓 연결 비활성화
+    // this.initializeWebSocket();
   }
 
   public async render(): Promise<void> {
@@ -180,27 +181,60 @@ export class FriendComponent {
   }
 
   private async loadFriendRequests(): Promise<void> {
+    console.log("친구 요청 로드 시작...");
     const response = await friendService.getReceivedRequests();
+    console.log("친구 요청 API 응답:", response);
 
     if (!response.success || !response.data) {
+      console.warn("친구 요청 로드 실패 또는 데이터 없음:", response);
       this.friendRequests = [];
       return;
     }
+
+    console.log("친구 요청 데이터 타입:", typeof response.data);
+    console.log("친구 요청 데이터 내용:", response.data);
 
     // 다양한 응답 구조 처리
     let requestsArray: any[] = [];
     if (Array.isArray(response.data)) {
       requestsArray = response.data;
+      console.log("친구 요청이 직접 배열:", requestsArray);
+    } else if ((response.data as any).data && Array.isArray((response.data as any).data)) {
+      requestsArray = (response.data as any).data;
+      console.log("친구 요청이 data.data 배열:", requestsArray);
     } else if ((response.data as any).content && Array.isArray((response.data as any).content)) {
       requestsArray = (response.data as any).content;
+      console.log("친구 요청이 content 배열:", requestsArray);
+    } else {
+      console.warn("친구 요청 데이터 구조를 인식할 수 없음:", response.data);
+      // 객체의 모든 키 확인
+      if (typeof response.data === "object" && response.data !== null) {
+        console.log("사용 가능한 키들:", Object.keys(response.data));
+        Object.keys(response.data).forEach((key) => {
+          console.log(`${key}:`, (response.data as any)[key]);
+        });
+      }
     }
 
-    this.friendRequests = requestsArray.map((request: any) => ({
-      id: request.id || request.relationId || "unknown",
-      name: request.name || request.username || request.nickname || "Unknown",
-      avatar: request.avatar || request.profile_image,
-      relationId: request.relationId || request.id || "unknown",
-    }));
+    console.log("변환할 친구 요청 배열:", requestsArray);
+
+    this.friendRequests = requestsArray.map((request: any) => {
+      console.log("처리 중인 친구 요청:", request);
+      console.log("sender 정보:", request.sender);
+
+      // API 응답 구조에 맞게 데이터 추출
+      const converted = {
+        id: request.id?.toString() || "unknown",
+        name:
+          request.sender?.nickname || request.sender?.username || request.sender?.name || `사용자 ${request.sender_id}`,
+        avatar: request.sender?.profile_image || request.sender?.avatar || null,
+        relationId: request.id?.toString() || "unknown",
+      };
+      console.log("변환된 친구 요청:", converted);
+      return converted;
+    });
+
+    console.log("최종 친구 요청 목록:", this.friendRequests);
   }
 
   private convertStatus(apiStatus: string): "online" | "offline" | "in-game" {
@@ -292,7 +326,9 @@ export class FriendComponent {
 
   private renderFriendItems(): void {
     console.log("renderFriendItems 호출됨, 친구 수:", this.friends.length);
+    console.log("친구 요청 수:", this.friendRequests.length);
     console.log("친구 목록 데이터:", this.friends);
+    console.log("친구 요청 데이터:", this.friendRequests);
 
     // 온라인 친구들 렌더링
     const onlineFriends = this.friends.filter((f) => f.status !== "offline");
@@ -371,17 +407,22 @@ export class FriendComponent {
     }
 
     // 친구 요청들 렌더링
+    console.log("친구 요청 렌더링 시작, 요청 수:", this.friendRequests.length);
     const requestSection = friendSections[2]; // 세 번째 섹션 (친구 요청)
     const requestList = requestSection?.querySelector(".friend-list");
+    console.log("친구 요청 섹션:", requestSection);
     console.log("친구 요청 리스트 엘리먼트:", requestList);
 
     if (requestList) {
       if (this.friendRequests.length === 0) {
+        console.log("친구 요청이 없어서 메시지 표시");
         requestList.innerHTML = '<div class="no-friends">받은 친구 요청이 없습니다</div>';
       } else {
+        console.log("친구 요청 HTML 생성 시작");
         const requestHTML = this.friendRequests
-          .map(
-            (request) => `
+          .map((request) => {
+            console.log("친구 요청 아이템 생성:", request);
+            return `
           <div class="friend-item request">
             <div class="friend-avatar"></div>
             <div class="friend-info">
@@ -393,12 +434,15 @@ export class FriendComponent {
               <button class="action-btn reject-btn" title="거절">✗</button>
             </div>
           </div>
-        `
-          )
+        `;
+          })
           .join("");
         console.log("친구 요청 HTML:", requestHTML);
         requestList.innerHTML = requestHTML;
+        console.log("친구 요청 HTML 설정 완료");
       }
+    } else {
+      console.error("친구 요청 리스트 엘리먼트를 찾을 수 없음");
     }
   }
 
@@ -518,7 +562,7 @@ export class FriendComponent {
 
   public destroy(): void {
     this.container.innerHTML = "";
-    // 웹소켓 연결 해제
-    friendWebSocketManager.disconnect();
+    // 웹소켓 연결 해제 비활성화
+    // friendWebSocketManager.disconnect();
   }
 }
