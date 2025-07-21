@@ -9,7 +9,7 @@ interface Friend {
   status: "online" | "offline" | "in-game";
   avatar?: string;
   relationId?: string;
-  username?: string; // API에서 올 수 있는 필드
+  username?: string;
 }
 
 interface FriendRequest {
@@ -34,18 +34,12 @@ export class FriendComponent {
     const template = await loadTemplate(TEMPLATE_PATHS.FRIEND);
     this.container.innerHTML = template;
 
-    // CSS 로드
     this.loadStyles();
-
-    // 사용자 프로필 설정
     this.setupUserProfile();
-
-    // 친구 데이터 로드
     await this.loadFriendsData();
-
     this.setupEventListeners();
-    this.updateFriendList();
     this.renderFriendItems();
+    this.updateFriendList();
   }
 
   private initializeWebSocket(): void {
@@ -146,81 +140,78 @@ export class FriendComponent {
 
   private async loadFriendsData(): Promise<void> {
     try {
-      console.log("친구 데이터 로드 시작...");
-
-      // 친구 목록 로드
-      const friendsResponse = await friendService.getFriendsList();
-      console.log("친구 목록 응답:", friendsResponse);
-
-      if (friendsResponse.success && friendsResponse.data && friendsResponse.data.friends) {
-        // API 응답 데이터를 Friend 인터페이스에 맞게 변환
-        this.friends = friendsResponse.data.friends.map((friend) => {
-          // status 변환: API의 "OFFLINE", "ONLINE", "IN_GAME" -> "offline", "online", "in-game"
-          let status: "online" | "offline" | "in-game" = "offline";
-          if (friend.status === "ONLINE") status = "online";
-          else if (friend.status === "IN_GAME") status = "in-game";
-
-          return {
-            id: friend.id.toString(),
-            name: friend.nickname || friend.username,
-            username: friend.username,
-            status: status,
-            avatar: friend.profile_image,
-            relationId: friend.id.toString(), // 임시로 id 사용
-          };
-        });
-        console.log("변환된 친구 목록:", this.friends);
-      } else {
-        console.warn("친구 목록 로드 실패:", friendsResponse.message);
-        this.friends = [];
-      }
-
-      // 받은 친구 요청 로드
-      const requestsResponse = await friendService.getReceivedRequests();
-      console.log("친구 요청 응답:", requestsResponse);
-
-      if (requestsResponse.success && requestsResponse.data) {
-        this.friendRequests = requestsResponse.data.map((request) => ({
-          id: request.id,
-          name: request.name || "Unknown",
-          avatar: request.avatar,
-          relationId: request.relationId,
-        }));
-        console.log("변환된 친구 요청:", this.friendRequests);
-      } else {
-        console.warn("친구 요청 로드 실패:", requestsResponse.message);
-        this.friendRequests = [];
-      }
-
-      // UI 업데이트
-      this.updateFriendList();
+      await this.loadFriends();
+      await this.loadFriendRequests();
       this.renderFriendItems();
+      this.updateFriendList();
     } catch (error) {
       console.error("친구 데이터 로드 실패:", error);
-
-      // 네트워크 오류 등의 경우에만 목 데이터 사용
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        console.log("네트워크 오류로 인한 목 데이터 사용");
-        this.loadMockData();
-      } else {
-        // API 오류의 경우 빈 배열로 초기화
-        this.friends = [];
-        this.friendRequests = [];
-        this.updateFriendList();
-        this.renderFriendItems();
-      }
+      this.friends = [];
+      this.friendRequests = [];
+      this.updateFriendList();
+      this.renderFriendItems();
     }
   }
 
-  private loadMockData(): void {
-    // 목 데이터 로드
-    this.friends = [
-      { id: "1", name: "hylim", status: "in-game", relationId: "rel1" },
-      { id: "2", name: "taebkim", status: "online", relationId: "rel2" },
-      { id: "3", name: "gitkim", status: "offline", relationId: "rel3" },
-    ];
+  private async loadFriends(): Promise<void> {
+    const response = await friendService.getFriendsList();
 
-    this.friendRequests = [{ id: "1", name: "newuser", relationId: "req1" }];
+    if (!response.success || !response.data) {
+      this.friends = [];
+      return;
+    }
+
+    // 중첩된 응답 구조 처리
+    let friendsData: any[] = [];
+    if (response.data.friends && Array.isArray(response.data.friends)) {
+      friendsData = response.data.friends;
+    } else if ((response.data as any).data?.friends && Array.isArray((response.data as any).data.friends)) {
+      friendsData = (response.data as any).data.friends;
+    }
+
+    this.friends = friendsData.map((friend: any) => ({
+      id: friend.id.toString(),
+      name: friend.nickname || friend.username,
+      username: friend.username,
+      status: this.convertStatus(friend.status),
+      avatar: friend.profile_image,
+      relationId: friend.id.toString(),
+    }));
+  }
+
+  private async loadFriendRequests(): Promise<void> {
+    const response = await friendService.getReceivedRequests();
+
+    if (!response.success || !response.data) {
+      this.friendRequests = [];
+      return;
+    }
+
+    // 다양한 응답 구조 처리
+    let requestsArray: any[] = [];
+    if (Array.isArray(response.data)) {
+      requestsArray = response.data;
+    } else if ((response.data as any).content && Array.isArray((response.data as any).content)) {
+      requestsArray = (response.data as any).content;
+    }
+
+    this.friendRequests = requestsArray.map((request: any) => ({
+      id: request.id || request.relationId || "unknown",
+      name: request.name || request.username || request.nickname || "Unknown",
+      avatar: request.avatar || request.profile_image,
+      relationId: request.relationId || request.id || "unknown",
+    }));
+  }
+
+  private convertStatus(apiStatus: string): "online" | "offline" | "in-game" {
+    switch (apiStatus) {
+      case "ONLINE":
+        return "online";
+      case "IN_GAME":
+        return "in-game";
+      default:
+        return "offline";
+    }
   }
 
   private setupEventListeners(): void {
@@ -300,14 +291,26 @@ export class FriendComponent {
   }
 
   private renderFriendItems(): void {
+    console.log("renderFriendItems 호출됨, 친구 수:", this.friends.length);
+    console.log("친구 목록 데이터:", this.friends);
+
     // 온라인 친구들 렌더링
     const onlineFriends = this.friends.filter((f) => f.status !== "offline");
-    const onlineList = this.container.querySelector(".friend-section:nth-child(1) .friend-list");
+    console.log("온라인 친구 수:", onlineFriends.length);
+
+    // 더 구체적인 선택자 사용
+    const friendSections = this.container.querySelectorAll(".friend-section");
+    console.log("친구 섹션 개수:", friendSections.length);
+
+    const onlineSection = friendSections[0]; // 첫 번째 섹션 (온라인)
+    const onlineList = onlineSection?.querySelector(".friend-list");
+    console.log("온라인 리스트 엘리먼트:", onlineList);
+
     if (onlineList) {
       if (onlineFriends.length === 0) {
         onlineList.innerHTML = '<div class="no-friends">온라인 친구가 없습니다</div>';
       } else {
-        onlineList.innerHTML = onlineFriends
+        const onlineHTML = onlineFriends
           .map(
             (friend) => `
           <div class="friend-item online">
@@ -324,19 +327,31 @@ export class FriendComponent {
         `
           )
           .join("");
+        console.log("온라인 친구 HTML:", onlineHTML);
+        onlineList.innerHTML = onlineHTML;
       }
     }
 
     // 오프라인 친구들 렌더링
     const offlineFriends = this.friends.filter((f) => f.status === "offline");
-    const offlineList = this.container.querySelector(".friend-section:nth-child(2) .friend-list");
+    console.log("오프라인 친구 수:", offlineFriends.length);
+    console.log("오프라인 친구 데이터:", offlineFriends);
+
+    const offlineSection = friendSections[1]; // 두 번째 섹션 (오프라인)
+    const offlineList = offlineSection?.querySelector(".friend-list");
+    console.log("오프라인 리스트 엘리먼트:", offlineList);
+    console.log("오프라인 섹션:", offlineSection);
+
     if (offlineList) {
       if (offlineFriends.length === 0) {
+        console.log("오프라인 친구가 없어서 메시지 표시");
         offlineList.innerHTML = '<div class="no-friends">오프라인 친구가 없습니다</div>';
       } else {
-        offlineList.innerHTML = offlineFriends
-          .map(
-            (friend) => `
+        console.log("오프라인 친구 HTML 생성 시작");
+        const offlineHTML = offlineFriends
+          .map((friend) => {
+            console.log("오프라인 친구 아이템 생성:", friend);
+            return `
           <div class="friend-item offline">
             <div class="friend-avatar"></div>
             <div class="friend-info">
@@ -344,19 +359,27 @@ export class FriendComponent {
               <div class="friend-status">오프라인</div>
             </div>
           </div>
-        `
-          )
+        `;
+          })
           .join("");
+        console.log("오프라인 친구 HTML:", offlineHTML);
+        offlineList.innerHTML = offlineHTML;
+        console.log("오프라인 친구 HTML 설정 완료");
       }
+    } else {
+      console.error("오프라인 리스트 엘리먼트를 찾을 수 없음");
     }
 
     // 친구 요청들 렌더링
-    const requestList = this.container.querySelector(".friend-section:nth-child(3) .friend-list");
+    const requestSection = friendSections[2]; // 세 번째 섹션 (친구 요청)
+    const requestList = requestSection?.querySelector(".friend-list");
+    console.log("친구 요청 리스트 엘리먼트:", requestList);
+
     if (requestList) {
       if (this.friendRequests.length === 0) {
         requestList.innerHTML = '<div class="no-friends">받은 친구 요청이 없습니다</div>';
       } else {
-        requestList.innerHTML = this.friendRequests
+        const requestHTML = this.friendRequests
           .map(
             (request) => `
           <div class="friend-item request">
@@ -373,6 +396,8 @@ export class FriendComponent {
         `
           )
           .join("");
+        console.log("친구 요청 HTML:", requestHTML);
+        requestList.innerHTML = requestHTML;
       }
     }
   }
@@ -382,25 +407,35 @@ export class FriendComponent {
     const onlineFriends = this.friends.filter((f) => f.status !== "offline");
     const offlineFriends = this.friends.filter((f) => f.status === "offline");
 
+    console.log("updateFriendList 호출됨");
+    console.log("온라인 친구 수:", onlineFriends.length);
+    console.log("오프라인 친구 수:", offlineFriends.length);
+
+    const friendSections = this.container.querySelectorAll(".friend-section");
+    console.log("친구 섹션 개수:", friendSections.length);
+
     // 온라인 섹션 업데이트
-    const onlineSection = this.container.querySelector(".friend-section:nth-child(1)");
+    const onlineSection = friendSections[0];
     const onlineTitle = onlineSection?.querySelector(".section-title");
     if (onlineTitle) {
       onlineTitle.textContent = `온라인 - ${onlineFriends.length}`;
+      console.log("온라인 제목 업데이트:", onlineTitle.textContent);
     }
 
     // 오프라인 섹션 업데이트
-    const offlineSection = this.container.querySelector(".friend-section:nth-child(2)");
+    const offlineSection = friendSections[1];
     const offlineTitle = offlineSection?.querySelector(".section-title");
     if (offlineTitle) {
       offlineTitle.textContent = `오프라인 - ${offlineFriends.length}`;
+      console.log("오프라인 제목 업데이트:", offlineTitle.textContent);
     }
 
     // 친구 요청 섹션 업데이트
-    const requestSection = this.container.querySelector(".friend-section:nth-child(3)");
+    const requestSection = friendSections[2];
     const requestTitle = requestSection?.querySelector(".section-title");
     if (requestTitle) {
       requestTitle.textContent = `받은 요청 - ${this.friendRequests.length}`;
+      console.log("친구 요청 제목 업데이트:", requestTitle.textContent);
     }
   }
 
