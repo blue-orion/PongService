@@ -72,7 +72,7 @@ export class GameComponent extends Component {
 
     this.canvas = this.container.querySelector("#gameCanvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
-    this.statusElement = this.container.querySelector("#gameStatus")!;
+    this.scoresElement = this.container.querySelector("#scores");
     this.connectionStatusElement = this.container.querySelector("#connectionStatus")!;
 
     // 게임 초기화 (인증은 이미 앱 레벨에서 확인됨)
@@ -204,37 +204,6 @@ export class GameComponent extends Component {
     (this as any)._keyupHandler = keyupHandler;
   }
 
-  // private setupUI(): void {
-  //   // 컨트롤 버튼들 컨테이너
-  //   const buttonsContainer = document.createElement("div");
-  //   buttonsContainer.className = "flex gap-3 mt-4";
-  //
-  //   // 재연결 버튼
-  //   const reconnectBtn = document.createElement("button");
-  //   reconnectBtn.textContent = "재연결";
-  //   reconnectBtn.className = "btn-primary";
-  //   reconnectBtn.onclick = () => this.connectWebSocket();
-  //
-  //   // 로그아웃 버튼
-  //   const logoutBtn = document.createElement("button");
-  //   logoutBtn.textContent = "로그아웃";
-  //   logoutBtn.className = "btn-muted";
-  //   logoutBtn.onclick = () => {
-  //     if (confirm("정말 로그아웃하시겠습니까?")) {
-  //       AuthManager.logout();
-  //       window.router.navigate("/login");
-  //     }
-  //   };
-  //
-  //   buttonsContainer.appendChild(reconnectBtn);
-  //   buttonsContainer.appendChild(logoutBtn);
-  //   this.statusElement.appendChild(buttonsContainer);
-  // }
-
-  private sendPlayerMove(direction: "up" | "down"): void {
-    // socket.io 기반에서는 키 이벤트에서 직접 emit 처리하므로 이 메서드는 더 이상 사용하지 않음
-  }
-
   private updateConnectionStatus(status: ConnectionStatus): void {
     const statusMessages = {
       connecting: "연결 중...",
@@ -257,8 +226,7 @@ export class GameComponent extends Component {
   private updateGameStatus(state: GameState): void {
     if (!state || !state.score) return;
     const scores = `LEFT: ${state.score.left} | RIGHT: ${state.score.right}`;
-    let scoresDiv = this.statusElement.querySelector(".scores") as HTMLElement;
-    scoresDiv.textContent = scores;
+    this.scoresElement.textContent = scores;
   }
 
   private checkGameEndByScore(payload: any): boolean {
