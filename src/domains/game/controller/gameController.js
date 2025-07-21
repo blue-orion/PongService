@@ -85,7 +85,7 @@ class GameController {
    * @param {object} msg - 전송할 메세지 객체
    */
   broadcastMessage = (players, event, msg) => {
-    for (const [role, info] of players) {
+    for (const [, info] of players) {
       websocketManager.sendToNamespaceUser("game", info.id, event, { payload: msg });
     }
   };
@@ -98,8 +98,8 @@ class GameController {
    * @returns {void}
    */
   handleMoveEvent(socket, raw) {
+    const { playerId } = socket.handshake.auth;
     try {
-      const { playerId } = socket.handshake.auth;
       let data = typeof raw === "string" ? JSON.parse(raw) : raw;
 
       const { gameId, role, keycode } = data.payload;

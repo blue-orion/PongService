@@ -1,7 +1,7 @@
 import Game from "#domains/game/model/Game.js";
 import GameDto from "#domains/game/model/GameDto.js";
 import GameRepository from "#domains/game/repo/gameRepo.js";
-import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
+import { GameStatus } from "@prisma/client";
 
 class GameService {
   /**
@@ -23,7 +23,7 @@ class GameService {
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
-    this.gameRepo = new GameRepository();
+    this.gameRepo = gameRepository;
   }
 
   setBroadcastCallback(callback) {
@@ -246,7 +246,7 @@ class GameService {
     game.stop();
 
     this.broadcastCallback(game.getPlayers(), "disconnection", { disconnectedId: playerId });
-    const timeoutId = setTimeout(() => {
+    setTimeout(() => {
       if (game.isStoped() === false) return;
       this._restartGame(gameId);
     }, 10000);
