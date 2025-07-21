@@ -32,8 +32,8 @@ class App {
       // 토큰 정리
       AuthManager.clearTokens();
 
-      // 친구 컴포넌트 정리
-      this.cleanupFriendComponent();
+      // 친구창 숨기기
+      this.hideFriendComponent();
 
       // 로그인 페이지로 이동
       this.router.navigate("/login");
@@ -64,7 +64,8 @@ class App {
       }
     } else {
       // 인증되지 않은 사용자는 로그인 페이지로
-      this.cleanupFriendComponent(); // 친구창 정리
+      // 친구창 숨기기
+      this.hideFriendComponent();
       this.router.navigate("/login", currentPath !== "/login");
     }
   }
@@ -109,33 +110,73 @@ class App {
     if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
       this.initializeFriendComponent();
     } else if (!isAuthenticated && this.friendComponent) {
-      this.cleanupFriendComponent();
+      // 인증되지 않은 상태에서는 친구창 숨기기
+      this.hideFriendComponent();
+    } else if (currentPath === "/login") {
+      // 로그인 페이지에서는 친구창 숨기기
+      this.hideFriendComponent();
     }
   }
 
-  private async initializeFriendComponent(): Promise<void> {
+  public async initializeFriendComponent(): Promise<void> {
+    // 기존 친구창이 있는지 확인
+    const existingFriendContainer = document.getElementById("friend-container");
+
     if (!this.friendComponent) {
-      // 친구창 컨테이너 생성
-      const friendContainer = document.createElement("div");
-      friendContainer.id = "friend-container";
-      document.body.appendChild(friendContainer);
+      let friendContainer = existingFriendContainer;
+
+      // 컨테이너가 없으면 새로 생성
+      if (!friendContainer) {
+        friendContainer = document.createElement("div");
+        friendContainer.id = "friend-container";
+        document.body.appendChild(friendContainer);
+      }
 
       // 친구 컴포넌트 초기화
       this.friendComponent = new FriendComponent(friendContainer);
       await this.friendComponent.render();
+    } else {
+      // 기존 친구 컴포넌트가 있으면 웹소켓만 재연결
+      friendWebSocketManager.connect();
+      console.log("기존 친구창 재사용 및 웹소켓 재연결");
+    }
+
+    // 친구창 보이기
+    this.showFriendComponent();
+  }
+  private hideFriendComponent(): void {
+    // 친구창 숨기기
+    const friendContainer = document.getElementById("friend-container");
+    if (friendContainer) {
+      friendContainer.style.display = "none";
+    }
+
+    // 웹소켓 연결 해제
+    if (this.friendComponent) {
+      friendWebSocketManager.disconnect();
+    }
+  }
+
+  private showFriendComponent(): void {
+    // 친구창 보이기
+    const friendContainer = document.getElementById("friend-container");
+    if (friendContainer) {
+      friendContainer.style.display = "block";
     }
   }
 
   private cleanupFriendComponent(): void {
     if (this.friendComponent) {
+      // 웹소켓 연결만 해제하고 UI는 유지
       this.friendComponent.destroy();
-      this.friendComponent = null;
+      // friendComponent 인스턴스는 null로 설정하지 않음으로써 재사용 가능하게 함
+      // this.friendComponent = null;
 
-      // 친구창 컨테이너 제거
-      const friendContainer = document.getElementById("friend-container");
-      if (friendContainer) {
-        friendContainer.remove();
-      }
+      // 친구창 컨테이너는 제거하지 않고 유지
+      // const friendContainer = document.getElementById("friend-container");
+      // if (friendContainer) {
+      //   friendContainer.remove();
+      // }
     }
   }
 }

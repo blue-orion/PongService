@@ -4,7 +4,7 @@ interface Friend {
   id: number;
   username: string;
   nickname: string;
-  profile_image?: string;
+  profile?: string;
   status: "ONLINE" | "OFFLINE" | "IN_GAME";
 }
 
@@ -115,10 +115,13 @@ export class FriendService {
     });
   }
 
-  // 친구 삭제
-  async deleteFriend(relationId: string): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/delete/${relationId}`, {
+  // 친구 삭제 (새로운 API 형식 - body만 사용)
+  async deleteFriend(deleteFriendId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/delete`, {
       method: "DELETE",
+      body: JSON.stringify({
+        deleteFriendId: parseInt(deleteFriendId),
+      }),
     });
   }
 
