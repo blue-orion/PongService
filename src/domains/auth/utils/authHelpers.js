@@ -72,7 +72,7 @@ class AuthHelpers {
   }
 
   async validateHashedPasswd(loginPasswd, userPasswd, encryptUtils) {
-    if (await encryptUtils.confirmPasswd(loginPasswd, userPasswd)) {
+    if (!(await encryptUtils.comparePasswd(loginPasswd, userPasswd))) {
       throw new PongException("invalid password", 400);
     }
   }

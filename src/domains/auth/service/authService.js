@@ -2,6 +2,7 @@ import axios from "axios";
 
 import AuthHelpers from "#domains/auth/utils/authHelpers.js";
 import AuthRepo from "#domains/auth/repo/authRepo.js";
+import HashedDto from "#domains/auth/model/hashedDto.js";
 import RegisterOAuthDto from "#domains/auth/model/registerOAuthDto.js";
 import TokenDto from "#domains/auth/model/tokenDto.js";
 import TwoFAService from "#domains/auth/service/2faService.js";
@@ -38,8 +39,9 @@ class AuthService {
   async registerUser(registerDto, encryptUtils) {
     const hashed = await encryptUtils.hashPasswd(registerDto.passwd);
     registerDto.passwd = hashed;
-    console.log("Registering user:", registerDto);
-    await this.userRepo.createUser(registerDto);
+    const hashedDto = new HashedDto(registerDto);
+    console.log("Registering user:", hashedDto);
+    await this.userRepo.createUser(hashedDto);
   }
 
   async refreshTokens(userId, jwtUtils, refreshToken) {
