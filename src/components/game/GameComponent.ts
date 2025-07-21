@@ -43,19 +43,20 @@ export class GameComponent extends Component {
   constructor(container: HTMLElement) {
     super(container);
     // accessToken에서 playerId 추출 (JWT 디코딩)
-    const tokens = AuthManager.getTokens && AuthManager.getTokens();
-    const token = tokens && tokens.accessToken;
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        this.playerId = payload.id;
-      } catch (e) {
-        this.playerId = "";
-      }
-    }
+    // const tokens = AuthManager.getTokens && AuthManager.getTokens();
+    // const token = tokens && tokens.accessToken;
+    // if (token) {
+    //   try {
+    //     const payload = JSON.parse(atob(token.split(".")[1]));
+    //     this.playerId = payload.id;
+    //   } catch (e) {
+    //     this.playerId = "";
+    //   }
+    // }
     // tournamentId, gameId는 임시로 1
     this.tournamentId = 1;
     this.gameId = 1;
+    this.playerId = "test-player";
   }
 
   async render(): Promise<void> {

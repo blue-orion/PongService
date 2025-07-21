@@ -36,4 +36,13 @@ export async function loadTemplates(templatePaths: string[]): Promise<string[]> 
 export const TEMPLATE_PATHS = {
   LOGIN: "/src/components/login/login.template.html",
   GAME: "/src/components/game/game.template.html",
+  HEADER: "/src/components/header/header.template.html",
+  FRIENDSLIST: "/src/components/friendsList/firendsList.template.html",
+  FRIENDS_LIST: "/src/components/friends/friendsList.template.html",
+  CHATTING_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
+  LAYOUT: "/src/pages/layout.template.html",
+  LOBBY_LIST: "/src/components/lobby/lobbyList/lobbyList.template.html",
+  LOBBY_DETAIL: "/src/components/lobby/lobbyDetail.template.html",
+  CHAT_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
+  CHAT_INPUT: "/src/components/lobby/chattingRoom/chatInput.template.html",
 } as const;

@@ -1,0 +1,46 @@
+<div class="lobby-list-page">
+    <div class="page-header">
+        <h2>🎮 게임 로비 목록</h2>
+        <button class="create-lobby-btn">새 로비 만들기</button>
+    </div>
+    
+    <div class="lobby-filters">
+        <select class="game-type-filter">
+            <option value="all">모든 게임</option>
+            <option value="pong">Pong</option>
+            <option value="tetris">테트리스</option>
+        </select>
+        <select class="status-filter">
+            <option value="all">모든 상태</option>
+            <option value="waiting">대기 중</option>
+            <option value="playing">게임 중</option>
+        </select>
+        <input type="text" class="search-input" placeholder="로비 이름 검색...">
+    </div>
+
+    <div class="lobby-grid" id="lobby-grid">
+        <!-- 로비 카드들이 동적으로 생성됩니다 -->
+    </div>
+
+    <div class="pagination-container">
+        <div class="pagination-info">
+            <span id="pagination-info">총 0개의 로비</span>
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" id="prev-page" disabled>이전</button>
+            <div class="page-numbers" id="page-numbers">
+                <!-- 페이지 번호들이 동적으로 생성됩니다 -->
+            </div>
+            <button class="pagination-btn" id="next-page" disabled>다음</button>
+        </div>
+        <div class="page-size-selector">
+            <label for="page-size">페이지당 표시:</label>
+            <select id="page-size">
+                <option value="8">8개</option>
+                <option value="12" selected>12개</option>
+                <option value="16">16개</option>
+                <option value="20">20개</option>
+            </select>
+        </div>
+    </div>
+</div>
