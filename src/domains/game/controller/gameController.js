@@ -13,7 +13,6 @@ class GameController {
    */
   constructor() {
     this.gameService = new GameService();
-
     this.gameService.setBroadcastCallback(this.broadcastMessage);
   }
 

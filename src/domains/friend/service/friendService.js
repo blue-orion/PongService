@@ -1,12 +1,12 @@
 import FriendRepo from "#domains/friend/repo/friendRepo.js";
 import UserRepo from "#domains/user/repo/userRepo.js";
 import PongException from "#shared/exception/pongException.js";
+import websocketManager from "#shared/websocket/websocketManager.js";
 
 class FriendService {
-  constructor(friendRepo = new FriendRepo(), userRepo = new UserRepo(), websocketManager = websocketManager) {
+  constructor(friendRepo = new FriendRepo(), userRepo = new UserRepo()) {
     this.friendRepo = friendRepo;
     this.userRepo = userRepo;
-    this.websocketManager = websocketManager;
   }
   // 친구요청
   async requestFriend(senderId, receiverId) {
@@ -21,7 +21,7 @@ class FriendService {
 
     const friendRelation = await this.friendRepo.requestFriend(senderId, receiverId);
 
-    this.websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
+    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
       type: "request",
       payload: {
         relationId: friendRelation.id,
@@ -47,7 +47,7 @@ class FriendService {
     await this.userRepo.addFriendToList(relation.receiver_id, relation.sender_id);
 
     // socket을 통해 친구 요청 수락 알림 전송
-    this.websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
+    websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
       type: "accepted",
       payload: {
         message: "Friend request accepted",
@@ -104,7 +104,7 @@ class FriendService {
     }
     const relation = await this.friendRepo.deleteFriend(relationId);
 
-    this.websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
+    websocketManager.sendToNamespaceUser("friend", relation.receiver_id, "friend_request", {
       type: "rejected",
       payload: {
         message: "Friend request rejected",
@@ -126,7 +126,7 @@ class FriendService {
       throw new PongException("Friend request does not exist", 404);
     }
 
-    this.websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
+    websocketManager.sendToNamespaceUser("friend", receiverId, "friend_request", {
       type: "cancelled",
       payload: {
         message: "Friend request cancelled",
