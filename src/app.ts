@@ -169,8 +169,8 @@ class App {
 
 
     // // 인증 상태 확인하여 친구창 관리
-    // const isAuthenticated = await AuthManager.checkAuth();
-    // const currentPath = window.location.pathname;
+    const isAuthenticated = await AuthManager.checkAuth();
+    const currentPath = window.location.pathname;
 
     if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
       this.initializeFriendComponent();
@@ -210,15 +210,15 @@ class App {
     console.log('레이아웃과 컴포넌트 렌더링 완료');
   }
 
-  // private async initializeFriendComponent(): Promise<void> {
+  private async initializeFriendComponent(): Promise<void> {
     // 기존 친구창이 있는지 확인
     const existingFriendContainer = document.getElementById("friend-container");
 
-  //   if (!this.friendComponent) {
+    if (!this.friendComponent) {
       let friendContainer = existingFriendContainer;
 
   //     // 컨테이너가 없으면 새로 생성
-  //     if (!friendContainer) {
+      if (!friendContainer) {
         friendContainer = document.createElement("div");
     //     friendContainer.id = "friend-container";
     //     document.body.appendChild(friendContainer);
@@ -254,21 +254,6 @@ class App {
     const friendContainer = document.getElementById("friend-container");
     if (friendContainer) {
       friendContainer.style.display = "block";
-    }
-  }
-
-  private cleanupFriendComponent(): void {
-    if (this.friendComponent) {
-      // 웹소켓 연결만 해제하고 UI는 유지
-      this.friendComponent.destroy();
-      // friendComponent 인스턴스는 null로 설정하지 않음으로써 재사용 가능하게 함
-      // this.friendComponent = null;
-
-      // 친구창 컨테이너는 제거하지 않고 유지
-      // const friendContainer = document.getElementById("friend-container");
-      // if (friendContainer) {
-      //   friendContainer.remove();
-      // }
     }
   }
 }
