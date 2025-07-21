@@ -75,12 +75,12 @@ export class GameRepository {
     const loser = await prisma.user.update({
       where: { id: loserId },
       data: {
-        total_loses: { increment: 1 },
+        total_losses: { increment: 1 },
       },
     });
 
     // WinRate Update
-    let winRate = (winner.total_wins / (winner.total_wins + winner.total_loses)) * 100;
+    let winRate = (winner.total_wins / (winner.total_wins + winner.total_losses)) * 100;
     await prisma.user.update({
       where: { id: winnerId },
       data: {
@@ -88,7 +88,7 @@ export class GameRepository {
       },
     });
 
-    winRate = (loser.total_wins / (loser.total_wins + loser.total_loses)) * 100;
+    winRate = (loser.total_wins / (loser.total_wins + loser.total_losses)) * 100;
     await prisma.user.update({
       where: { id: loserId },
       data: {

@@ -62,5 +62,21 @@ class UserHelpers {
       throw new PongException("New password and confirmation do not match", 400);
     }
   }
+
+  validateUserStatusForm(formData) {
+    if (!formData.status) {
+      throw new PongException("Status is required", 400);
+    }
+    const validStatuses = ["OFFLINE", "ONLINE", "PLAYING"];
+    if (!validStatuses.includes(formData.status)) {
+      throw new PongException(`Invalid status. Valid statuses are: ${validStatuses.join(", ")}`, 400);
+    }
+  }
+
+  validateExistingUser(user) {
+    if (!user) {
+      throw new PongException("User not found", 404);
+    }
+  }
 }
 export default UserHelpers;

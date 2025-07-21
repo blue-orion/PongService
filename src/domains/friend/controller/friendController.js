@@ -3,26 +3,28 @@ import { ApiResponse } from "#shared/api/response.js";
 import PageRequest from "#shared/page/PageRequest.js";
 import PageResponse from "#shared/page/PageResponse.js";
 
+const friendService = new FriendService();
+
 const friendController = {
   // POST /v1/friends/request
   async requestFriendHandler(request, reply) {
     const { receiverId } = request.body;
     const senderId = request.user.id;
-    await FriendService.requestFriend(receiverId, senderId);
+    await friendService.requestFriend(receiverId, senderId);
     return ApiResponse.ok(reply, { message: "Friend request sent successfully" });
   },
 
   // PUT /v1/friends/accept-request
   async acceptFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
-    await FriendService.acceptFriendRequest(parseInt(relationId));
+    await friendService.acceptFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request accepted successfully" });
   },
 
   // DELETE /v1/friends/delete/:relationId
   async deleteFriendHandler(request, reply) {
     const relationId = request.params.relationId;
-    await FriendService.deleteFriend(parseInt(relationId));
+    await friendService.deleteFriend(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend deleted successfully" });
   },
 
@@ -30,7 +32,7 @@ const friendController = {
   async getFriendsHandler(request, reply) {
     const userId = request.user.id;
     const pageable = PageRequest.of(request.query);
-    const friends = await FriendService.getFriends(userId, pageable);
+    const friends = await friendService.getFriends(userId, pageable);
     return ApiResponse.ok(reply, { friends });
   },
 
@@ -38,7 +40,7 @@ const friendController = {
   async getReceivedRequestsHandler(request, reply) {
     const userId = request.user.id;
     const pageable = PageRequest.of(request.query);
-    const requests = await FriendService.getReceivedRequests(userId, pageable);
+    const requests = await friendService.getReceivedRequests(userId, pageable);
     return ApiResponse.ok(reply, PageResponse.of(pageable, requests));
   },
 
@@ -46,14 +48,14 @@ const friendController = {
   async getSentRequestsHandler(request, reply) {
     const userId = request.user.id;
     const pageable = PageRequest.of(request.query);
-    const requests = await FriendService.getSentRequests(userId, pageable);
+    const requests = await friendService.getSentRequests(userId, pageable);
     return ApiResponse.ok(reply, PageResponse.of(pageable, requests));
   },
 
   // DELETE /v1/friends/reject-request
   async rejectFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
-    await FriendService.rejectFriendRequest(parseInt(relationId));
+    await friendService.rejectFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request rejected successfully" });
   },
 
@@ -61,7 +63,7 @@ const friendController = {
   async cancelFriendRequestHandler(request, reply) {
     const receiverId = request.params.receiverId;
     const senderId = request.user.id;
-    await FriendService.cancelFriendRequest(senderId, receiverId);
+    await friendService.cancelFriendRequest(senderId, receiverId);
     return ApiResponse.ok(reply, { message: "Friend request cancelled successfully" });
   },
 };
