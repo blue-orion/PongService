@@ -35,7 +35,7 @@ class GameState {
   hitLeftPaddle() {
     const b = this.ball;
     const { width, height } = this.paddles;
-    const paddle = this.paddles['left'];
+    const paddle = this.paddles["left"];
     const buffer = 6;
 
     const paddleTop = paddle.y;
@@ -57,7 +57,7 @@ class GameState {
   hitRightPaddle() {
     const b = this.ball;
     const { width, height } = this.paddles;
-    const paddle = this.paddles['right'];
+    const paddle = this.paddles["right"];
     const buffer = 6;
 
     const paddleTop = paddle.y;
@@ -98,9 +98,9 @@ class GameState {
     if (this.ball.dx >= MAX_SPEED) this.ball.dx = MAX_SPEED;
     if (this.ball.dx >= MAX_SPEED) this.ball.dx = MAX_SPEED;
 
-    if (this.lastHitPaddle === 'left') {
+    if (this.lastHitPaddle === "left") {
       this.ball.x = this.paddles.left.x + this.paddles.width + this.ball.radius + 1;
-    } else if (this.lastHitPaddle === 'right') {
+    } else if (this.lastHitPaddle === "right") {
       this.ball.x = this.paddles.right.x - this.ball.radius - 1;
     }
   }
@@ -121,18 +121,18 @@ class GameState {
       const dx = CANVAS_WIDTH / 200;
       const dy = CANVAS_HEIGHT / 100;
 
-      if (keyState[role]['ArrowUp']) paddle.y -= dy;
-      if (keyState[role]['ArrowDown']) paddle.y += dy;
-      if (keyState[role]['ArrowLeft']) paddle.x -= dx;
-      if (keyState[role]['ArrowRight']) paddle.x += dx;
+      if (keyState[role]["ArrowUp"]) paddle.y -= dy;
+      if (keyState[role]["ArrowDown"]) paddle.y += dy;
+      if (keyState[role]["ArrowLeft"]) paddle.x -= dx;
+      if (keyState[role]["ArrowRight"]) paddle.x += dx;
 
       const halfWidth = this.canvasWidth / 2;
       const limitY = { min: 0, max: this.canvasHeight - 100 };
 
-      if (role === 'left') {
+      if (role === "left") {
         if (paddle.x < 0) paddle.x = 1;
         if (paddle.x > halfWidth - 11 - this.ball.radius * 2) paddle.x = halfWidth - 11 - this.ball.radius * 2;
-      } else if (role === 'right') {
+      } else if (role === "right") {
         if (paddle.x < halfWidth + 2 + this.ball.radius * 2) paddle.x = halfWidth + 2 + this.ball.radius * 2;
         if (paddle.x > this.canvasWidth - 10) paddle.x = this.canvasWidth - 10;
       }
@@ -165,13 +165,13 @@ class GameState {
       }
       this.updateBall();
 
-      if (this.hitLeftPaddle() && this.lastHitPaddle !== 'left') {
-        this.lastHitPaddle = 'left';
+      if (this.hitLeftPaddle() && this.lastHitPaddle !== "left") {
+        this.lastHitPaddle = "left";
         this.hitCooldown = this.calculateHitCooldown();
         this.processHitPaddle();
       }
-      if (this.hitRightPaddle() && this.lastHitPaddle !== 'right') {
-        this.lastHitPaddle = 'right';
+      if (this.hitRightPaddle() && this.lastHitPaddle !== "right") {
+        this.lastHitPaddle = "right";
         this.hitCooldown = this.calculateHitCooldown();
         this.processHitPaddle();
       }
@@ -183,12 +183,12 @@ class GameState {
       if (this.ball.x <= 0) {
         this.ball = this.resetBall();
         this.status.waitUntil = Date.now() + 1000;
-        return 'right';
+        return "right";
       }
       if (this.ball.x >= this.canvasWidth) {
         this.ball = this.resetBall();
         this.status.waitUntil = Date.now() + 1000;
-        return 'left';
+        return "left";
       }
     }
     return null;
@@ -212,8 +212,8 @@ class GameState {
   }
 
   isGameOver() {
-    if (this.score.left >= END_SCORE) return 'left';
-    if (this.score.right >= END_SCORE) return 'right';
+    if (this.score.left >= END_SCORE) return "left";
+    if (this.score.right >= END_SCORE) return "right";
     return null;
   }
 

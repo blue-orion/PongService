@@ -1,9 +1,9 @@
-import Game from '#domains/game/model/Game.js';
-import GameDto from '#domains/game/model/GameDto.js';
-import GameRepository from '#domains/game/repo/gameRepo.js';
-import { GameStatus, TournamentStatus, TournamentType } from '@prisma/client';
+import Game from "#domains/game/model/Game.js";
+import GameDto from "#domains/game/model/GameDto.js";
+import GameRepository from "#domains/game/repo/gameRepo.js";
+import { GameStatus, TournamentStatus, TournamentType } from "@prisma/client";
 
-export class GameService {
+class GameService {
   /**
    * GameService 클래스
    * 게임의 생성, 진행, 상태 관리 등을 담당
@@ -16,13 +16,13 @@ export class GameService {
      * @type { Map<number, Game> } - key: gameId, value: Game instance
      */
     this.activeGames = new Map();
+    this.gameIntervalId = new Map();
     this.playTimes = new Map();
     /**
      * gameController가 등록하는 callback 함수
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
-
     this.gameRepo = new GameRepository();
   }
 
@@ -49,27 +49,34 @@ export class GameService {
         game = this._makeGameInstance(gameId);
       }
 
-      // TODO: 같은 게임 아이디로 여러 접속이 들어올 경우
-      // 먼저 들어왔던 한명만 접속하게 해야 함
-      // if (game.isExistPlayer(playerId))
+      if (this.isConnectedPlayer(gameId, playerId) === true) {
+        console.log("이미 연결된 플레이어");
+        return { success: false, msg: "이미 연결된 플레이어" };
+      }
 
       const gameData = await this.gameRepo.getGameById(gameId);
 
       // DB에서 플레이어 role 가져오기
-      if (playerId === gameData.player_one_id) role = 'left';
-      if (playerId === gameData.player_two_id) role = 'right';
+      if (playerId === gameData.player_one_id) role = "left";
+      if (playerId === gameData.player_two_id) role = "right";
       if (role === null) {
         throw new Error("[GameService] Role isn't defined");
       }
 
       game.addPlayer(role, playerId);
 
-      if (game.isFull() && game.isStart() === false) {
-        status = 'start';
-        this._startGame(gameId);
-      } else {
+      if (!game.isFull()) {
         console.log(`[GameService] Wating players (Game Id = ${gameId})`);
-        status = 'waiting';
+        status = "waiting";
+        return { success: true, status, role };
+      }
+      if (game.isStarted() === false) {
+        status = "start";
+        this._startGame(gameId);
+      }
+      if (game.isStoped()) {
+        status = "restart";
+        this._restartGame(gameId);
       }
       return { success: true, status, role };
     } catch (err) {
@@ -107,11 +114,32 @@ export class GameService {
     this.gameRepo.updateGameStatus(gameId, GameStatus.IN_PROGRESS);
     console.log(`[GameService] Start Game ID : ${gameId}`);
     const game = this.activeGames.get(gameId);
-    if (game.isStart()) return;
+    if (game.isStarted()) return;
 
     game.start();
     this.playTimes.set(gameId, { startTime: performance.now(), endTime: 0 });
 
+    const intervalId = this._broadcastGameState(gameId);
+    this.gameIntervalId.set(gameId, intervalId);
+  }
+
+  _restartGame(gameId) {
+    const game = this.activeGames.get(gameId);
+
+    if (game.isStoped() === false) {
+      console.log("이미 시작된 게임입니다.");
+      return;
+    }
+    console.log(`[GameService] Restart game (Game Id = ${gameId})`);
+
+    this.broadcastCallback(game.getPlayers(), "restart", { restartSeconds: 2 });
+
+    game.restart(2);
+    const intervalId = this._broadcastGameState(gameId);
+    this.gameIntervalId.set(gameId, intervalId);
+  }
+
+  _broadcastGameState(gameId) {
     const intervalId = setInterval(async () => {
       try {
         const game = this.activeGames.get(gameId);
@@ -126,22 +154,29 @@ export class GameService {
         throw new Error(err.message);
       }
     }, 1000 / 60);
+    return intervalId;
   }
 
   _sendGameState(gameId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
-      throw new Error('[Game] 해당하는 게임이 없음');
+      throw new Error("[Game] 해당하는 게임이 없음");
     }
+
+    const players = game.getPlayers();
 
     const gameState = game.getState();
     const payload = {
       ball: gameState.ball,
       paddles: gameState.paddles,
       score: game.getScore(),
+      players: {
+        left: players.get("left"),
+        right: players.get("right"),
+      },
     };
 
-    this.broadcastCallback(gameId, 'state', payload);
+    this.broadcastCallback(players, "state", payload);
   }
 
   /**
@@ -158,7 +193,10 @@ export class GameService {
 
     const time = this.playTimes.get(gameId);
     time.endTime = performance.now();
-    const playTime = (time.endTime - time.startTime) / 1000;
+    const totalSeconds = Math.floor((time.endTime - time.startTime) / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const playTime = `${minutes}:${seconds}`;
 
     const game = this.activeGames.get(gameId);
     const { score, winnerId, loserId } = game.getResult();
@@ -167,6 +205,13 @@ export class GameService {
     if (!this.activeGames.delete(gameId)) {
       throw new Error(`[GameService] Unexpected Error`);
     }
+
+    const payload = {
+      playTime,
+      score: game.getScore(),
+    };
+
+    this.broadcastCallback(game.getPlayers(), "gameOver", payload);
   }
 
   handleKeyDownEvent(gameId, role, keycode) {
@@ -183,10 +228,44 @@ export class GameService {
     game.setKeyState(role, keycode, false);
   }
 
+  handleDisconnection(gameId, playerId) {
+    const intervalId = this.gameIntervalId.get(gameId);
+    const game = this.activeGames.get(gameId);
+    if (!game) {
+      throw new Error("[Game] 해당하는 게임이 없음");
+    }
+
+    game.removePlayer(playerId);
+
+    if (!game.isStarted()) {
+      return;
+    }
+
+    clearInterval(intervalId);
+    this._sendGameState(gameId);
+    game.stop();
+
+    this.broadcastCallback(game.getPlayers(), "disconnection", { disconnectedId: playerId });
+    const timeoutId = setTimeout(() => {
+      if (game.isStoped() === false) return;
+      this._restartGame(gameId);
+    }, 10000);
+  }
+
+  isConnectedPlayer(gameId, playerId) {
+    const game = this.activeGames.get(gameId);
+    if (!game) {
+      throw new Error("[Game] 해당하는 게임이 없음");
+    }
+    const players = game.getPlayers();
+
+    return [...players.values()].some((player) => player.id === playerId && player.status === true);
+  }
+
   async getGameById(id) {
     const game = await this.gameRepo.getGameById(id);
     return new GameDto(game);
   }
 }
 
-export const gameService = new GameService();
+export default GameService;

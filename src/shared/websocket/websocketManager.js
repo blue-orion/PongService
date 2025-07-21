@@ -31,7 +31,7 @@ class WebSocketManager {
     }
     this.userSockets.get(userId)[type] = socket;
     console.log(`User ${userId} connected to ${type} namespace`);
-    console.log(this.userSockets);
+    // console.log(this.userSockets);
   }
 
   // 사용자 소켓 제거
@@ -88,7 +88,7 @@ class WebSocketManager {
     if (namespace) {
       // Socket.IO에서는 소켓 ID로 찾아야 함
       const userSocketInfo = this.userSockets.get(userId);
-      console.log(userSocketInfo);
+      // console.log(userSocketInfo);
       if (userSocketInfo) {
         // 해당 네임스페이스의 소켓 찾기
         const socket = userSocketInfo[namespace];
