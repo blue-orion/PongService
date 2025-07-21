@@ -65,8 +65,7 @@ class App {
       if (currentPath === "/login") {
         this.router.navigate("/");
       } else {
-        // 현재 경로 유지하고 친구창 초기화
-        // this.initializeFriendComponent();
+        // 현재 경로 유지
         this.requestNotificationPermission();
         this.router.navigate(currentPath, false);
       }
@@ -90,11 +89,11 @@ class App {
   }
 
   private setupRoutes(): void {
-    console.log('라우트 설정 중...');
-    
+    console.log("라우트 설정 중...");
+
     // 로그인 페이지
     this.router.addRoute("/login", async () => {
-      console.log('로그인 페이지 라우트 실행');
+      console.log("로그인 페이지 라우트 실행");
       await this.loadComponent(LoginComponent);
     });
 
@@ -108,55 +107,50 @@ class App {
       await this.loadComponent(SocialCallbackComponent);
     });
 
-    // 회원가입 페이지
-    this.router.addRoute("/signup", async () => {
-      await this.loadComponent(SignupComponent);
-    });
-
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
     this.router.addRoute("/", async () => {
-      console.log('메인 페이지 (로비 리스트) 라우트 실행');
+      console.log("메인 페이지 (로비 리스트) 라우트 실행");
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 로비 목록 페이지 (헤더에서 접근)
     this.router.addRoute("/lobby", async () => {
-      console.log('로비 목록 페이지 라우트 실행');
+      console.log("로비 목록 페이지 라우트 실행");
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 대시보드 페이지
     this.router.addRoute("/dashboard", async () => {
-      console.log('대시보드 페이지 라우트 실행');
+      console.log("대시보드 페이지 라우트 실행");
       // 대시보드 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 프로필 페이지
     this.router.addRoute("/profile", async () => {
-      console.log('프로필 페이지 라우트 실행');
+      console.log("프로필 페이지 라우트 실행");
       // 프로필 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 로비 상세 페이지 - 동적 라우트
     this.router.addDynamicRoute("/lobby/:id", async (params: any) => {
-      console.log('로비 상세 페이지 라우트 실행, ID:', params.id);
+      console.log("로비 상세 페이지 라우트 실행, ID:", params.id);
       await this.loadLayoutWithComponent(LobbyDetailComponent, params.id);
     });
 
     // 사용자 정보 페이지 - 동적 라우트
     this.router.addDynamicRoute("/info/:id", async (params: any) => {
-      console.log('사용자 정보 페이지 라우트 실행, ID:', params.id);
+      console.log("사용자 정보 페이지 라우트 실행, ID:", params.id);
       await this.loadLayoutWithComponent(UserInfoComponent, params.id);
     });
-    
-    console.log('라우트 설정 완료');
+
+    console.log("라우트 설정 완료");
   }
 
   private async loadComponent(ComponentClass: any): Promise<void> {
-    console.log('컴포넌트 로딩 시작:', ComponentClass.name);
-    
+    console.log("컴포넌트 로딩 시작:", ComponentClass.name);
+
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
       this.currentComponent.destroy();
@@ -164,28 +158,13 @@ class App {
 
     // 새 컴포넌트 로드
     this.currentComponent = new ComponentClass(this.appContainer);
-    console.log('컴포넌트 생성 완료, 렌더링 시작...');
+    console.log("컴포넌트 생성 완료, 렌더링 시작...");
     await this.currentComponent.render();
-
-
-    // // 인증 상태 확인하여 친구창 관리
-    const isAuthenticated = await AuthManager.checkAuth();
-    const currentPath = window.location.pathname;
-
-    if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
-      this.initializeFriendComponent();
-    } else if (!isAuthenticated && this.friendComponent) {
-      // 인증되지 않은 상태에서는 친구창 숨기기
-      this.hideFriendComponent();
-    } else if (currentPath === "/login") {
-      // 로그인 페이지에서는 친구창 숨기기
-      this.hideFriendComponent();
-    }
   }
 
   public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
-    console.log('레이아웃과 함께 컴포넌트 로딩 시작:', ComponentClass.name);
-    
+    console.log("레이아웃과 함께 컴포넌트 로딩 시작:", ComponentClass.name);
+
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
       this.currentComponent.destroy();
@@ -196,18 +175,18 @@ class App {
     await this.currentComponent.render();
 
     // 메인 콘텐츠 영역에 특정 컴포넌트 렌더링
-    const mainContentContainer = document.getElementById('main-content');
+    const mainContentContainer = document.getElementById("main-content");
     if (mainContentContainer) {
       const mainComponent = new ComponentClass(mainContentContainer, ...args);
       await mainComponent.render();
-      
+
       // Layout 컴포넌트에 메인 컴포넌트 저장 (나중에 정리하기 위해)
       if (this.currentComponent && this.currentComponent.setMainComponent) {
         this.currentComponent.setMainComponent(mainComponent);
       }
     }
-    
-    console.log('레이아웃과 컴포넌트 렌더링 완료');
+
+    console.log("레이아웃과 컴포넌트 렌더링 완료");
   }
 
   private async initializeFriendComponent(): Promise<void> {
@@ -217,11 +196,11 @@ class App {
     if (!this.friendComponent) {
       let friendContainer = existingFriendContainer;
 
-  //     // 컨테이너가 없으면 새로 생성
+      // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
         friendContainer = document.createElement("div");
-    //     friendContainer.id = "friend-container";
-    //     document.body.appendChild(friendContainer);
+        friendContainer.id = "friend-container";
+        document.body.appendChild(friendContainer);
       }
 
       // 친구 컴포넌트 초기화
