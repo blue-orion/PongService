@@ -1,26 +1,32 @@
 import axios from "axios";
 
-import TokenDto from "#domains/auth/model/tokenDto.js";
-import RegisterOAuthDto from "#domains/user/model/registerOAuthDto.js";
+import AuthHelpers from "#domains/auth/utils/authHelpers.js";
 import AuthRepo from "#domains/auth/repo/authRepo.js";
-import UserRepo from "#domains/user/repo/userRepo.js";
+import RegisterOAuthDto from "#domains/auth/model/registerOAuthDto.js";
+import TokenDto from "#domains/auth/model/tokenDto.js";
 import TwoFAService from "#domains/auth/service/2faService.js";
-import PongException from "#shared/exception/pongException.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
 
 class AuthService {
-  constructor(authRepo = new AuthRepo(), userRepo = new UserRepo(), twoFAService = new TwoFAService()) {
+  constructor(
+    authHelpers = new AuthHelpers(),
+    authRepo = new AuthRepo(),
+    userRepo = new UserRepo(),
+    twoFAService = new TwoFAService()
+  ) {
+    this.authHelpers = authHelpers;
     this.authRepo = authRepo;
     this.userRepo = userRepo;
     this.twoFAService = twoFAService;
   }
 
-  async authenticateUser(username, passwd, token, jwtUtils, encryptUtils) {
-    const user = await this.userRepo.getUserByUsername(username);
+  async authenticateUser(loginDto, jwtUtils, encryptUtils) {
+    const user = await this.userRepo.getUserByUsername(loginDto.username);
 
-    if (!(await encryptUtils.comparePasswd(passwd, user.passwd))) throw new PongException("invalid password", 400);
-    if (!user.enabled) throw PongException.UNAUTHORIZED;
+    await this.authHelpers.validateHashedPasswd(loginDto.passwd, user.passwd, encryptUtils);
+    this.authHelpers.validateUserEnable(user);
 
-    this.twoFAService.verify2FACode(user.twoFASecret, token);
+    this.twoFAService.verify2FACode(user.twoFASecret, loginDto.token);
 
     return await this.generateTokens(jwtUtils, user);
   }
@@ -36,9 +42,9 @@ class AuthService {
     await this.userRepo.createUser(registerDto);
   }
 
-  async refreshTokens(jwtUtils, refreshToken) {
-    const user = await this.userRepo.getUserByRefreshToken(refreshToken);
-    if (user.refreshToken !== refreshToken) throw PongException.UNAUTHORIZED;
+  async refreshTokens(userId, jwtUtils, refreshToken) {
+    const user = await this.userRepo.getUserById(userId);
+    this.authHelpers.validateUserRefreshToken(user, refreshToken);
     return await this.generateTokens(jwtUtils, user);
   }
 

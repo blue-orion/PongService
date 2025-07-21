@@ -1,50 +1,47 @@
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 
+import AuthHelpers from "#domains/auth/utils/authHelpers.js";
+import TwoFASecretDto from "#domains/auth/model/twoFASecretDto.js";
 import UserRepo from "#domains/user/repo/userRepo.js";
-import PongException from "#shared/exception/pongException.js";
 
 class TwoFAService {
-  constructor(userRepo = new UserRepo()) {
+  constructor(userRepo = new UserRepo(), authHelpers = new AuthHelpers()) {
     this.userRepo = userRepo;
+    this.authHelpers = authHelpers;
   }
 
   async setup2FA(username) {
     const user = await this.userRepo.getUserByUsername(username);
-    const { secret, qrCodeDataURL } = await this.generate2FASecret(username);
+    const twoFASecretDto = await this.generate2FASecret(username);
+    this.authHelpers.validate2FASecretForm(twoFASecretDto);
 
-    await this.userRepo.updateUser2FASecret(user.id, secret);
-    return { qrCodeDataURL };
+    await this.userRepo.updateUser2FASecret(user.id, twoFASecretDto.secret);
+    return { qrCodeDataURL: twoFASecretDto.qrCodeDataURL };
   }
 
   async generate2FASecret(username) {
     const secret = speakeasy.generateSecret({ name: `MyApp (${username})` });
     const otpauthUrl = secret.otpauth_url;
     const qrCodeDataURL = await qrcode.toDataURL(otpauthUrl);
-    return { secret: secret.base32, otpauthUrl, qrCodeDataURL };
+    return new TwoFASecretDto(secret.base32, otpauthUrl, qrCodeDataURL);
   }
 
-  async verifyUser2FA(username, token) {
-    const user = await this.userRepo.getUserByUsername(username);
-    if (!user.twoFASecret) throw PongException.BAD_REQUEST;
+  async verifyUser2FA(twoFADto) {
+    const user = await this.userRepo.getUserByUsername(twoFADto.username);
+    this.authHelpers.validate2FASecret(user.two_fa_secret);
 
-    this.verify2FACode(user.twoFASecret, token);
-    return true;
+    this.verify2FACode(user.two_fa_secret, twoFADto.token);
   }
 
   verify2FACode(secret, token) {
-    if (!secret) return;
-    if (!token) throw new PongException("2FA code required", 400);
-
     const verified = speakeasy.totp.verify({
       secret,
       encoding: "base32",
       token,
       window: 1,
     });
-    if (!verified) throw new PongException("Invalid 2FA code", 400);
-
-    return verified;
+    this.authHelpers.validate2FAToken(verified);
   }
 }
 
