@@ -41,9 +41,10 @@ const authController = {
 
   // POST /v1/auth/refresh
   async refreshTokenHandler(request, reply) {
+    const userId = request.user.id;
     const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
     const jwtUtils = request.server.jwtUtils;
-    const jwt = await authService.refreshTokens(jwtUtils, refreshToken);
+    const jwt = await authService.refreshTokens(userId, jwtUtils, refreshToken);
     return ApiResponse.ok(reply, jwt);
   },
 

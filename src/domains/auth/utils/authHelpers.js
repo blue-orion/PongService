@@ -56,6 +56,24 @@ class AuthHelpers {
     }
   }
 
+  async validateHashedPasswd(loginPasswd, userPasswd, encryptUtils) {
+    if (await encryptUtils.confirmPasswd(loginPasswd, userPasswd)) {
+      throw new PongException("invalid password", 400);
+    }
+  }
+
+  validateUserEnable(user) {
+    if (!user.enabled) {
+      throw PongException.UNAUTHORIZED;
+    }
+  }
+
+  validateUserRefreshToken(user, refreshToken) {
+    if (user?.refreshToken !== refreshToken) {
+      throw PongException.UNAUTHORIZED;
+    }
+  }
+
   validate2FASetupForm(formData) {
     if (!formData.username) {
       throw new PongException("Username is required for 2FA setup", 400);
