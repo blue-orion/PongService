@@ -3,7 +3,7 @@ import legacy from "@vitejs/plugin-legacy";
 
 export default defineConfig({
   // 프로젝트 루트 (HTML 파일들이 있는 위치)
-  root: ".",
+  root: "./",
 
   // 빌드 설정
   build: {
@@ -20,6 +20,13 @@ export default defineConfig({
   server: {
     port: 8080,
     host: true,
+    proxy: {
+      "/v1": {
+        target: "http://back:3333",
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
+    },
   },
 
   // 플러그인

@@ -24,14 +24,16 @@
     ></div>
   </div>
 
-  <div id="gameStatus" class="game-status relative z-10">
-    <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+  <div class="status-bar relative z-10 w-[800px] px-4 py-2 mb-8">
+    <div id="gameStatus" class="game-status absolute left-0 top-1/2 -translate-y-1/2">
+      <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+    </div>
+    <div id="scores" class="scores flex justify-center text-2xl">LEFT: 0 | RIGHT: 0</div>
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 text-center text-sm text-primary-600 glass-card p-1.5">
+      <p class="font-medium">게임 조작법</p>
+      <p class="mt-1">W/A/S/D 또는 방향키로 패들을 조작하세요</p>
+    </div>
   </div>
 
-  <canvas id="gameCanvas" class="game-canvas relative z-10" width="800" height="600"></canvas>
-
-  <div class="mt-6 text-center text-sm text-primary-600 glass-card p-4 relative z-10">
-    <p class="font-medium">게임 조작법</p>
-    <p class="mt-1">W/S 또는 ↑/↓ 키로 패들을 조작하세요</p>
-  </div>
+  <canvas id="gameCanvas" class="game-canvas relative z-0" width="800" height="600"></canvas>
 </div>
