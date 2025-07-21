@@ -75,7 +75,11 @@ export class LoginComponent extends Component {
       const success = await AuthManager.login(username, password);
 
       if (success) {
-        // 로그인 성공 시 메인 페이지로 이동
+        // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
+        if ((window as any).app) {
+          await (window as any).app.initializeFriendComponent();
+        }
+        // 메인 페이지로 이동
         window.router.navigate("/");
       } else {
         this.showError(

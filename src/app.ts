@@ -40,8 +40,8 @@ class App {
       // 토큰 정리
       AuthManager.clearTokens();
 
-      // 친구 컴포넌트 정리
-      // this.cleanupFriendComponent();
+      // 친구창 숨기기
+      this.hideFriendComponent();
 
       // 로그인 페이지로 이동
       this.router.navigate("/login");
@@ -73,7 +73,8 @@ class App {
       }
     } else {
       // 인증되지 않은 사용자는 로그인 페이지로
-      // this.cleanupFriendComponent(); // 친구창 정리
+      // 친구창 숨기기
+      this.hideFriendComponent();
       this.router.navigate("/login", currentPath !== "/login");
     }
   }
@@ -168,20 +169,23 @@ class App {
     await this.currentComponent.render();
 
     // // 인증 상태 확인하여 친구창 관리
-    // const isAuthenticated = await AuthManager.checkAuth();
-    // const currentPath = window.location.pathname;
+    const isAuthenticated = await AuthManager.checkAuth();
+    const currentPath = window.location.pathname;
 
-    // if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
-    //   this.initializeFriendComponent();
-    // } else if (!isAuthenticated && this.friendComponent) {
-    //   this.cleanupFriendComponent();
-    // }
-    console.log("컴포넌트 렌더링 완료");
+    if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
+      this.initializeFriendComponent();
+    } else if (!isAuthenticated && this.friendComponent) {
+      // 인증되지 않은 상태에서는 친구창 숨기기
+      this.hideFriendComponent();
+    } else if (currentPath === "/login") {
+      // 로그인 페이지에서는 친구창 숨기기
+      this.hideFriendComponent();
+    }
   }
 
-  private async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
-    console.log("레이아웃과 함께 컴포넌트 로딩 시작:", ComponentClass.name);
-
+  public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
+    console.log('레이아웃과 함께 컴포넌트 로딩 시작:', ComponentClass.name);
+    
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
       this.currentComponent.destroy();
@@ -206,31 +210,52 @@ class App {
     console.log("레이아웃과 컴포넌트 렌더링 완료");
   }
 
-  // private async initializeFriendComponent(): Promise<void> {
-  //   if (!this.friendComponent) {
-  //     // 친구창 컨테이너 생성
-  //     const friendContainer = document.createElement("div");
-  //     friendContainer.id = "friend-container";
-  //     document.body.appendChild(friendContainer);
+  private async initializeFriendComponent(): Promise<void> {
+    // 기존 친구창이 있는지 확인
+    const existingFriendContainer = document.getElementById("friend-container");
 
-  //     // 친구 컴포넌트 초기화
-  //     this.friendComponent = new FriendComponent(friendContainer);
-  //     await this.friendComponent.render();
-  //   }
-  // }
+    if (!this.friendComponent) {
+      let friendContainer = existingFriendContainer;
 
-  // private cleanupFriendComponent(): void {
-  //   if (this.friendComponent) {
-  //     this.friendComponent.destroy();
-  //     this.friendComponent = null;
+  //     // 컨테이너가 없으면 새로 생성
+      if (!friendContainer) {
+        friendContainer = document.createElement("div");
+    //     friendContainer.id = "friend-container";
+    //     document.body.appendChild(friendContainer);
+      }
 
-  //     // 친구창 컨테이너 제거
-  //     const friendContainer = document.getElementById("friend-container");
-  //     if (friendContainer) {
-  //       friendContainer.remove();
-  //     }
-  //   }
-  // }
+      // 친구 컴포넌트 초기화
+      this.friendComponent = new FriendComponent(friendContainer);
+      await this.friendComponent.render();
+    } else {
+      // 기존 친구 컴포넌트가 있으면 웹소켓만 재연결
+      friendWebSocketManager.connect();
+      console.log("기존 친구창 재사용 및 웹소켓 재연결");
+    }
+
+    // 친구창 보이기
+    this.showFriendComponent();
+  }
+  private hideFriendComponent(): void {
+    // 친구창 숨기기
+    const friendContainer = document.getElementById("friend-container");
+    if (friendContainer) {
+      friendContainer.style.display = "none";
+    }
+
+    // 웹소켓 연결 해제
+    if (this.friendComponent) {
+      friendWebSocketManager.disconnect();
+    }
+  }
+
+  private showFriendComponent(): void {
+    // 친구창 보이기
+    const friendContainer = document.getElementById("friend-container");
+    if (friendContainer) {
+      friendContainer.style.display = "block";
+    }
+  }
 }
 
 // 페이지 로드 시 앱 초기화

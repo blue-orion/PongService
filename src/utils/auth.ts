@@ -44,6 +44,33 @@ export class AuthManager {
     };
   }
 
+  // JWT 토큰 디코딩
+  static decodeJWT(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('JWT 토큰 디코딩 실패:', error);
+      return null;
+    }
+  }
+
+  // 현재 로그인한 사용자 ID 가져오기
+  static getCurrentUserId(): number | null {
+    const tokens = this.getTokens();
+    if (!tokens?.accessToken) {
+      return null;
+    }
+
+    const payload = this.decodeJWT(tokens.accessToken);
+    return payload?.user_id || payload?.id || payload?.sub || null;
+  }
+
   // 토큰 삭제 (로그아웃)
   static clearTokens(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);

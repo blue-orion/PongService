@@ -25,7 +25,7 @@ export class FriendWebSocketManager {
   private onError?: (error: string) => void;
 
   constructor(
-    private serverUrl: string = "http://localhost:3333/ws/friend",
+    private serverUrl: string = "http://localhost:3333",
     private options = {
       withCredentials: true,
       transports: ["websocket", "polling"] as ["websocket", "polling"],
@@ -55,12 +55,13 @@ export class FriendWebSocketManager {
     const userId = this.getUserIdFromToken(tokens.accessToken);
     console.log("친구 웹소켓 연결 시도:", {
       serverUrl: this.serverUrl,
+      namespace: "/ws/friend",
       userId: userId,
       tokenPrefix: tokens.accessToken.substring(0, 20) + "...",
     });
 
-    // 인증 정보와 함께 소켓 연결
-    this.socket = io(this.serverUrl, {
+    // Socket.IO 네임스페이스에 올바르게 연결
+    this.socket = io(this.serverUrl + "/ws/friend", {
       ...this.options,
       auth: {
         userId: userId,
@@ -81,9 +82,10 @@ export class FriendWebSocketManager {
 
   private getUserIdFromToken(token: string): string | null {
     try {
-      // JWT 토큰에서 userId 추출 (실제 구현은 토큰 구조에 따라 달라질 수 있음)
+      // JWT 토큰에서 userId 추출
       const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.userId || payload.id || payload.sub;
+      // 백엔드에서 사용하는 필드명에 맞게 userId 추출
+      return payload.userId || payload.id || payload.sub || payload.username;
     } catch (error) {
       console.error("토큰에서 userId 추출 실패:", error);
       return null;
@@ -95,6 +97,7 @@ export class FriendWebSocketManager {
 
     this.socket.on("connect", () => {
       console.log("친구 서버에 연결됨:", this.socket?.id);
+      console.log("연결된 URL:", this.serverUrl);
       this.updateConnectionStatus("connected");
       this.reconnectAttempts = 0;
     });
@@ -110,13 +113,37 @@ export class FriendWebSocketManager {
 
     this.socket.on("connect_error", (error) => {
       console.error("친구 웹소켓 연결 오류:", error);
+      console.error("오류 상세:", {
+        message: error.message,
+        stack: error.stack,
+      });
       this.onError?.(`친구 연결 오류: ${error.message}`);
       this.attemptReconnect();
     });
 
-    // 친구 관련 이벤트 리스너
+    // 친구 관련 이벤트 리스너 - 백엔드에서 "friend_request" 이벤트로 모든 타입의 알림을 전송
     this.socket.on("friend_request", (notification: FriendNotification) => {
       console.log("친구 알림 수신:", notification);
+
+      // 타입별로 다른 처리
+      switch (notification.type) {
+        case "request":
+          console.log("새 친구 요청:", notification.payload.message);
+          break;
+        case "accepted":
+          console.log("친구 요청 수락됨:", notification.payload.message);
+          break;
+        case "rejected":
+          console.log("친구 요청 거절됨:", notification.payload.message);
+          break;
+        case "cancelled":
+          console.log("친구 요청 취소됨:", notification.payload.message);
+          break;
+        default:
+          console.log("알 수 없는 친구 알림 타입:", notification.type);
+      }
+
+      // 콜백으로 알림 전달
       this.onFriendNotification?.(notification);
     });
 
@@ -148,12 +175,12 @@ export class FriendWebSocketManager {
   }
 
   // 콜백 등록 메서드들
-  onFriendNotificationReceived(callback: (notification: FriendNotification) => void): void {
-    this.onFriendNotification = callback;
-  }
-
   onConnectionStatusChange(callback: (status: string) => void): void {
     this.onConnectionChange = callback;
+  }
+
+  onFriendNotificationReceived(callback: (notification: FriendNotification) => void): void {
+    this.onFriendNotification = callback;
   }
 
   onErrorOccurred(callback: (error: string) => void): void {
@@ -166,6 +193,12 @@ export class FriendWebSocketManager {
 
   get status(): string {
     return this.connectionStatus;
+  }
+
+  get userId(): string | null {
+    const tokens = AuthManager.getTokens();
+    if (!tokens?.accessToken) return null;
+    return this.getUserIdFromToken(tokens.accessToken);
   }
 }
 

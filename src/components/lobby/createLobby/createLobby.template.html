@@ -1,0 +1,39 @@
+<div class="create-lobby-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>새 로비 만들기</h3>
+            <button class="close-btn" type="button">&times;</button>
+        </div>
+        
+        <form class="create-lobby-form">
+            <div class="form-group">
+                <label for="tournament-type">토너먼트 타입 선택</label>
+                <select id="tournament-type" name="tournamentType" required>
+                    <option value="">토너먼트 타입을 선택하세요</option>
+                    <option value="FINAL" data-players="2">결승 (2명)</option>
+                    <option value="SEMIFINAL" data-players="4">4강 (4명)</option>
+                    <option value="QUARTERFINAL" data-players="8">8강 (8명)</option>
+                    <option value="LAST_16" data-players="16">16강 (16명)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="player-info" style="display: none;">
+                <div class="player-info-display">
+                    <span class="info-label">최대 플레이어:</span>
+                    <span class="player-count" id="player-count">-</span>명
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="cancel-btn">취소</button>
+                <button type="submit" class="create-btn">로비 생성</button>
+            </div>
+        </form>
+
+        <div class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>로비를 생성하는 중...</p>
+        </div>
+    </div>
+</div>
