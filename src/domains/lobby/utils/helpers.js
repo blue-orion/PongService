@@ -121,6 +121,13 @@ export class Helpers {
     }
   }
 
+  async _findActiveLobbyByUserId(userId) {
+    const existingLobby = await this.lobbyRepository.findActiveLobbyByUserId(userId);
+    if (existingLobby) {
+      throw PongException.ALREADY_IN_LOBBY;
+    }
+  }
+
   async _validatePlayerInLobby(lobbyId, userId) {
     const playerInLobby = await this.lobbyRepository.isPlayerAlreadyInLobby(lobbyId, userId);
     if (!playerInLobby) {

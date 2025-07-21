@@ -191,9 +191,30 @@ export class LobbyController {
       const { id } = req.params;
       const { user_id } = req.body;
 
+      // 1. 매칭 생성
       const createdMatch = await this.lobbyService.createMatch({
         lobby_id: id,
         user_id,
+      });
+
+      // 2. 매칭된 게임 정보 추출
+      const matchGames = createdMatch.matches; // Game 모델 기반의 배열
+
+      // 3. Socket.io를 통해 해당 로비 방(lobby-{id})에 매칭 완료 알림 전송
+      this.io.to(`lobby-${id}`).emit("match:created", {
+        tournament_id: createdMatch.tournament_id,
+        lobby_id: createdMatch.lobby_id,
+        round: createdMatch.round,
+        total_matches: createdMatch.total_matches,
+        games: matchGames.map(game => ({
+          game_id: game.id,
+          round: game.round,
+          match: game.match,
+          player_one_id: game.player_one_id,
+          player_two_id: game.player_two_id,
+          game_status: game.game_status,
+        })),
+        message: "매칭이 완료되었습니다.",
       });
 
       return ApiResponse.ok(res, createdMatch);

@@ -84,6 +84,8 @@ export class LobbyService {
   async createLobby(requestData) {
     const dto = new CreateLobbyDto(requestData);
 
+    await this.helpers._findActiveLobbyByUserId(dto.creator_id);
+
     const tournament = await this.helpers._getTournamentWithValidation(dto.tournament_id);
     this.helpers._validateTournamentStatus(tournament, TOURNAMENT_STATUS.PENDING);
 

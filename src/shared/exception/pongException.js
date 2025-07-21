@@ -31,7 +31,7 @@ class PongException extends Error {
 
   // === 플레이어 관련 에러 ===
   static NOT_REAL_USER = new PongException("존재하지 않는 유저입니다", 404);
-  static ALREADY_IN_LOBBY = new PongException("이미 해당 로비에 참가 중입니다.", 409);
+  static ALREADY_IN_LOBBY = new PongException("이미 로비에 참가 중입니다.", 409);
   static NOT_IN_LOBBY = new PongException("해당 로비에 참가하지 않은 사용자입니다.", 403);
   static TARGET_NOT_IN_LOBBY = new PongException("해당 유저가 로비에 참가하지 않았습니다.", 403);
 
