@@ -11,9 +11,7 @@ export async function loadTemplate(templatePath: string): Promise<string> {
   try {
     const response = await fetch(templatePath);
     if (!response.ok) {
-      throw new Error(
-        `템플릿 로드 실패: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`템플릿 로드 실패: ${response.status} ${response.statusText}`);
     }
     return await response.text();
   } catch (error) {
@@ -27,9 +25,7 @@ export async function loadTemplate(templatePath: string): Promise<string> {
  * @param templatePaths 템플릿 파일 경로들
  * @returns Promise<string[]> HTML 문자열 배열
  */
-export async function loadTemplates(
-  templatePaths: string[],
-): Promise<string[]> {
+export async function loadTemplates(templatePaths: string[]): Promise<string[]> {
   const promises = templatePaths.map((path) => loadTemplate(path));
   return await Promise.all(promises);
 }
@@ -50,4 +46,5 @@ export const TEMPLATE_PATHS = {
   LOBBY_DETAIL: "/src/components/lobby/lobbyDetail.template.html",
   CHAT_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
   CHAT_INPUT: "/src/components/lobby/chattingRoom/chatInput.template.html",
+  DASHBOARD: "/components/dashboard/dashboard.template.html",
 } as const;

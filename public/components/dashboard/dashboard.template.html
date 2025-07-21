@@ -1,0 +1,55 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>🏆 User Ranking Dashboard</h1>
+    <p>실시간 사용자 랭킹 및 통계</p>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-overview">
+    <div class="stat-card">
+      <div class="stat-number" id="total-users">10</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="active-players">2</div>
+      <div class="stat-label">Active Players</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="avg-win-rate">25.0%</div>
+      <div class="stat-label">Average Win Rate</div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Content -->
+  <div class="dashboard-content">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">User Rankings</h2>
+        <p class="section-subtitle">승률 기준 사용자 순위</p>
+      </div>
+    </div>
+
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>User</th>
+          <th>Games Played</th>
+          <th>Wins</th>
+          <th>Losses</th>
+          <th>Win Rate</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body">
+        <!-- 데이터가 여기에 동적으로 삽입됩니다 -->
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      <button id="prev-btn" disabled>Previous</button>
+      <span id="page-info">Page 1</span>
+      <button id="next-btn">Next</button>
+    </div>
+  </div>
+</div>
