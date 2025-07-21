@@ -48,6 +48,7 @@ export const TEMPLATE_PATHS = {
   LAYOUT: "/src/pages/layout.template.html",
   LOBBY_LIST: "/src/components/lobby/lobbyList/lobbyList.template.html",
   LOBBY_DETAIL: "/src/components/lobby/lobbyDetail.template.html",
+  CREATE_LOBBY: "/src/components/lobby/createLobby/createLobby.template.html",
   CHAT_ROOM: "/src/components/lobby/chattingRoom/chattingRoom.template.html",
   CHAT_INPUT: "/src/components/lobby/chattingRoom/chatInput.template.html",
 } as const;

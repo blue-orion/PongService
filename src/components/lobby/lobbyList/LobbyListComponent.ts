@@ -1,9 +1,10 @@
 import { loadTemplate, TEMPLATE_PATHS } from "../../../utils/template-loader";
 import { Component } from "../../Component";
+import { CreateLobbyModal } from "../createLobby/CreateLobbyModal";
 
 export class LobbyListComponent extends Component {
-    private currentPage: number = 1;
-    private pageSize: number = 12;
+    currentPage: number = 1;
+    pageSize: number = 12;
     private totalItems: number = 0;
     private lobbies: any[] = [];
     private isLoading: boolean = false;
@@ -39,21 +40,35 @@ export class LobbyListComponent extends Component {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const data = await response.json().then(data => data.data);
             
-            this.lobbies = data.lobbies.map((lobby: any) => ({
-                id: lobby.id,
-                name: lobby.name || `로비 ${lobby.id}`,
-                host: lobby.lobby_players?.find((p: any) => p.is_host)?.user?.username || 'Unknown',
-                status: lobby.status === 'waiting' ? 'waiting' : 'playing',
-                statusText: lobby.status === 'waiting' ? '대기 중' : '게임 중',
-                currentPlayers: lobby.lobby_players?.length || 0,
-                maxPlayers: lobby.max_players || 2,
-                createdAt: new Date(lobby.created_at).toLocaleString('ko-KR')
-            }));
+            // 안전하게 lobbies 배열 확인
+            const lobbiesArray = data.lobbies || [];
+            
+            this.lobbies = lobbiesArray.map((lobby: any) => {
+                return {
+                    id: lobby.id,
+                    name: lobby.name || `로비 ${lobby.id}`,
+                    host: lobby.creator_id,
+                    status: lobby.lobby_status === 'waiting' ? 'waiting' : 'playing',
+                    statusText: lobby.lobby_status === 'waiting' ? '대기 중' : '게임 중',
+                    currentPlayers: lobby.players?.length || 0,
+                    maxPlayers: lobby.max_player || 2,
+                    createdAt: new Date(lobby.created_at).toLocaleString('ko-KR'),
+                    tournamentId: lobby.tournament_id,
+                    creatorId: lobby.creator_id,
+                    tournament: lobby.tournament
+                };
+            });
             
             this.totalItems = data.total;
-            this.renderLobbyData();
+            
+            // 로비가 하나도 없는 경우와 일반적인 렌더링 구분
+            if (this.lobbies.length === 0) {
+                this.showEmptyState();
+            } else {
+                this.renderLobbyData();
+            }
             
         } catch (error) {
             console.error('로비 데이터 로드 실패:', error);
@@ -84,6 +99,34 @@ export class LobbyListComponent extends Component {
                 </div>
             `;
         }
+    }
+
+    private showEmptyState(): void {
+        const lobbyGrid = this.container.querySelector('#lobby-grid');
+        if (lobbyGrid) {
+            lobbyGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🎮</div>
+                    <h3>생성된 로비가 없습니다</h3>
+                    <p>새로운 게임 로비를 만들어 보세요!</p>
+                    <button class="create-lobby-btn-empty">
+                        새 로비 만들기
+                    </button>
+                </div>
+            `;
+
+            // 빈 상태의 새 로비 만들기 버튼 이벤트 리스너 추가
+            const createBtn = lobbyGrid.querySelector('.create-lobby-btn-empty');
+            if (createBtn) {
+                createBtn.addEventListener('click', () => {
+                    this.createNewLobby();
+                });
+            }
+        }
+
+        // 페이징 정보도 업데이트
+        this.updatePaginationInfo();
+        this.updatePaginationControls();
     }
 
     private setupEventListeners(): void {
@@ -266,16 +309,28 @@ export class LobbyListComponent extends Component {
         }
     }
 
-    private createNewLobby(): void {
-        // 새 로비 생성 다이얼로그 표시
-        const lobbyName = prompt('로비 이름을 입력하세요:');
-        if (lobbyName) {
-            console.log('새 로비 생성:', lobbyName);
-            // 실제 로비 생성 로직 구현
-            // 성공 시 새로 생성된 로비로 이동
-            if (window.router) {
-                window.router.navigate('/lobby/new');
+    private async createNewLobby(): Promise<void> {
+        // 모달 컨테이너 생성
+        const modalContainer = document.createElement('div');
+        modalContainer.className = 'modal-container';
+        document.body.appendChild(modalContainer);
+
+        // 로비 생성 모달 생성
+        const createLobbyModal = new CreateLobbyModal(
+            modalContainer,
+            (createdLobby) => {
+                // 로비 생성 성공 시 콜백
+                console.log('로비 생성 완료:', createdLobby);
+                // 로비 목록 새로고침
+                this.loadLobbyData();
             }
+        );
+
+        try {
+            await createLobbyModal.render();
+        } catch (error) {
+            console.error('로비 생성 모달 렌더링 실패:', error);
+            document.body.removeChild(modalContainer);
         }
     }
 
