@@ -151,7 +151,7 @@ class GameService {
         }
       } catch (err) {
         clearInterval(intervalId);
-        throw new Error(err.message);
+        console.warn(err.message);
       }
     }, 1000 / 60);
     return intervalId;
@@ -232,7 +232,7 @@ class GameService {
     const intervalId = this.gameIntervalId.get(gameId);
     const game = this.activeGames.get(gameId);
     if (!game) {
-      throw new Error("[Game] 해당하는 게임이 없음");
+      return;
     }
 
     game.removePlayer(playerId);
@@ -255,7 +255,7 @@ class GameService {
   isConnectedPlayer(gameId, playerId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
-      throw new Error("[Game] 해당하는 게임이 없음");
+      return;
     }
     const players = game.getPlayers();
 
