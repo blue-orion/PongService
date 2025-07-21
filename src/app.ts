@@ -1,5 +1,7 @@
 import { Router } from "./router";
 import { LoginComponent } from "./components/login/LoginComponent";
+import { SignupComponent } from "./components/login/SignupComponent";
+import { SocialCallbackComponent } from "./components/login/SocialCallback";
 import { GameComponent } from "./components/game/GameComponent";
 import { AuthManager } from "./utils/auth";
 import "./styles/input.css";
@@ -50,16 +52,17 @@ class App {
   }
 
   private async initializeApp(): Promise<void> {
-    // 인증 상태 확인
     const isAuthenticated = await AuthManager.checkAuth();
-
-    // 현재 URL 경로 확인
     const currentPath = window.location.pathname;
 
+    // 소셜 콜백 경로는 인증 예외
+    if (currentPath === "/social-callback") {
+      this.router.navigate("/social-callback", false);
+      return;
+    }
+
     if (isAuthenticated) {
-      // 인증된 사용자
       if (currentPath === "/login") {
-        // 로그인 페이지에 있다면 메인 페이지로 이동
         this.router.navigate("/");
       } else {
         // 현재 경로 유지하고 친구창 초기화
@@ -92,6 +95,26 @@ class App {
     this.router.addRoute("/login", async () => {
       console.log('로그인 페이지 라우트 실행');
       await this.loadComponent(LoginComponent);
+    });
+
+    // 회원가입 페이지
+    this.router.addRoute("/signup", async () => {
+      await this.loadComponent(SignupComponent);
+    });
+
+    // 소셜 로그인 콜백 페이지
+    this.router.addRoute("/social-callback", async () => {
+      await this.loadComponent(SocialCallbackComponent);
+    });
+
+    // 회원가입 페이지
+    this.router.addRoute("/signup", async () => {
+      await this.loadComponent(SignupComponent);
+    });
+
+    // 소셜 로그인 콜백 페이지
+    this.router.addRoute("/social-callback", async () => {
+      await this.loadComponent(SocialCallbackComponent);
     });
 
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
