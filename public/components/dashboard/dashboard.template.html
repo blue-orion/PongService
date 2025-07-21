@@ -1,55 +1,62 @@
-<div class="dashboard-container">
-  <!-- Header -->
-  <div class="header">
-    <h1>🏆 User Ranking Dashboard</h1>
-    <p>실시간 사용자 랭킹 및 통계</p>
+<header class="dashboard-header slide-up">
+  <h1 class="dashboard-title leading-tight">🏆 User Ranking Dashboard</h1>
+  <p class="dashboard-subtitle">실시간 사용자 랭킹 및 통계</p>
+</header>
+
+<!-- Stats Overview -->
+<section class="stats-grid slide-up">
+  <div class="stat-card hover-lift hover-glow">
+    <div id="total-users" class="stat-number">0</div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="stat-card hover-lift hover-glow">
+    <div id="active-players" class="stat-number">0</div>
+    <div class="stat-label">Active Players</div>
+  </div>
+  <div class="stat-card hover-lift hover-glow">
+    <div id="avg-win-rate" class="stat-number">0.0%</div>
+    <div class="stat-label">Average Win Rate</div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<main class="rankings-container slide-up">
+  <div class="rankings-header">
+    <div>
+      <h2 class="rankings-title">User Rankings</h2>
+      <p class="rankings-subtitle">승률 기준 사용자 순위</p>
+    </div>
   </div>
 
-  <!-- Stats Overview -->
-  <div class="stats-overview">
-    <div class="stat-card">
-      <div class="stat-number" id="total-users">10</div>
-      <div class="stat-label">Total Users</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="active-players">2</div>
-      <div class="stat-label">Active Players</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="avg-win-rate">25.0%</div>
-      <div class="stat-label">Average Win Rate</div>
-    </div>
-  </div>
-
-  <!-- Main Dashboard Content -->
-  <div class="dashboard-content">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">User Rankings</h2>
-        <p class="section-subtitle">승률 기준 사용자 순위</p>
-      </div>
-    </div>
-
-    <table class="user-table">
+  <div class="overflow-x-auto">
+    <table class="rankings-table">
       <thead>
         <tr>
-          <th>Rank</th>
-          <th>User</th>
-          <th>Games Played</th>
-          <th>Wins</th>
-          <th>Losses</th>
-          <th>Win Rate</th>
+          <th class="table-header">Rank</th>
+          <th class="table-header">User</th>
+          <th class="table-header">Games Played</th>
+          <th class="table-header">Wins</th>
+          <th class="table-header">Losses</th>
+          <th class="table-header">Win Rate</th>
         </tr>
       </thead>
       <tbody id="user-table-body">
-        <!-- 데이터가 여기에 동적으로 삽입됩니다 -->
+        <!-- Loading state -->
+        <tr>
+          <td colspan="6" class="loading-container">
+            <div class="loading-spinner"></div>
+          </td>
+        </tr>
       </tbody>
     </table>
-
-    <div class="pagination">
-      <button id="prev-btn" disabled>Previous</button>
-      <span id="page-info">Page 1</span>
-      <button id="next-btn">Next</button>
-    </div>
   </div>
-</div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <button id="prev-btn" disabled class="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+      Previous
+    </button>
+    <span id="page-info" class="pagination-info">Page 1</span>
+    <button id="next-btn" class="btn-primary">Next</button>
+  </div>
+</main>

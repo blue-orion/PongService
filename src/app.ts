@@ -184,8 +184,8 @@ class App {
   }
 
   public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
-    console.log('레이아웃과 함께 컴포넌트 로딩 시작:', ComponentClass.name);
-    
+    console.log("레이아웃과 함께 컴포넌트 로딩 시작:", ComponentClass.name);
+
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
       this.currentComponent.destroy();
@@ -217,11 +217,11 @@ class App {
     if (!this.friendComponent) {
       let friendContainer = existingFriendContainer;
 
-  //     // 컨테이너가 없으면 새로 생성
+      //     // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
         friendContainer = document.createElement("div");
-    //     friendContainer.id = "friend-container";
-    //     document.body.appendChild(friendContainer);
+        //     friendContainer.id = "friend-container";
+        //     document.body.appendChild(friendContainer);
       }
 
       // 친구 컴포넌트 초기화

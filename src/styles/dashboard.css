@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-card {
+    @apply bg-glass backdrop-blur-xl rounded-2xl border border-glass shadow-xl;
+  }
+
+  /* Dashboard specific styles */
+  .dashboard-container {
+    @apply max-w-7xl mx-auto px-4 py-8 space-y-8;
+  }
+
+  .dashboard-header {
+    @apply glass-card p-8 text-center space-y-2;
+  }
+
+  .dashboard-title {
+    @apply text-4xl sm:text-5xl font-bold bg-gradient-primary text-transparent bg-clip-text;
+  }
+
+  .dashboard-subtitle {
+    @apply text-lg text-primary-600;
+  }
+
+  /* Stats Overview */
+  .stats-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 text-center hover:scale-105 transition-transform duration-300;
+  }
+
+  .stat-number {
+    @apply text-3xl sm:text-4xl font-bold text-primary-800;
+  }
+
+  .stat-label {
+    @apply text-sm uppercase text-primary-600 tracking-wider;
+  }
+
+  /* Rankings Table */
+  .rankings-container {
+    @apply glass-card p-6 space-y-6;
+  }
+
+  .rankings-header {
+    @apply flex items-center justify-between;
+  }
+
+  .rankings-title {
+    @apply text-2xl font-semibold text-primary-800;
+  }
+
+  .rankings-subtitle {
+    @apply text-sm text-primary-600;
+  }
+
+  .rankings-table {
+    @apply table-auto w-full border-collapse overflow-hidden rounded-lg;
+  }
+
+  .table-header {
+    @apply px-4 py-3 bg-gradient-primary text-white text-left font-semibold text-sm uppercase tracking-wider;
+  }
+
+  .table-header:first-child {
+    @apply rounded-tl-lg;
+  }
+
+  .table-header:last-child {
+    @apply rounded-tr-lg;
+  }
+
+  .table-row {
+    @apply hover:bg-white/50 transition-colors duration-200 border-b border-white/20;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm;
+  }
+
+  /* Rank Badges */
+  .rank-badge {
+    @apply inline-block w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm;
+  }
+
+  .rank-gold {
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-600 text-primary-900;
+  }
+
+  .rank-silver {
+    @apply bg-gradient-to-br from-gray-300 to-gray-500 text-primary-900;
+  }
+
+  .rank-bronze {
+    @apply bg-gradient-to-br from-yellow-700 to-yellow-900 text-white;
+  }
+
+  .rank-default {
+    @apply bg-gradient-primary text-white;
+  }
+
+  /* Profile Display */
+  .profile-container {
+    @apply flex items-center space-x-3;
+  }
+
+  .profile-avatar {
+    @apply w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center font-semibold text-sm;
+  }
+
+  .profile-info {
+    @apply min-w-0 flex-1;
+  }
+
+  .profile-name {
+    @apply text-primary-800 font-medium truncate;
+  }
+
+  .profile-username {
+    @apply text-xs text-primary-600 truncate;
+  }
+
+  /* Win Rate Badges */
+  .win-rate-badge {
+    @apply px-2 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .win-rate-excellent {
+    @apply bg-success-100 text-success-700;
+  }
+
+  .win-rate-good {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .win-rate-average {
+    @apply bg-warning-100 text-warning-700;
+  }
+
+  .win-rate-poor {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .win-rate-none {
+    @apply bg-gray-100 text-gray-500;
+  }
+
+  /* Game Stats */
+  .wins-text {
+    @apply text-success-500 font-semibold;
+  }
+
+  .losses-text {
+    @apply text-red-500 font-semibold;
+  }
+
+  .no-games-text {
+    @apply italic text-primary-600 text-sm;
+  }
+
+  /* Pagination */
+  .pagination-container {
+    @apply flex items-center justify-center space-x-4;
+  }
+
+  .pagination-info {
+    @apply text-primary-700 font-medium;
+  }
+
+  /* Loading States */
+  .loading-container {
+    @apply flex items-center justify-center py-12;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-2 border-primary-200 border-t-primary-500;
+  }
+
+  /* Empty States */
+  .empty-state {
+    @apply text-center py-12 space-y-4;
+  }
+
+  .empty-state-icon {
+    @apply text-6xl text-primary-400;
+  }
+
+  .empty-state-title {
+    @apply text-xl font-semibold text-primary-800;
+  }
+
+  .empty-state-description {
+    @apply text-primary-600;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .dashboard-title {
+      @apply text-3xl leading-tight;
+    }
+
+    .rankings-table {
+      @apply text-xs;
+    }
+
+    .table-cell {
+      @apply px-2 py-2;
+    }
+
+    .profile-container {
+      @apply space-x-2;
+    }
+
+    .profile-avatar {
+      @apply w-8 h-8 text-xs;
+    }
+
+    .rank-badge {
+      @apply w-6 h-6 text-xs;
+    }
+  }
+
+  /* Animation Enhancements */
+  .fade-in {
+    @apply animate-pulse;
+  }
+
+  .slide-up {
+    @apply transform translate-y-4 opacity-0 transition-all duration-500;
+  }
+
+  .slide-up.active {
+    @apply translate-y-0 opacity-100;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200 hover:shadow-xl hover:shadow-primary-200/50;
+  }
+}
