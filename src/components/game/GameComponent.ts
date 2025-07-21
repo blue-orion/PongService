@@ -8,14 +8,14 @@ interface Paddle {
   y: number;
 }
 interface GameState {
-  ball: { x: number; y: number; vx: number; vy: number; radius: number; };
+  ball: { x: number; y: number; vx: number; vy: number; radius: number };
   paddles: {
     width: number;
     height: number;
     left: Paddle;
     right: Paddle;
   };
-  score: { left: number; right: number; };
+  score: { left: number; right: number };
   status?: "waiting" | "playing" | "finished" | "paused";
   winner?: "left" | "right" | null;
 }
@@ -53,6 +53,9 @@ export class GameComponent extends Component {
     //     this.playerId = "";
     //   }
     // }
+
+    this.playerId = "hylim";
+
     // tournamentId, gameId는 임시로 1
     this.tournamentId = 1;
     this.gameId = 1;
@@ -103,7 +106,7 @@ export class GameComponent extends Component {
       const payload = msg?.payload;
       this.gameState = payload;
       this.updateGameStatus(payload);
-      
+
       // 게임 종료 상태 체크 - 점수로도 확인
       if (payload?.status === "finished" || this.checkGameEndByScore(payload)) {
         this.showGameResult(payload);
@@ -142,11 +145,9 @@ export class GameComponent extends Component {
 
   private setupWebSocketEvents(): void {
     // 연결 상태 변화 감지
-
   }
 
   private setupKeyboardControls(): void {
-
     const keydownHandler = (event: KeyboardEvent) => {
       if (!this.socket) return;
       let keycode = event.code;
@@ -279,7 +280,7 @@ export class GameComponent extends Component {
         gameData.winner = "right";
       }
     }
-    
+
     // 결과 메시지 생성
     let resultMessage = "게임 종료!";
     if (gameData.winner) {
@@ -287,16 +288,18 @@ export class GameComponent extends Component {
       const isWinner = gameData.winner === this.myRole;
       resultMessage = isWinner ? `승리! ${winnerText} 승!` : `패배! ${winnerText} 승!`;
     }
-    
+
     // 결과 표시
     const resultDiv = document.createElement("div");
     resultDiv.className = "game-result glass-card p-6 mt-4 text-center";
     resultDiv.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
-      <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${this.gameState?.score.right || 0}</p>
+      <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
+      this.gameState?.score.right || 0
+    }</p>
       <button class="btn-primary" onclick="location.reload()">다시 게임</button>
     `;
-    
+
     this.statusElement.appendChild(resultDiv);
   }
 
@@ -337,12 +340,12 @@ export class GameComponent extends Component {
     if (!this.gameState || !this.gameState.paddles || !this.gameState.ball) return;
 
     const { left, right, width, height } = this.gameState.paddles;
-    
+
     // P1 패들 렌더링 (left) - primary-600 색상
     this.ctx.fillStyle = "#6182b8";
     this.ctx.fillRect(left.x, left.y, width, height);
-    
-    // P2 패들 렌더링 (right) - secondary-600 색상  
+
+    // P2 패들 렌더링 (right) - secondary-600 색상
     this.ctx.fillStyle = "#9070aa";
     this.ctx.fillRect(right.x, right.y, width, height);
 
@@ -352,10 +355,10 @@ export class GameComponent extends Component {
     this.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
     this.ctx.fillStyle = "#1f2937";
     this.ctx.fill();
-    
+
     // 공에 글래스 하이라이트 효과
     this.ctx.beginPath();
-    this.ctx.arc(ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/3, 0, Math.PI * 2);
+    this.ctx.arc(ball.x - ball.radius / 3, ball.y - ball.radius / 3, ball.radius / 3, 0, Math.PI * 2);
     this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
     this.ctx.fill();
 
@@ -375,15 +378,15 @@ export class GameComponent extends Component {
     this.ctx.fillStyle = "rgba(77, 106, 159, 0.9)"; // primary-700 with opacity
     this.ctx.font = '28px "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif';
     this.ctx.textAlign = "center";
-    
+
     // 텍스트 그림자 효과
     this.ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
     this.ctx.shadowBlur = 4;
     this.ctx.shadowOffsetX = 2;
     this.ctx.shadowOffsetY = 2;
-    
+
     this.ctx.fillText("게임 서버에 연결 중...", this.canvas.width / 2, this.canvas.height / 2);
-    
+
     // 그림자 효과 초기화
     this.ctx.shadowColor = "transparent";
     this.ctx.shadowBlur = 0;

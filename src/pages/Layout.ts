@@ -1,11 +1,11 @@
 import { Component } from "../components/Component";
+import { FriendComponent } from "../components/friend/FriendComponent";
 import { HeaderComponents } from "../components/header/HeaderComponents";
-import { FriendsListComponent } from "../components/friends/FriendsListComponent";
 import { loadTemplate, TEMPLATE_PATHS } from "../utils/template-loader";
 
 export class Layout extends Component {
     private headerComponent: HeaderComponents | null = null;
-    private friendsListComponent: FriendsListComponent | null = null;
+    private friendComponent: FriendComponent | null = null;
     private mainComponent: any = null;
 
     constructor(container: HTMLElement) {
@@ -46,8 +46,8 @@ export class Layout extends Component {
         }
 
         if (friendsContainer) {
-            this.friendsListComponent = new FriendsListComponent(friendsContainer);
-            await this.friendsListComponent.render();
+            this.friendComponent = new FriendComponent(friendsContainer);
+            await this.friendComponent.render();
         }
     }
 
@@ -55,8 +55,8 @@ export class Layout extends Component {
         if (this.headerComponent) {
             this.headerComponent.destroy();
         }
-        if (this.friendsListComponent) {
-            this.friendsListComponent.destroy();
+        if (this.friendComponent) {
+            this.friendComponent.destroy();
         }
         if (this.mainComponent) {
             this.mainComponent.destroy();

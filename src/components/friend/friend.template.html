@@ -1,0 +1,59 @@
+<div class="friend-sidebar">
+  <!-- 외부 토글 버튼 -->
+  <button class="friend-external-toggle-btn" id="friendToggleBtn">
+    <span>▶</span>
+  </button>
+
+  <!-- 친구창 헤더 -->
+  <div class="friend-header">
+    <h3>친구 목록</h3>
+  </div>
+
+  <!-- 사용자 프로필 -->
+  <div class="user-profile">
+    <div class="user-avatar" id="userAvatar"></div>
+    <div class="user-info">
+      <div class="user-nickname" id="userNickname">사용자</div>
+      <div class="user-status">온라인</div>
+    </div>
+  </div>
+
+  <!-- 친구창 내용 -->
+  <div class="friend-content" id="friendContent">
+    <!-- 친구 추가 -->
+    <div class="friend-add-section">
+      <div class="add-friend-form">
+        <input type="text" placeholder="사용자명으로 친구 추가" class="add-friend-input" id="addFriendInput" />
+        <button class="add-friend-btn" id="addFriendBtn">+</button>
+      </div>
+    </div>
+
+    <!-- 온라인 친구들 -->
+    <div class="friend-section">
+      
+    </div>
+
+    <!-- 오프라인 친구들 -->
+    <div class="friend-section">
+      
+    </div>
+
+    <!-- 친구 요청 -->
+    <div class="friend-section" id="friendRequests">
+      <div class="section-title">받은 요청 - 1</div>
+      <div class="friend-list">
+        <div class="friend-item request">
+          <div class="friend-avatar"></div>
+          <div class="friend-info">
+            <div class="friend-name">newuser</div>
+            <div class="friend-status">친구 요청</div>
+          </div>
+          <div class="friend-actions">
+            <button class="action-btn accept-btn" title="수락">✓</button>
+            <button class="action-btn reject-btn" title="거절">✗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
