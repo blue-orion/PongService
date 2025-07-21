@@ -2,7 +2,7 @@ import websocketManager from "#shared/websocket/websocketManager.js";
 
 import AuthHelpers from "#domains/auth/utils/authHelpers.js";
 import FriendsUtils from "#domains/friend/util/friendsUtils.js";
-import ProfileDto from "#domains/user/model/ProfileDto.js";
+import ProfileDto from "#domains/user/model/profileDto.js";
 import SummaryDto from "#domains/user/model/summaryDto.js";
 import UserHelpers from "#domains/user/utils/userHelpers.js";
 import UserRepo from "#domains/user/repo/userRepo.js";
