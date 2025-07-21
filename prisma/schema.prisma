@@ -58,7 +58,7 @@ model User {
   status        UserStatus  @default(OFFLINE)
   enabled       Boolean     @default(true)
   total_wins    Int         @default(0)
-  total_loses   Int         @default(0)
+  total_losses   Int         @default(0)
   win_rate      Float       @default(0)
   friends       String?     @default("[]")
   // Relations

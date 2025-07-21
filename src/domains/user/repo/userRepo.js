@@ -9,7 +9,7 @@ class UserRepo {
   }
 
   async getUserById(id) {
-    return await prisma.user.findUniqueOrThrow({
+    return await prisma.user.findUnique({
       where: { id },
     });
   }
@@ -90,16 +90,10 @@ class UserRepo {
   }
 
   async getUserFriendIds(userId) {
-    const user = await prisma.user.findUnique({
+    return await prisma.user.findUnique({
       where: { id: parseInt(userId) },
       select: { friends: true },
     });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    return FriendsUtils.parseIds(user.friends);
   }
 
   async addFriendToList(userId, friendId) {
@@ -170,6 +164,21 @@ class UserRepo {
     });
 
     return friends;
+  }
+
+  async getUserGameRecords(userId, pageable) {
+    return await prisma.user.findUnique({
+      skip: pageable.skip,
+      take: pageable.take,
+      where: { id: userId },
+      select: {
+        gamesAsWinner: true,
+        gamesAsLoser: true,
+      },
+      orderBy: {
+        [pageable.sort]: pageable.order,
+      },
+    });
   }
 }
 

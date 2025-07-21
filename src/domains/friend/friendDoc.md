@@ -140,7 +140,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
         "profile_image": "/uploads/profiles/john.jpg",
         "status": "ONLINE",
         "total_wins": 15,
-        "total_loses": 8,
+        "total_losses": 8,
         "win_rate": 65.2,
         "updated_at": "2025-07-20T10:30:00.000Z"
       },
@@ -151,7 +151,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
         "profile_image": null,
         "status": "OFFLINE",
         "total_wins": 22,
-        "total_loses": 12,
+        "total_losses": 12,
         "win_rate": 64.7,
         "updated_at": "2025-07-20T09:15:00.000Z"
       }
@@ -309,7 +309,7 @@ interface User {
   profile_image: string | null;
   status: "ONLINE" | "OFFLINE" | "PLAYING";
   total_wins: number;
-  total_loses: number;
+  total_losses: number;
   win_rate: number;
   updated_at: string;
 }

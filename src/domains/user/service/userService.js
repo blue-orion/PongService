@@ -1,18 +1,29 @@
-import AuthHelpers from "#domains/auth/utils/authHelpers.js";
-import ProfileDto from "#domains/user/model/ProfileDto.js";
-import UserHelpers from "#domains/user/utils/userHelpers";
-import UserRepo from "#domains/user/repo/userRepo.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
 
+import AuthHelpers from "#domains/auth/utils/authHelpers.js";
+import FriendsUtils from "#domains/friend/util/friendsUtils.js";
+import ProfileDto from "#domains/user/model/ProfileDto.js";
+import SummaryDto from "#domains/user/model/summaryDto.js";
+import UserHelpers from "#domains/user/utils/userHelpers.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
+
 class UserService {
-  constructor(authHelpers = new AuthHelpers(), userHelpers = new UserHelpers(), userRepo = new UserRepo()) {
+  constructor(
+    authHelpers = new AuthHelpers(),
+    friendsUtils = new FriendsUtils(),
+    userHelpers = new UserHelpers(),
+    userRepo = new UserRepo()
+  ) {
     this.authHelpers = authHelpers;
+    this.friendsUtils = friendsUtils;
     this.userHelpers = userHelpers;
     this.userRepo = userRepo;
   }
 
   async getProfileById(userId) {
     const user = await this.userRepo.getUserById(userId);
+    this.userHelpers.validateExistingUser(user);
+
     return new ProfileDto(user);
   }
 
@@ -38,19 +49,18 @@ class UserService {
 
   async getUserStatus(userId) {
     const user = await this.userRepo.getUserById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    this.userHelpers.validateExistingUser(user);
+
     return user.status;
   }
 
   async updateUserStatus(userId, status) {
     const user = await this.userRepo.getUserById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    this.userHelpers.validateExistingUser(user);
+
     await this.userRepo.updateUserStatus(userId, status);
-    const friendIds = await this.userRepo.getUserFriendIds(userId);
+    const friends = await this.userRepo.getUserFriendIds(userId);
+    const friendIds = this.friendsUtils.parseIds(friends);
     friendIds.forEach((friendId) => {
       websocketManager.sendToNamespaceUser("friend", friendId, "user_status", {
         type: "status_update",
@@ -60,6 +70,20 @@ class UserService {
         },
       });
     });
+  }
+
+  async getUserGameRecords(userId, pageable) {
+    const user = await this.userRepo.getUserById(userId);
+    this.userHelpers.validateExistingUser(user);
+
+    return this.userRepo.getUserGameRecords(userId, pageable);
+  }
+
+  async getUserSummary(userId) {
+    const user = await this.userRepo.getUserById(userId);
+    this.userHelpers.validateExistingUser(user);
+
+    return new SummaryDto(user);
   }
 }
 

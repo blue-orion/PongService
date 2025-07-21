@@ -11,7 +11,7 @@ class DashboardRepo {
         nickname: true,
         profile_image: true,
         total_wins: true,
-        total_loses: true,
+        total_losses: true,
         win_rate: true,
       },
       orderBy: {
