@@ -112,11 +112,6 @@ class App {
       await this.loadComponent(SignupComponent);
     });
 
-    // 소셜 로그인 콜백 페이지
-    this.router.addRoute("/social-callback", async () => {
-      await this.loadComponent(SocialCallbackComponent);
-    });
-
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
     this.router.addRoute("/", async () => {
       console.log('메인 페이지 (로비 리스트) 라우트 실행');
