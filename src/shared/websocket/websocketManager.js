@@ -107,6 +107,7 @@ class WebSocketManager {
         const socket = userSocketInfo[namespace];
         if (socket) {
           socket.emit(event, message);
+          console.log(`Sent message to user ${userId} in ${namespace} namespace:`, message);
           return true;
         }
       }
