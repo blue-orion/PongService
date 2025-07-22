@@ -19,7 +19,7 @@ export default defineConfig({
 
   // 개발 서버 설정
   server: {
-    https: true,
+    https: false,
     port: 8080,
     host: true,
   },
