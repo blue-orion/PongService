@@ -18,14 +18,21 @@ class UserService {
     const user = await this.userRepo.getUserById(userId);
     this.userHelpers.validateExistingUser(user);
 
-    return new ProfileDto(user);
+    const profileDto = new ProfileDto(user);
+    if (profileDto.twoFASecret) {
+      profileDto.twoFASecret = true;
+    }
+
+    return profileDto;
   }
 
   async updateUserNickname(user, nickname) {
+    this.userHelpers.validateUpdateNickname(nickname);
     await this.userRepo.putNickname(user.id, nickname);
   }
 
   async updateUserProfileImage(user, profileImage) {
+    this.userHelpers.validateUpdateProfileImage(profileImage);
     await this.userRepo.putProfileImage(user.id, profileImage);
   }
 
@@ -70,7 +77,17 @@ class UserService {
     const user = await this.userRepo.getUserById(userId);
     this.userHelpers.validateExistingUser(user);
 
-    return this.userRepo.getUserGameRecords(userId, pageable);
+    const gameRecords = await this.userRepo.getUserGameRecords(userId, pageable);
+
+    if (!gameRecords) {
+      return [];
+    }
+
+    const allGames = [...(gameRecords.gamesAsWinner || []), ...(gameRecords.gamesAsLoser || [])];
+
+    allGames.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    return allGames.slice(pageable.skip, pageable.skip + pageable.take);
   }
 
   async getUserSummary(userId) {

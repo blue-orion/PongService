@@ -47,6 +47,13 @@ class UserRepo {
     });
   }
 
+  async getUser2FASecret(username) {
+    return await prisma.user.findUniqueOrThrow({
+      where: { username: username },
+      select: { two_fa_secret: true },
+    });
+  }
+
   async updateUser2FASecret(userId, secret) {
     return await prisma.user.update({
       where: { id: userId },
@@ -166,17 +173,56 @@ class UserRepo {
     });
   }
 
-  async getUserGameRecords(userId, pageable) {
+  async getUserGameRecords(userId, _pageable) {
     return await prisma.user.findUnique({
-      skip: pageable.skip,
-      take: pageable.take,
       where: { id: userId },
       select: {
-        gamesAsWinner: true,
-        gamesAsLoser: true,
-      },
-      orderBy: {
-        [pageable.sort]: pageable.order,
+        gamesAsWinner: {
+          select: {
+            id: true,
+            created_at: true,
+            game_status: true,
+            winner: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                profile_image: true,
+              },
+            },
+            loser: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                profile_image: true,
+              },
+            },
+          },
+        },
+        gamesAsLoser: {
+          select: {
+            id: true,
+            created_at: true,
+            game_status: true,
+            winner: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                profile_image: true,
+              },
+            },
+            loser: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                profile_image: true,
+              },
+            },
+          },
+        },
       },
     });
   }

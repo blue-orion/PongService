@@ -37,6 +37,17 @@ class AuthService {
     return await this.generateTokens(jwtUtils, user);
   }
 
+  async checkUser2FAEnabled(loginDto) {
+    const user = await this.userRepo.getUserByUsername(loginDto.username);
+    this.authHelpers.validateUserEnable(user);
+
+    const twoFASecret = await this.userRepo.getUser2FASecret(loginDto.username);
+    if (!twoFASecret) {
+      return false;
+    }
+    return true;
+  }
+
   async signOutUser(userId) {
     await this.userService.updateUserStatus(Number(userId), "OFFLINE");
 
@@ -69,7 +80,7 @@ class AuthService {
     } catch {
       user = await this.userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
     }
-
+    this.authHelpers.validateUserEnable(user);
     await this.userService.updateUserStatus(user.id, "ONLINE");
 
     return await this.generateTokens(jwtUtils, user);
@@ -87,7 +98,7 @@ class AuthService {
     } catch {
       user = await this.userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
     }
-
+    this.authHelpers.validateUserEnable(user);
     await this.userService.updateUserStatus(user.id, "ONLINE");
 
     return await this.generateTokens(jwtUtils, user);

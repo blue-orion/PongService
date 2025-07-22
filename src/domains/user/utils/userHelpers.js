@@ -11,8 +11,6 @@ class UserHelpers {
     if (!formData.nickname && !formData.profileImage) {
       throw new PongException("At least one field (nickname or profile image) must be provided", 400);
     }
-    this.validateUpdateNickname(formData.nickname);
-    this.validateUpdateProfileImage(formData.profileImage);
   }
 
   validateUpdateNickname(nickname) {
@@ -34,8 +32,9 @@ class UserHelpers {
     if (typeof profileImage !== "string") {
       throw new PongException("Profile image must be a string URL", 400);
     }
-    if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(profileImage)) {
-      throw new PongException("Profile image must be a valid URL ending with .jpg, .jpeg, .png, or .gif", 400);
+    // data URL 또는 HTTP URL 둘 다 허용
+    if (!/^(https?:\/\/.+\.(jpg|jpeg|png|gif)|data:image\/(jpeg|jpg|png|gif);base64,.+)$/.test(profileImage)) {
+      throw new PongException("Profile image must be a valid URL or data URL", 400);
     }
   }
 

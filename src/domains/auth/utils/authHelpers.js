@@ -3,13 +3,13 @@ import PongException from "#shared/exception/pongException.js";
 class AuthHelpers {
   validateLoginForm(formData) {
     if (!formData.username || !formData.passwd) {
-      throw PongException.BAD_REQUEST;
+      throw PongException.BAD_REQUEST();
     }
   }
 
   validateLogoutForm(formData) {
     if (!formData.userId) {
-      throw PongException.BAD_REQUEST;
+      throw PongException.BAD_REQUEST();
     }
   }
 
@@ -79,17 +79,17 @@ class AuthHelpers {
 
   validateUserEnable(user) {
     if (!user.enabled) {
-      throw PongException.UNAUTHORIZED;
+      throw PongException.UNAUTHORIZED();
     }
   }
 
   validateUserRefreshToken(user, refreshToken) {
-    if (user?.refreshToken !== refreshToken) {
-      throw PongException.UNAUTHORIZED;
+    if (user?.refresh_token !== refreshToken) {
+      throw PongException.UNAUTHORIZED();
     }
   }
 
-  validate2FASetupForm(formData) {
+  validate2FAForm(formData) {
     if (!formData.username) {
       throw new PongException("Username is required for 2FA setup", 400);
     }
@@ -104,6 +104,12 @@ class AuthHelpers {
     }
   }
 
+  validateUser2FAEnable(user) {
+    if (!user.two_fa_secret) {
+      throw new PongException("User has not enabled 2FA", 400);
+    }
+  }
+
   validate2FASecretForm(formData) {
     this.validate2FASecret(formData.secret);
     this.validate2FAOtpauthUrl(formData.otpauthUrl);
@@ -111,7 +117,7 @@ class AuthHelpers {
   }
 
   validate2FASecret(secret) {
-    if (!secret || secret.length !== 32) {
+    if (!secret || secret.length < 16) {
       throw new PongException("Invalid 2FA secret", 400);
     }
     if (!/^[A-Z2-7]+=*$/.test(secret)) {

@@ -27,6 +27,13 @@ class TwoFAService {
     return new TwoFASecretDto(secret.base32, otpauthUrl, qrCodeDataURL);
   }
 
+  async disable2FA(username) {
+    const user = await this.userRepo.getUserByUsername(username);
+    this.authHelpers.validateUser2FAEnable(user);
+
+    await this.userRepo.updateUser2FASecret(user.id, null);
+  }
+
   async verifyUser2FA(twoFADto) {
     const user = await this.userRepo.getUserByUsername(twoFADto.username);
     this.authHelpers.validate2FASecret(user.two_fa_secret);

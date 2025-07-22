@@ -20,6 +20,15 @@ const authController = {
     return ApiResponse.ok(reply, jwt);
   },
 
+  // POST /v1/auth/login/check
+  async checkLoginHandler(request, reply) {
+    const loginDto = new LoginDto(request.body);
+    authHelpers.validateLoginForm(loginDto);
+
+    const isValid = await authService.checkUser2FAEnabled(loginDto);
+    return ApiResponse.ok(reply, { isValid });
+  },
+
   // POST /v1/auth/logout
   async logoutHandler(request, reply) {
     const formData = { userId: request.user?.id };
@@ -39,7 +48,7 @@ const authController = {
     return ApiResponse.ok(reply, { message: "User registered successfully" });
   },
 
-  // POST /v1/auth/refresh
+  // GET /v1/auth/refresh
   async refreshTokenHandler(request, reply) {
     const userId = request.user.id;
     const refreshToken = request.headers.authorization?.replace(/^Bearer\s/, "");
