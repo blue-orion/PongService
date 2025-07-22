@@ -31,10 +31,15 @@ export class AuthManager {
     // JWT에서 사용자 정보 추출하여 UserManager로 저장
     try {
       const payload = this.decodeJWT(tokens.accessToken);
-      if (payload?.id && payload?.username) {
+      
+      // 다양한 필드명 시도
+      const userId = payload?.id || payload?.user_id || payload?.userId || payload?.sub;
+      const username = payload?.username || payload?.user_name || payload?.name || payload?.userName;
+      
+      if (userId && username) {
         UserManager.saveUserInfo({
-          id: payload.id,
-          username: payload.username
+          id: String(userId), // 숫자일 수 있으므로 문자열로 변환
+          username: String(username)
         });
       }
     } catch (e) {
@@ -76,14 +81,15 @@ export class AuthManager {
   }
 
   // 현재 로그인한 사용자 ID 가져오기
-  static getCurrentUserId(): number | null {
+  static getCurrentUserId(): string | null {
     const tokens = this.getTokens();
     if (!tokens?.accessToken) {
       return null;
     }
 
     const payload = this.decodeJWT(tokens.accessToken);
-    return payload?.user_id || payload?.id || payload?.sub || null;
+    const userId = payload?.user_id || payload?.id || payload?.sub || null;
+    return userId ? String(userId) : null;
   }
 
   // 토큰 삭제 (로그아웃)
@@ -105,14 +111,19 @@ export class AuthManager {
   }
 
   // 로그인
-  static async login(username: string, passwd: string): Promise<LoginResponse> {
+  static async login(username: string, passwd: string, token?: string): Promise<LoginResponse> {
     try {
+      const requestBody: any = { username, passwd };
+      if (token) {
+        requestBody.token = token;
+      }
+
       const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, passwd }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -141,34 +152,61 @@ export class AuthManager {
   // 토큰 갱신
   static async refreshAccessToken(): Promise<boolean> {
     const tokens = this.getTokens();
-    if (!tokens?.refreshToken) return false;
+    if (!tokens?.refreshToken) {
+      return false;
+    }
 
     try {
       const response = await fetch(`${this.API_BASE_URL}/auth/refresh`, {
-        method: "POST",
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          "Authorization": `Bearer ${tokens.refreshToken}`,
         },
-        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
       });
 
       if (!response.ok) {
-        this.clearTokens();
+        // 401/403이면 refresh token이 만료된 것이므로 로그아웃
+        if (response.status === 401 || response.status === 403) {
+          this.clearTokens();
+        }
         return false;
       }
 
-      const { accessToken, refreshToken } = await response.json();
+      const responseData = await response.json();
+
+      // 응답 구조 확인 및 적응적 처리
+      let newAccessToken: string;
+      let newRefreshToken: string;
+
+      // 백엔드 응답 구조에 따라 적응적으로 처리
+      if (responseData.data) {
+        // { data: { accessToken, refreshToken } } 구조
+        newAccessToken = responseData.data.accessToken;
+        newRefreshToken = responseData.data.refreshToken || tokens.refreshToken; // refresh token이 갱신되지 않을 수도 있음
+      } else if (responseData.accessToken) {
+        // { accessToken, refreshToken } 구조
+        newAccessToken = responseData.accessToken;
+        newRefreshToken = responseData.refreshToken || tokens.refreshToken;
+      } else {
+        console.error('[AuthManager] 예상하지 못한 응답 구조:', responseData);
+        return false;
+      }
+
+      if (!newAccessToken) {
+        return false;
+      }
+
       const expiresAt = Date.now() + 15 * 60 * 1000;
 
       this.saveTokens({
-        accessToken,
-        refreshToken,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
         expiresAt,
       });
 
       return true;
     } catch (error) {
-      console.error("토큰 갱신 실패:", error);
+      console.error("[AuthManager] 토큰 갱신 중 예외 발생:", error);
       this.clearTokens();
       return false;
     }
@@ -203,7 +241,26 @@ export class AuthManager {
       Authorization: `Bearer ${tokens.accessToken}`,
     };
 
-    return fetch(url, { ...options, headers });
+    const response = await fetch(url, { ...options, headers });
+
+    // 401 응답이면 토큰이 무효화된 것일 수 있으므로 한 번 더 갱신 시도
+    if (response.status === 401) {
+      const refreshed = await this.refreshAccessToken();
+      if (refreshed) {
+        // 갱신된 토큰으로 재요청
+        const newTokens = this.getTokens()!;
+        const newHeaders = {
+          ...options.headers,
+          Authorization: `Bearer ${newTokens.accessToken}`,
+        };
+        return fetch(url, { ...options, headers: newHeaders });
+      } else {
+        this.redirectToLogin();
+        throw new Error("토큰 갱신에 실패했습니다.");
+      }
+    }
+
+    return response;
   }
 
   // 로그인 페이지로 리다이렉트 (SPA용)
@@ -217,28 +274,18 @@ export class AuthManager {
 
   // 순수한 인증 상태 확인 (리다이렉트 없음)
   static async checkAuth(): Promise<boolean> {
-    console.log("🔍 인증 상태 확인 시작");
-
     // 토큰이 있고 유효한 경우
     if (this.isTokenValid()) {
-      console.log("✅ 유효한 토큰 존재");
       return true;
     }
-
-    console.log("❌ 유효한 토큰 없음");
 
     // 토큰은 있지만 만료된 경우 갱신 시도
     const tokens = this.getTokens();
     if (tokens) {
-      console.log("🔄 토큰 갱신 시도");
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
-        console.log("✅ 토큰 갱신 성공");
         return true;
       }
-      console.log("❌ 토큰 갱신 실패");
-    } else {
-      console.log("❌ 저장된 토큰 없음");
     }
 
     return false;
@@ -252,32 +299,21 @@ export class AuthManager {
 
   // 인증 상태 확인 및 리다이렉트
   static async checkAuthAndRedirect(): Promise<boolean> {
-    console.log("🔍 인증 상태 확인 시작");
-
     // 토큰이 있고 유효한 경우
     if (this.isTokenValid()) {
-      console.log("✅ 유효한 토큰 존재");
       return true;
     }
-
-    console.log("❌ 유효한 토큰 없음");
 
     // 토큰은 있지만 만료된 경우 갱신 시도
     const tokens = this.getTokens();
     if (tokens) {
-      console.log("🔄 토큰 갱신 시도");
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
-        console.log("✅ 토큰 갱신 성공");
         return true;
       }
-      console.log("❌ 토큰 갱신 실패");
-    } else {
-      console.log("❌ 저장된 토큰 없음");
     }
 
     // 인증 실패 시 로그인 페이지로 리다이렉트
-    console.log("🔄 로그인 페이지로 리다이렉트");
     this.redirectToLogin();
     return false;
   }

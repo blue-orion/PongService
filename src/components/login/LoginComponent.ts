@@ -1,6 +1,6 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
+import { loadTemplate, renderTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class LoginComponent extends Component {
   private formElement: HTMLFormElement | null = null;
@@ -64,6 +64,7 @@ export class LoginComponent extends Component {
     const formData = new FormData(this.formElement!);
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
+    const token = formData.get("token") as string;
 
     if (!username || !password) {
       this.showError("사용자명과 비밀번호를 모두 입력해주세요.");
@@ -72,26 +73,158 @@ export class LoginComponent extends Component {
 
     try {
       this.setLoading(true);
-      const success = await AuthManager.login(username, password);
 
-      if (success) {
-        // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
-        if ((window as any).app) {
-          await (window as any).app.initializeFriendComponent();
+      // 2FA 입력 필드가 아직 없는 경우 (첫 로그인 시도)
+      const has2FAInput = !!this.container.querySelector('.twofa-input-container');
+      if (!has2FAInput) {
+        // 먼저 2FA 활성화 여부 확인
+        const is2FAEnabled = await this.check2FAEnabled(username, password);
+        
+        if (is2FAEnabled) {
+          // 2FA가 활성화된 경우 입력 필드 표시
+          this.show2FAInput();
+          this.showError("2FA가 활성화된 계정입니다. 인증 코드를 입력해주세요.");
+          this.setLoading(false);
+          return;
         }
-        // 메인 페이지로 이동
-        window.router.navigate("/");
-      } else {
-        this.showError(
-          "로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.",
-        );
       }
+
+      // 로그인 시도 (2FA 비활성화이거나 토큰이 있는 경우)
+      await AuthManager.login(username, password, token || undefined);
+
+      // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
+      if ((window as any).app) {
+        await (window as any).app.initializeFriendComponent();
+      }
+      // 메인 페이지로 이동
+      window.router.navigate("/");
+      
     } catch (error) {
       console.error("로그인 오류:", error);
-      this.showError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
+      this.showError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       this.setLoading(false);
     }
+  }
+
+  // 2FA 활성화 여부 확인
+  private async check2FAEnabled(username: string, password: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, passwd: password }),
+      });
+
+      if (!response.ok) {
+        // 사용자명/비밀번호가 잘못된 경우 등
+        const error = await response.json();
+        throw new Error(error.message || "사용자 확인 중 오류가 발생했습니다.");
+      }
+
+      const result = await response.json();
+      return result.data?.isValid || false;
+      
+    } catch (error) {
+      // check API 실패 시에도 로그인을 시도할 수 있도록 false 반환
+      console.error("2FA 확인 중 오류:", error);
+      throw error;
+    }
+  }
+
+  private async show2FAInput(): Promise<void> {
+    // 기존 2FA 입력 필드가 있으면 제거
+    const existing2FAInput = this.container.querySelector('.twofa-input-container');
+    if (existing2FAInput) {
+      existing2FAInput.remove();
+    }
+
+    try {
+      // 2FA 템플릿 로드
+      const template = await loadTemplate('/src/components/login/login2FA.template.html');
+      
+      // 로그인 버튼 앞에 2FA 입력 필드 삽입
+      const submitButton = this.container.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.insertAdjacentHTML('beforebegin', template);
+        
+        // 2FA 입력 필드에 포커스 및 이벤트 설정
+        const tokenInput = this.container.querySelector('#token') as HTMLInputElement;
+        if (tokenInput) {
+          this.setup2FATokenInput(tokenInput);
+        }
+      }
+    } catch (templateError) {
+      console.error('[LoginComponent] 2FA 템플릿 로드 오류:', templateError);
+      // 템플릿 로드 실패 시 기본 2FA 입력 필드 생성
+      this.show2FAInputFallback();
+    }
+  }
+
+  // 템플릿 로드 실패 시 사용할 폴백
+  private show2FAInputFallback(): void {
+    // 기존 2FA 입력 필드가 있으면 제거
+    const existing2FAInput = this.container.querySelector('.twofa-input-container');
+    if (existing2FAInput) {
+      existing2FAInput.remove();
+    }
+
+    // 2FA 입력 필드 HTML 생성
+    const twoFAHTML = `
+      <div class="twofa-input-container space-y-4 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="text-center">
+          <p class="text-sm font-medium text-blue-700 mb-2">2FA 인증 코드 입력</p>
+          <p class="text-xs text-blue-600 mb-4">Google Authenticator 앱에서 6자리 코드를 확인하세요</p>
+        </div>
+        <div>
+          <label for="token" class="block text-sm font-medium text-primary-700 mb-2">인증 코드 (6자리)</label>
+          <input
+            type="text"
+            id="token"
+            name="token"
+            maxlength="6"
+            class="login-input text-center text-xl tracking-wider"
+            placeholder="000000"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+    `;
+
+    // 로그인 버튼 앞에 2FA 입력 필드 삽입
+    const submitButton = this.container.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.insertAdjacentHTML('beforebegin', twoFAHTML);
+      
+      // 2FA 입력 필드에 포커스
+      const tokenInput = this.container.querySelector('#token') as HTMLInputElement;
+      if (tokenInput) {
+        this.setup2FATokenInput(tokenInput);
+      }
+    }
+  }
+
+  // 2FA 토큰 입력 필드 이벤트 설정
+  private setup2FATokenInput(tokenInput: HTMLInputElement): void {
+    tokenInput.focus();
+    
+    // 숫자만 입력 허용
+    tokenInput.addEventListener('input', (e) => {
+      const input = e.target as HTMLInputElement;
+      input.value = input.value.replace(/[^0-9]/g, '');
+    });
+    
+    // Enter 키로 로그인
+    tokenInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const submitBtn = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
+        if (submitBtn) {
+          submitBtn.click();
+        }
+      }
+    });
   }
 
   private showError(message: string): void {

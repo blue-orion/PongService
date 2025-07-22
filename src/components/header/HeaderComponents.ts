@@ -49,12 +49,14 @@ export class HeaderComponents extends Component {
                 e.preventDefault();
                 // localStorage에서 내 userId 가져오기
                 const myUserId = UserManager.getUserId();
+                console.log('[HeaderComponent] 내 프로필 클릭, userId:', myUserId); // 디버깅용
                 if (!myUserId) {
                     alert('내 사용자 ID 정보가 없습니다. 다시 로그인해주세요.');
                     return;
                 }
                 if (window.router) {
-                    window.router.navigate(`/info/${myUserId}`);
+                    console.log(`[HeaderComponent] /user/${myUserId}로 이동`); // 디버깅용
+                    window.router.navigate(`/user/${myUserId}`);
                 }
             });
         };

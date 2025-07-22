@@ -12,6 +12,9 @@ import { Layout } from "./pages/Layout";
 import { LobbyListComponent } from "./components/lobby/lobbyList/LobbyListComponent";
 import { LobbyDetailComponent } from "./components/lobby/lobbyDetail/LobbyDetailComponent";
 import { UserInfoComponent } from "./components/user/UserInfoComponent";
+import { EditProfileComponent } from "./components/user/EditProfileComponent";
+import { StatsComponent } from "./components/user/StatsComponent";
+import { GameHistoryComponent } from "./components/user/GameHistoryComponent";
 
 class App {
   private router: Router;
@@ -141,9 +144,31 @@ class App {
     });
 
     // 사용자 정보 페이지 - 동적 라우트
-    this.router.addDynamicRoute("/info/:id", async (params: any) => {
+    this.router.addDynamicRoute("/user/:id", async (params: any) => {
       console.log('사용자 정보 페이지 라우트 실행, ID:', params.id);
       await this.loadLayoutWithComponent(UserInfoComponent, params.id);
+    });
+
+    // 사용자 전적 페이지 - 동적 라우트
+    this.router.addDynamicRoute("/user/:id/stats", async (params: any) => {
+      console.log('사용자 전적 페이지 라우트 실행, ID:', params.id);
+      await this.loadLayoutWithComponent(StatsComponent, params.id);
+    });
+
+    // 사용자 게임 기록 페이지 - 동적 라우트
+    this.router.addDynamicRoute("/user/:id/games", async (params: any) => {
+      console.log('사용자 게임 기록 페이지 라우트 실행, ID:', params.id);
+      await this.loadLayoutWithComponent(GameHistoryComponent, params.id);
+    });
+
+    // 프로필 편집 페이지 (프로필 변경 + 비밀번호 변경 통합)
+    this.router.addRoute("/profile/edit", async () => {
+      await this.loadComponent(EditProfileComponent);
+    });
+
+    // 비밀번호 변경 페이지 (프로필 편집으로 리다이렉트)
+    this.router.addRoute("/profile/password", async () => {
+      await this.loadComponent(EditProfileComponent);
     });
     
     console.log('라우트 설정 완료');
