@@ -1,7 +1,11 @@
 import { Component } from "../Component";
+import { UserManager } from "../../utils/user";
+import { AuthManager } from "../../utils/auth";
+import { loadTemplate, renderTemplate } from "../../utils/template-loader";
 
 export class UserInfoComponent extends Component {
     private userId: string;
+    private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     constructor(container: HTMLElement, userId: string) {
         super(container);
@@ -10,208 +14,94 @@ export class UserInfoComponent extends Component {
 
     async render(): Promise<void> {
         this.clearContainer();
-        
-        console.log('사용자 정보 컴포넌트 렌더링 시작..., 사용자 ID:', this.userId);
-        
-        // 실제로는 API에서 사용자 정보를 가져와야 함
-        const userData = this.getMockUserData(this.userId);
-        
-        this.container.innerHTML = `
-            <div class="user-info-page">
-                <div class="page-header">
-                    <button class="back-btn">← 뒤로가기</button>
-                    <h2>사용자 정보</h2>
-                </div>
 
-                <div class="user-profile">
-                    <div class="profile-header">
-                        <div class="profile-avatar">
-                            <img src="${userData.avatar}" alt="${userData.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <div class="avatar-placeholder" style="display: none;">👤</div>
-                        </div>
-                        <div class="profile-info">
-                            <h3>${userData.username}</h3>
-                            <p class="user-level">레벨 ${userData.level}</p>
-                            <p class="user-status ${userData.status}">${userData.statusText}</p>
-                            <p class="last-seen">마지막 접속: ${userData.lastSeen}</p>
-                        </div>
-                        <div class="profile-actions">
-                            ${userData.isFriend ? `
-                                <button class="friend-btn remove">친구 삭제</button>
-                                <button class="message-btn">메시지 보내기</button>
-                                <button class="invite-btn">게임 초대</button>
-                            ` : `
-                                <button class="friend-btn add">친구 추가</button>
-                                <button class="message-btn">메시지 보내기</button>
-                            `}
-                            ${userData.isBlocked ? `
-                                <button class="block-btn unblock">차단 해제</button>
-                            ` : `
-                                <button class="block-btn block">차단하기</button>
-                            `}
-                        </div>
-                    </div>
-                </div>
+        // userId가 없으면 안내 메시지 출력
+        if (!this.userId) {
+            this.container.innerHTML = `<div class="user-info-error">사용자 ID 정보가 없습니다. 다시 로그인해주세요.</div>`;
+            return;
+        }
 
-                <div class="user-stats">
-                    <h3>게임 통계</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.totalGames}</div>
-                            <div class="stat-label">총 게임 수</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.wins}</div>
-                            <div class="stat-label">승리</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.losses}</div>
-                            <div class="stat-label">패배</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.winRate}%</div>
-                            <div class="stat-label">승률</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.ranking}</div>
-                            <div class="stat-label">랭킹</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${userData.stats.playTime}</div>
-                            <div class="stat-label">플레이 시간</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="user-achievements">
-                    <h3>업적</h3>
-                    <div class="achievements-grid">
-                        ${userData.achievements.map((achievement: any) => `
-                            <div class="achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}">
-                                <div class="achievement-icon">${achievement.icon}</div>
-                                <div class="achievement-info">
-                                    <h4>${achievement.name}</h4>
-                                    <p>${achievement.description}</p>
-                                    ${achievement.unlocked ? `<span class="unlock-date">달성일: ${achievement.unlockedAt}</span>` : ''}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div class="recent-games">
-                    <h3>최근 게임 기록</h3>
-                    <div class="games-list">
-                        ${userData.recentGames.map((game: any) => `
-                            <div class="game-record ${game.result}">
-                                <div class="game-info">
-                                    <span class="game-type">${game.gameType}</span>
-                                    <span class="opponent">vs ${game.opponent}</span>
-                                    <span class="score">${game.score}</span>
-                                </div>
-                                <div class="game-meta">
-                                    <span class="result ${game.result}">${game.result === 'win' ? '승리' : '패배'}</span>
-                                    <span class="date">${game.date}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        this.setupEventListeners();
-        console.log('사용자 정보 컴포넌트 렌더링 완료');
-    }
-
-    private getMockUserData(userId: string) {
-        // 실제로는 API에서 데이터를 가져와야 함
-        const mockUsers: any = {
-            'player123': {
-                username: 'Player123',
-                level: 15,
-                status: 'online',
-                statusText: '온라인',
-                lastSeen: '방금 전',
-                avatar: '/avatars/player123.jpg',
-                isFriend: true,
-                isBlocked: false,
-                stats: {
-                    totalGames: 157,
-                    wins: 98,
-                    losses: 59,
-                    winRate: 62,
-                    ranking: 1245,
-                    playTime: '48시간'
-                },
-                achievements: [
-                    {
-                        name: '첫 승리',
-                        description: '첫 번째 게임에서 승리하기',
-                        icon: '🏆',
-                        unlocked: true,
-                        unlockedAt: '2024-12-15'
-                    },
-                    {
-                        name: '연승왕',
-                        description: '10연승 달성하기',
-                        icon: '🔥',
-                        unlocked: true,
-                        unlockedAt: '2025-01-10'
-                    },
-                    {
-                        name: '백전백승',
-                        description: '100승 달성하기',
-                        icon: '👑',
-                        unlocked: false
-                    }
-                ],
-                recentGames: [
-                    {
-                        gameType: 'Pong',
-                        opponent: 'GamerPro',
-                        score: '11-7',
-                        result: 'win',
-                        date: '2025-01-22'
-                    },
-                    {
-                        gameType: 'Pong',
-                        opponent: 'NewPlayer',
-                        score: '8-11',
-                        result: 'lose',
-                        date: '2025-01-21'
-                    },
-                    {
-                        gameType: 'Pong',
-                        opponent: 'ProGamer99',
-                        score: '11-4',
-                        result: 'win',
-                        date: '2025-01-20'
-                    }
-                ]
+        // 실제 API에서 사용자 정보 받아오기
+        let userData: any = null;
+        let apiError: string | null = null;
+        try {
+            const url = `${UserInfoComponent.API_BASE_URL}/users/profile/${this.userId}`;
+            
+            // AuthManager의 authenticatedFetch 사용하여 자동 토큰 갱신
+            const res = await AuthManager.authenticatedFetch(url, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!res.ok) {
+                throw new Error(`API 요청 실패: ${res.status} ${res.statusText}`);
             }
-        };
+            
+            userData = await res.json();
+        } catch (e) {
+            console.error('[UserInfoComponent] API 오류:', e);
+            apiError = e instanceof Error ? e.message : '사용자 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        }
 
-        return mockUsers[userId] || {
-            username: '알 수 없는 사용자',
-            level: 0,
-            status: 'offline',
-            statusText: '오프라인',
-            lastSeen: '알 수 없음',
-            avatar: '',
-            isFriend: false,
-            isBlocked: false,
-            stats: {
-                totalGames: 0,
-                wins: 0,
-                losses: 0,
-                winRate: 0,
-                ranking: 0,
-                playTime: '0시간'
-            },
-            achievements: [],
-            recentGames: []
+        // 에러 발생 시 안내 메시지 출력
+        if (apiError || !userData || typeof userData !== 'object') {
+            this.container.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-center font-medium m-5">${apiError || '사용자 정보가 없습니다.'}</div>`;
+            return;
+        }
+
+        // 내 프로필 여부 판단 (UserManager 활용)
+        const myId = UserManager.getUserId();
+        // 더 안전한 타입 비교 - null/undefined 체크 후 문자열로 변환하여 비교
+        const myIdStr = myId ? String(myId).trim() : '';
+        const userIdStr = this.userId ? String(this.userId).trim() : '';
+        const isMe = myIdStr && userIdStr && myIdStr === userIdStr;
+        
+        // 디버깅용 로그
+        console.log('[UserInfoComponent] 프로필 구분 디버깅:');
+        console.log('- myId:', myId);
+        console.log('- this.userId:', this.userId);
+        console.log('- myIdStr:', myIdStr);
+        console.log('- userIdStr:', userIdStr);
+        console.log('- isMe:', isMe);
+
+        // ProfileDto 구조에 맞게 필드 매칭 (data 속성 안에 실제 데이터가 있음)
+        const profileData = userData.data || {};
+        const profileImage = profileData.profileImage || '';
+        const username = profileData.username || '알 수 없음';
+        const nickname = profileData.nickname || '닉네임 없음';
+        const status = profileData.status || '정보 없음';
+        const userId = profileData.id || this.userId;
+        
+        // 2FA 활성화 여부 확인 (twoFASecret이 있으면 활성화됨)
+        const is2faEnabled = !!profileData.twoFASecret;
+
+        // 템플릿 데이터 준비
+        const templateData = {
+            profileImage: profileImage,
+            username: username,
+            nickname: nickname,
+            status: status,
+            statusClasses: this.getStatusClasses(status),
+            isMe: isMe,
+            is2faEnabled: is2faEnabled,
+            twoFaButtonText: is2faEnabled ? '2FA 비활성화' : '2FA 활성화'
         };
+        
+        // 디버깅용 로그
+        console.log('[UserInfoComponent] 템플릿 데이터:', templateData);
+
+        try {
+            // 템플릿 로드 및 렌더링
+            const template = await loadTemplate('/src/components/user/userInfo.template.html');
+            const renderedTemplate = renderTemplate(template, templateData);
+            this.container.innerHTML = renderedTemplate;
+            
+            this.setupEventListeners();
+        } catch (templateError) {
+            console.error('[UserInfoComponent] 템플릿 로드 오류:', templateError);
+            this.container.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-center font-medium m-5">페이지를 로드하는 중 오류가 발생했습니다.</div>`;
+        }
     }
 
     private setupEventListeners(): void {
@@ -225,57 +115,435 @@ export class UserInfoComponent extends Component {
             });
         }
 
-        // 친구 추가/삭제 버튼
-        const friendBtn = this.container.querySelector('.friend-btn');
-        if (friendBtn) {
-            friendBtn.addEventListener('click', () => {
-                this.toggleFriend();
+        // 2FA 토글 버튼 (내 프로필에만 표시)
+        const toggle2faBtn = this.container.querySelector('.toggle-2fa-btn');
+        if (toggle2faBtn) {
+            toggle2faBtn.addEventListener('click', () => {
+                const isEnabled = toggle2faBtn.getAttribute('data-enabled') === 'true';
+                this.toggle2fa(isEnabled);
             });
         }
 
-        // 메시지 보내기 버튼
-        const messageBtn = this.container.querySelector('.message-btn');
-        if (messageBtn) {
-            messageBtn.addEventListener('click', () => {
-                this.sendMessage();
+        // 내 정보 변경 버튼 (내 프로필에만 표시)
+        const editProfileBtn = this.container.querySelector('.edit-profile-btn');
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener('click', () => {
+                this.editProfile();
             });
         }
 
-        // 게임 초대 버튼
-        const inviteBtn = this.container.querySelector('.invite-btn');
-        if (inviteBtn) {
-            inviteBtn.addEventListener('click', () => {
-                this.inviteToGame();
+        // 내 전적 보기 버튼 (내 프로필에만 표시)
+        const viewMyStatsBtn = this.container.querySelector('.view-my-stats-btn');
+        if (viewMyStatsBtn) {
+            viewMyStatsBtn.addEventListener('click', () => {
+                this.viewMyStats();
             });
         }
 
-        // 차단/차단 해제 버튼
-        const blockBtn = this.container.querySelector('.block-btn');
-        if (blockBtn) {
-            blockBtn.addEventListener('click', () => {
-                this.toggleBlock();
+        // 회원 탈퇴 버튼 (내 프로필에만 표시)
+        const deactivateAccountBtn = this.container.querySelector('.deactivate-account-btn');
+        if (deactivateAccountBtn) {
+            deactivateAccountBtn.addEventListener('click', () => {
+                this.deactivateAccount();
+            });
+        }
+
+        // 전적 보기 버튼 (다른 사용자 프로필에만 표시)
+        const viewStatsBtn = this.container.querySelector('.view-stats-btn');
+        if (viewStatsBtn) {
+            viewStatsBtn.addEventListener('click', () => {
+                this.viewUserStats();
+            });
+        }
+
+        // 친구 추가 버튼 (다른 사용자 프로필에만 표시)
+        const addFriendBtn = this.container.querySelector('.add-friend-btn');
+        if (addFriendBtn) {
+            addFriendBtn.addEventListener('click', () => {
+                this.addFriend();
             });
         }
     }
 
-    private toggleFriend(): void {
-        console.log('친구 추가/삭제 토글');
-        // 실제로는 서버에 친구 관계 변경 요청
+    private async toggle2fa(isCurrentlyEnabled: boolean): Promise<void> {
+        if (isCurrentlyEnabled) {
+            // 2FA 비활성화
+            await this.disable2fa();
+        } else {
+            // 2FA 활성화 (QR 코드 설정 시작)
+            await this.setup2FA();
+        }
     }
 
-    private sendMessage(): void {
-        console.log('메시지 보내기');
-        // 메시지 다이얼로그 또는 채팅 창 열기
+    // 2FA 비활성화
+    private async disable2fa(): Promise<void> {
+        try {
+            const confirmed = confirm('2FA를 비활성화하시겠습니까?');
+            if (!confirmed) return;
+
+            // UserManager에서 저장된 username 가져오기
+            const username = UserManager.getUsername();
+            
+            if (!username) {
+                alert('사용자명을 찾을 수 없습니다.');
+                return;
+            }
+
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/auth/2fa/disable`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`2FA 비활성화 실패: ${response.status} ${response.statusText}`);
+            }
+
+            // 성공 시 버튼 상태 업데이트
+            const toggle2faBtn = this.container.querySelector('.toggle-2fa-btn');
+            if (toggle2faBtn) {
+                toggle2faBtn.setAttribute('data-enabled', 'false');
+                toggle2faBtn.textContent = '2FA 활성화';
+            }
+
+            alert('2FA가 성공적으로 비활성화되었습니다!');
+
+        } catch (error) {
+            console.error('[UserInfoComponent] 2FA 비활성화 오류:', error);
+            const message = error instanceof Error ? error.message : '2FA 비활성화 중 오류가 발생했습니다.';
+            alert(message);
+        }
     }
 
-    private inviteToGame(): void {
-        console.log('게임 초대');
-        // 게임 초대 기능 구현
+    private editProfile(): void {
+        if (window.router) {
+            window.router.navigate('/profile/edit');
+        }
     }
 
-    private toggleBlock(): void {
-        console.log('차단/차단 해제 토글');
-        // 실제로는 서버에 차단 상태 변경 요청
+    private viewMyStats(): void {
+        if (window.router) {
+            window.router.navigate(`/user/${this.userId}/stats`);
+        }
+    }
+
+    private async deactivateAccount(): Promise<void> {
+        const confirmed = confirm('정말로 회원 탈퇴를 하시겠습니까?\n이 작업은 되돌릴 수 없습니다.');
+        if (!confirmed) return;
+
+        try {
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/users/disable`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`회원 탈퇴 실패: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            // 회원 탈퇴 성공 시 토큰 삭제 및 로그인 페이지로 이동
+            alert('회원 탈퇴가 완료되었습니다.');
+            AuthManager.clearTokens();
+            
+            if (window.router) {
+                window.router.navigate('/login');
+            }
+
+        } catch (error) {
+            console.error('[UserInfoComponent] 회원 탈퇴 오류:', error);
+            const message = error instanceof Error ? error.message : '회원 탈퇴 중 오류가 발생했습니다.';
+            alert(message);
+        }
+    }
+
+    private viewUserStats(): void {
+        if (window.router) {
+            window.router.navigate(`/user/${this.userId}/stats`);
+        }
+    }
+
+    private addFriend(): void {
+        alert(`사용자 ${this.userId}를 친구로 추가 요청합니다. (구현 예정)`);
+    }
+
+    private getStatusClasses(status: string): string {
+        const statusLower = status.toLowerCase();
+        switch (statusLower) {
+            case 'online':
+                return 'bg-green-500 text-white';
+            case 'offline':
+                return 'bg-gray-500 text-white';
+            case 'playing':
+                return 'bg-purple-500 text-white';
+            default:
+                return 'bg-gray-400 text-white';
+        }
+    }
+
+    // 2FA 설정 (QR 코드 받기)
+    private async setup2FA(): Promise<void> {
+        try {
+            // UserManager에서 저장된 username 가져오기
+            const username = UserManager.getUsername();
+            
+            if (!username) {
+                alert('사용자명을 찾을 수 없습니다.');
+                return;
+            }
+
+            const requestData = {
+                username: username
+            };
+            
+            console.log('2FA 설정 요청 데이터:', requestData);
+
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/auth/2fa/setup`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                }
+            );
+
+            if (!response.ok) {
+                // 에러 응답 내용을 확인
+                const errorData = await response.text();
+                console.error('2FA 설정 에러 응답:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorData
+                });
+                throw new Error(`2FA 설정 요청 실패: ${response.status} ${response.statusText} - ${errorData}`);
+            }
+
+            const responseData = await response.json();
+            console.log('2FA 설정 응답:', responseData);
+
+            // 백엔드 응답 구조에 맞게 QR 코드 데이터 추출
+            let qrCodeDataURL: string;
+            if (responseData.data?.qrCodeDataURL) {
+                // ApiResponse.ok() 구조: { success: true, data: { qrCodeDataURL: "..." } }
+                qrCodeDataURL = responseData.data.qrCodeDataURL;
+            } else if (responseData.qrCodeDataURL) {
+                // 직접 구조: { qrCodeDataURL: "..." }
+                qrCodeDataURL = responseData.qrCodeDataURL;
+            } else {
+                console.error('예상하지 못한 응답 구조:', responseData);
+                throw new Error('QR 코드 데이터를 찾을 수 없습니다.');
+            }
+
+            console.log('QR 코드 데이터:', qrCodeDataURL);
+
+            // QR 코드 모달 표시
+            this.show2FASetupModal(qrCodeDataURL);
+
+        } catch (error) {
+            console.error('[UserInfoComponent] 2FA 설정 오류:', error);
+            alert(error instanceof Error ? error.message : '2FA 설정 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 2FA 설정 모달 표시
+    private async show2FASetupModal(qrCodeDataURL: string): Promise<void> {
+        try {
+            // 모달 템플릿 로드
+            const modalTemplate = await loadTemplate('/src/components/user/userInfo2FAModal.template.html');
+            
+            // 템플릿 데이터 준비
+            const modalData = {
+                qrCodeDataURL: qrCodeDataURL,
+                qrCodeDataURLPreview: qrCodeDataURL.substring(0, 50)
+            };
+            
+            // 템플릿 렌더링 후 body에 추가
+            const renderedModal = renderTemplate(modalTemplate, modalData);
+            document.body.insertAdjacentHTML('beforeend', renderedModal);
+            
+            // 이벤트 리스너 추가
+            this.setup2FAModalEvents();
+        } catch (templateError) {
+            console.error('[UserInfoComponent] 모달 템플릿 로드 오류:', templateError);
+            // 템플릿 로드 실패 시 기본 모달 생성
+            this.show2FASetupModalFallback(qrCodeDataURL);
+        }
+    }
+    
+    // 템플릿 로드 실패 시 사용할 폴백 모달
+    private show2FASetupModalFallback(qrCodeDataURL: string): void {
+        // 모달 HTML 생성
+        const modalHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="twofa-modal">
+                <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">2FA 설정</h2>
+                        <p class="text-gray-600 mb-6">
+                            Google Authenticator 또는 다른 2FA 앱으로 아래 QR 코드를 스캔하세요.
+                        </p>
+                        
+                        <!-- QR 코드 이미지 -->
+                        <div class="mb-6 flex justify-center">
+                            <div class="qr-code-container">
+                                <img src="${qrCodeDataURL}" 
+                                     alt="2FA QR Code" 
+                                     class="max-w-full h-auto border rounded-lg" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                                <div style="display: none;" class="text-red-500 p-4 border border-red-300 rounded-lg">
+                                    QR 코드를 불러올 수 없습니다.<br/>
+                                    <small class="text-gray-500">데이터: ${qrCodeDataURL.substring(0, 50)}...</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 토큰 입력 -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                인증 코드를 입력하세요 (6자리)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="twofa-token" 
+                                maxlength="6" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-xl tracking-wider"
+                                placeholder="000000"
+                                autocomplete="off"
+                            />
+                        </div>
+
+                        <!-- 버튼 -->
+                        <div class="flex gap-4">
+                            <button class="cancel-twofa-btn flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                                취소
+                            </button>
+                            <button class="confirm-twofa-btn flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                확인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 모달을 body에 추가
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // 이벤트 리스너 추가
+        this.setup2FAModalEvents();
+    }
+
+    // 2FA 모달 이벤트 설정
+    private setup2FAModalEvents(): void {
+        const modal = document.getElementById('twofa-modal');
+        const cancelBtn = modal?.querySelector('.cancel-twofa-btn');
+        const confirmBtn = modal?.querySelector('.confirm-twofa-btn');
+        const tokenInput = modal?.querySelector('#twofa-token') as HTMLInputElement;
+
+        // 취소 버튼
+        cancelBtn?.addEventListener('click', () => {
+            this.close2FAModal();
+        });
+
+        // 모달 배경 클릭시 닫기
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.close2FAModal();
+            }
+        });
+
+        // 확인 버튼
+        confirmBtn?.addEventListener('click', () => {
+            const token = tokenInput?.value?.trim();
+            if (!token || token.length !== 6) {
+                alert('6자리 인증 코드를 입력해주세요.');
+                return;
+            }
+            this.verify2FASetup(token);
+        });
+
+        // Enter 키로 확인
+        tokenInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const token = tokenInput.value.trim();
+                if (token && token.length === 6) {
+                    this.verify2FASetup(token);
+                }
+            }
+        });
+
+        // 숫자만 입력 허용
+        tokenInput?.addEventListener('input', (e) => {
+            const input = e.target as HTMLInputElement;
+            input.value = input.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    // 2FA 설정 검증
+    private async verify2FASetup(token: string): Promise<void> {
+        try {
+            // UserManager에서 저장된 username 가져오기
+            const username = UserManager.getUsername();
+            
+            if (!username) {
+                alert('사용자명을 찾을 수 없습니다.');
+                return;
+            }
+
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/auth/2fa/verify`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        token: token
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`2FA 검증 실패: ${response.status} ${response.statusText}`);
+            }
+
+            // 성공 시 모달 닫기 및 버튼 상태 업데이트
+            this.close2FAModal();
+            
+            // 버튼 상태 업데이트
+            const toggle2faBtn = this.container.querySelector('.toggle-2fa-btn');
+            if (toggle2faBtn) {
+                toggle2faBtn.setAttribute('data-enabled', 'true');
+                toggle2faBtn.textContent = '2FA 비활성화';
+            }
+            
+            alert('2FA가 성공적으로 활성화되었습니다!');
+
+        } catch (error) {
+            console.error('[UserInfoComponent] 2FA 검증 오류:', error);
+            alert(error instanceof Error ? error.message : '2FA 검증 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 2FA 모달 닫기
+    private close2FAModal(): void {
+        const modal = document.getElementById('twofa-modal');
+        modal?.remove();
     }
 
     destroy(): void {
