@@ -45,19 +45,28 @@ export class FriendUIRenderer {
     const isOnline = friend.status === "online";
     const statusText = isOnline ? "온라인" : "오프라인";
     const opacityClass = isOnline ? "" : "opacity-60";
-    const avatarClass = friend.avatar
+
+    // 프로필 이미지가 있는지 확인하고 유효한 URL인지 체크
+    const hasValidAvatar =
+      friend.avatar &&
+      friend.avatar.trim() !== "" &&
+      (friend.avatar.startsWith("http") || friend.avatar.startsWith("/") || friend.avatar.startsWith("data:"));
+
+    const avatarClass = hasValidAvatar
       ? "friend-avatar-with-image"
       : isOnline
       ? "friend-avatar-online-gradient"
       : "friend-avatar-offline-gradient";
+
     const statusIndicatorClass = isOnline ? "friend-status-indicator-online" : "friend-status-indicator-offline";
     const statusTextClass = isOnline ? "friend-status-text-online" : "friend-status-text-offline";
 
+    // 배경 이미지 스타일 생성
+    const avatarStyle = hasValidAvatar ? `style="background-image: url('${friend.avatar}');"` : "";
+
     return `
       <div class="friend-item ${opacityClass}" data-friend-id="${friend.id}" data-relation-id="${friend.relationId}">
-        <div class="friend-item-avatar ${avatarClass}" ${
-      friend.avatar ? `style="background-image: url('${friend.avatar}');"` : ""
-    }>
+        <div class="friend-item-avatar ${avatarClass}" ${avatarStyle}>
           <div class="friend-item-status-indicator ${statusIndicatorClass}"></div>
         </div>
         <div class="friend-item-info">
@@ -93,7 +102,15 @@ export class FriendUIRenderer {
       } else {
         const requestsHTML = friendRequests
           .map((request) => {
-            const avatarContent = request.avatar
+            // 프로필 이미지가 있는지 확인하고 유효한 URL인지 체크
+            const hasValidAvatar =
+              request.avatar &&
+              request.avatar.trim() !== "" &&
+              (request.avatar.startsWith("http") ||
+                request.avatar.startsWith("/") ||
+                request.avatar.startsWith("data:"));
+
+            const avatarContent = hasValidAvatar
               ? `<div class="friend-request-avatar-with-image" style="background-image: url('${request.avatar}');"></div>`
               : `<div class="friend-request-avatar-default"></div>`;
 
@@ -137,7 +154,15 @@ export class FriendUIRenderer {
       } else {
         const sentRequestsHTML = sentRequests
           .map((request) => {
-            const avatarContent = request.avatar
+            // 프로필 이미지가 있는지 확인하고 유효한 URL인지 체크
+            const hasValidAvatar =
+              request.avatar &&
+              request.avatar.trim() !== "" &&
+              (request.avatar.startsWith("http") ||
+                request.avatar.startsWith("/") ||
+                request.avatar.startsWith("data:"));
+
+            const avatarContent = hasValidAvatar
               ? `<div class="friend-request-avatar-with-image" style="background-image: url('${request.avatar}');"></div>`
               : `<div class="friend-sent-request-avatar-default"></div>`;
 

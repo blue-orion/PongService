@@ -203,12 +203,14 @@
   .friend-avatar-with-image {
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
   }
 
   .friend-request-avatar-with-image {
     @apply w-10 h-10 rounded-full border-2 border-white/50;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
   }
 
   /* 친구 아이템 스타일 */
