@@ -49,8 +49,6 @@ class App {
 
       // 로그인 페이지로 이동
       this.router.navigate("/login");
-
-      console.log("로그아웃 완료");
     } catch (error) {
       console.error("로그아웃 오류:", error);
     }
@@ -86,7 +84,6 @@ class App {
     if ("Notification" in window && Notification.permission === "default") {
       try {
         const permission = await Notification.requestPermission();
-        console.log("알림 권한:", permission);
       } catch (error) {
         console.error("알림 권한 요청 실패:", error);
       }
@@ -94,11 +91,8 @@ class App {
   }
 
   private setupRoutes(): void {
-    console.log("라우트 설정 중...");
-
     // 로그인 페이지
     this.router.addRoute("/login", async () => {
-      console.log("로그인 페이지 라우트 실행");
       await this.loadComponent(LoginComponent);
     });
 
@@ -114,51 +108,43 @@ class App {
 
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
     this.router.addRoute("/", async () => {
-      console.log("메인 페이지 (로비 리스트) 라우트 실행");
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 로비 목록 페이지 (헤더에서 접근)
     this.router.addRoute("/lobby", async () => {
-      console.log("로비 목록 페이지 라우트 실행");
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 대시보드 페이지
     this.router.addRoute("/dashboard", async () => {
-      console.log("대시보드 페이지 라우트 실행");
       // 대시보드 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
       await this.loadLayoutWithComponent(DashboardComponent);
     });
 
     // 프로필 페이지
     this.router.addRoute("/profile", async () => {
-      console.log("프로필 페이지 라우트 실행");
       // 프로필 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 로비 상세 페이지 - 동적 라우트
     this.router.addDynamicRoute("/lobby/:id", async (params: any) => {
-      console.log("로비 상세 페이지 라우트 실행, ID:", params.id);
       await this.loadLayoutWithComponent(LobbyDetailComponent, params.id);
     });
 
     // 사용자 정보 페이지 - 동적 라우트
     this.router.addDynamicRoute("/user/:id", async (params: any) => {
-      console.log('사용자 정보 페이지 라우트 실행, ID:', params.id);
       await this.loadLayoutWithComponent(UserInfoComponent, params.id);
     });
 
     // 사용자 전적 페이지 - 동적 라우트
     this.router.addDynamicRoute("/user/:id/stats", async (params: any) => {
-      console.log('사용자 전적 페이지 라우트 실행, ID:', params.id);
       await this.loadLayoutWithComponent(StatsComponent, params.id);
     });
 
     // 사용자 게임 기록 페이지 - 동적 라우트
     this.router.addDynamicRoute("/user/:id/games", async (params: any) => {
-      console.log('사용자 게임 기록 페이지 라우트 실행, ID:', params.id);
       await this.loadLayoutWithComponent(GameHistoryComponent, params.id);
     });
 
@@ -171,21 +157,14 @@ class App {
     this.router.addRoute("/profile/password", async () => {
       await this.loadComponent(EditProfileComponent);
     });
-    
-    console.log('라우트 설정 완료');
 
-    // 사용자 정보 페이지 - 동적 라우트
+    // 게임 페이지 - 동적 라우트
     this.router.addDynamicRoute("/game/:gameId/:tournamentId", async (params: any) => {
-      console.log("사용자 정보 페이지 라우트 실행, ID:", params.gameId, params.tournamentId);
       await this.loadLayoutWithComponent(GameComponent, params);
     });
-
-    console.log("라우트 설정 완료");
   }
 
   private async loadComponent(ComponentClass: any): Promise<void> {
-    console.log("컴포넌트 로딩 시작:", ComponentClass.name);
-
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
       this.currentComponent.destroy();
@@ -193,15 +172,10 @@ class App {
 
     // 새 컴포넌트 로드
     this.currentComponent = new ComponentClass(this.appContainer);
-    console.log("컴포넌트 생성 완료, 렌더링 시작...");
     await this.currentComponent.render();
-    console.log("컴포넌트 생성 완료, 렌더링 완료");
   }
 
   public async loadMainComponent(ComponentClass: any, ...args: any[]): Promise<void> {
-    console.log("메인 컴포넌트 로딩 시작:", ComponentClass.name);
-
-    console.log(this.currentComponent);
     if (!this.currentComponent || !this.currentComponent.setMainComponent) {
       console.warn("현재 Layout이 없습니다. Layout부터 로드하세요.");
       this.loadLayoutWithComponent(ComponentClass);
@@ -219,13 +193,9 @@ class App {
         this.currentComponent.setMainComponent(mainComponent);
       }
     }
-
-    console.log("메인 컴포넌트 렌더링 완료");
   }
 
   public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
-    console.log("레이아웃과 함께 컴포넌트 로딩 시작:", ComponentClass.name);
-
     const layoutAlreadyRendered = this.currentComponent instanceof Layout;
 
     // Layout이 이미 있다면, MainComponent만 교체
