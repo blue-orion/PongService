@@ -83,7 +83,7 @@ body {
   }
 
   .modal-overlay {
-    @apply absolute inset-0 bg-black/50;
+    @apply absolute inset-0 bg-black/50 z-[60];
   }
 
   .modal-content {
@@ -731,4 +731,3 @@ body {
     @apply text-[#e74c3c] font-bold;
   }
 }
-

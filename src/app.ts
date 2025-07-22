@@ -147,7 +147,7 @@ class App {
     });
 
     // 사용자 정보 페이지 - 동적 라우트
-    this.router.addDynamicRoute("/game/:gameId/:tournamenttId", async (params: any) => {
+    this.router.addDynamicRoute("/game/:gameId/:tournamentId", async (params: any) => {
       console.log("사용자 정보 페이지 라우트 실행, ID:", params.gameId, params.tournamentId);
       await this.loadLayoutWithComponent(GameComponent, params);
     });
@@ -167,24 +167,44 @@ class App {
     this.currentComponent = new ComponentClass(this.appContainer);
     console.log("컴포넌트 생성 완료, 렌더링 시작...");
     await this.currentComponent.render();
+    console.log("컴포넌트 생성 완료, 렌더링 완료");
+  }
 
-    // // 인증 상태 확인하여 친구창 관리
-    const isAuthenticated = await AuthManager.checkAuth();
-    const currentPath = window.location.pathname;
+  public async loadMainComponent(ComponentClass: any, ...args: any[]): Promise<void> {
+    console.log("메인 컴포넌트 로딩 시작:", ComponentClass.name);
 
-    if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
-      this.initializeFriendComponent();
-    } else if (!isAuthenticated && this.friendComponent) {
-      // 인증되지 않은 상태에서는 친구창 숨기기
-      this.hideFriendComponent();
-    } else if (currentPath === "/login") {
-      // 로그인 페이지에서는 친구창 숨기기
-      this.hideFriendComponent();
+    console.log(this.currentComponent);
+    if (!this.currentComponent || !this.currentComponent.setMainComponent) {
+      console.warn("현재 Layout이 없습니다. Layout부터 로드하세요.");
+      this.loadLayoutWithComponent(ComponentClass);
+      return;
     }
+
+    // 메인 콘텐츠 영역에 특정 컴포넌트 렌더링
+    const mainContentContainer = document.getElementById("main-content");
+    if (mainContentContainer) {
+      const mainComponent = new ComponentClass(mainContentContainer, ...args);
+      await mainComponent.render();
+
+      // Layout 컴포넌트에 메인 컴포넌트 저장 (나중에 정리하기 위해)
+      if (this.currentComponent && this.currentComponent.setMainComponent) {
+        this.currentComponent.setMainComponent(mainComponent);
+      }
+    }
+
+    console.log("메인 컴포넌트 렌더링 완료");
   }
 
   public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
     console.log("레이아웃과 함께 컴포넌트 로딩 시작:", ComponentClass.name);
+
+    const layoutAlreadyRendered = this.currentComponent instanceof Layout;
+
+    // Layout이 이미 있다면, MainComponent만 교체
+    if (layoutAlreadyRendered) {
+      await this.loadMainComponent(ComponentClass, ...args);
+      return;
+    }
 
     // 기존 컴포넌트 정리
     if (this.currentComponent) {
@@ -207,6 +227,13 @@ class App {
       }
     }
 
+    // 친구창 초기화
+    const isAuthenticated = await AuthManager.checkAuth();
+    if (isAuthenticated) {
+      await this.initializeFriendComponent?.();
+    }
+    console.log(isAuthenticated);
+
     console.log("레이아웃과 컴포넌트 렌더링 완료");
   }
 
@@ -217,7 +244,7 @@ class App {
     if (!this.friendComponent) {
       let friendContainer = existingFriendContainer;
 
-      //     // 컨테이너가 없으면 새로 생성
+      // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
         friendContainer = document.createElement("div");
         friendContainer.id = "friend-container";
@@ -236,6 +263,7 @@ class App {
     // 친구창 보이기
     this.showFriendComponent();
   }
+
   private hideFriendComponent(): void {
     // 친구창 숨기기
     const friendContainer = document.getElementById("friend-container");

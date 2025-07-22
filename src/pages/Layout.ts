@@ -29,7 +29,7 @@ export class Layout extends Component {
 								<main id="main-content" class="main-section">
 									<!-- 메인 콘텐츠 영역 -->
 								</main>
-								<div id="friend-area">
+								<div id="friend-container">
 									<!-- 친구 목록 템플릿 -->
 								</div>
 							</div>
@@ -81,4 +81,3 @@ export class Layout extends Component {
     this.clearContainer();
   }
 }
-

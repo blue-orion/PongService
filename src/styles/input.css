@@ -14,13 +14,13 @@
   }
 
   /* 친구창이 활성화되었을 때 메인 컨텐츠 여백 추가 */
-  body:has(#friend-area) #app {
+  body:has(#friend-container) #app {
     padding-right: 300px;
   }
 
   /* 반응형: 모바일에서는 친구창이 오버레이 형태 */
-  @media (max-width: 768px) {
-    body:has(#friend-area) #app {
+  @media (max-width: 1024px) {
+    body:has(#friend-container) #app {
       padding-right: 0;
     }
   }

@@ -46,7 +46,7 @@ export class GameComponent extends Component {
   private gameId: number = 1;
   private playerId: string = "";
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, ...args: any[]) {
     super(container);
     // accessToken에서 playerId 추출 (JWT 디코딩)
     // const tokens = AuthManager.getTokens && AuthManager.getTokens();
@@ -314,8 +314,8 @@ export class GameComponent extends Component {
     resultDiv.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
-      this.gameState?.score.right || 0
-    }</p>
+        this.gameState?.score.right || 0
+      }</p>
       <button class="btn-primary" onclick="location.reload()">다시 게임</button>
     `;
 

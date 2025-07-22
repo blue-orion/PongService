@@ -4,6 +4,7 @@ import { LobbyDetailService } from "./LobbyDetailService";
 import { LobbyDetailUI } from "./LobbyDetailUI";
 import { SocketEventProcessor } from "../managers/SocketEventProcessor";
 import { LobbyData, SocketEventHandlers, UIEventHandlers } from "../../../types/lobby";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export class LobbyDetailComponent extends Component {
   private lobbyId: string;
@@ -174,6 +175,10 @@ export class LobbyDetailComponent extends Component {
     console.log("게임 시작");
     try {
       if (window.router) {
+        // 일괄적으로 백엔드 POST /lobbies/:lobbyId/game_start
+        // body: {user_id, game_id}
+        //
+        // 각자 소켓 이벤트("game:started")를 받아서 router.navigate();
         window.router.navigate(`/game/${this.lobbyId}`);
       }
     } catch (error) {
@@ -201,7 +206,6 @@ export class LobbyDetailComponent extends Component {
       try {
         await this.service.leaveLobby();
         console.log("로비 나가기 성공");
-
         if (window.router) {
           window.router.navigate("/");
         }
@@ -291,7 +295,7 @@ export class LobbyDetailComponent extends Component {
   }
 
   destroy(): void {
+    this.ui.clearEventHandlers(); // 핸들러 제거
     this.service.disconnect();
-    this.ui.clearContainer();
   }
 }
