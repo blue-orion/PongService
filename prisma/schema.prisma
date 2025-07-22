@@ -67,6 +67,7 @@ model User {
   gamesAsWinner    Game[]        @relation("Winner")
   gamesAsLoser     Game[]        @relation("Loser")
   lobby_players    LobbyPlayer[]
+  createdLobbies   Lobby[]       @relation("LobbyCreator")
   sentFriendRequests     Friendship[] @relation("SentRequests")
   receivedFriendRequests Friendship[] @relation("ReceivedRequests")
 }
@@ -133,6 +134,7 @@ model Lobby {
   enabled       Boolean       @default(true)
   // Relations
   tournament    Tournament    @relation(fields: [tournament_id], references: [id])
+  creator       User          @relation("LobbyCreator", fields: [creator_id], references: [id])
   lobby_players LobbyPlayer[]
 }
 

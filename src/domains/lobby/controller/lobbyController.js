@@ -3,14 +3,13 @@ import { ApiResponse } from "#shared/api/response.js";
 import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
 import { Helpers } from "#domains/lobby/utils/helpers.js";
-import websocketHandlers from "#shared/websocket/websocketHandlers.js";
+import websocketManager from "#shared/websocket/websocketManager.js";
 
 export class LobbyController {
-  constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService(), io) {
+  constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService()) {
     this.lobbyService = lobbyService;
     this.tournamentService = tournamentService;
     this.helpers = new Helpers();
-    this.io = io;
 
     Object.getOwnPropertyNames(Object.getPrototypeOf(this))
       .filter((prop) => typeof this[prop] === "function" && prop !== "constructor")
@@ -46,6 +45,23 @@ export class LobbyController {
       const lobby = await this.lobbyService.getLobbyById({ id });
 
       return ApiResponse.ok(res, lobby);
+    } catch (error) {
+      return ApiResponse.error(res, error);
+    }
+  }
+
+  /**
+   * 로비 매칭 조회
+   * @method GET v1/lobbies/:id/matches
+   */
+  async getMatches(req, res) {
+    try {
+      const { id } = req.params;
+      const matches = await this.lobbyService.getMatches({
+        lobby_id: id,
+      });
+
+      return ApiResponse.ok(res, matches);
     } catch (error) {
       return ApiResponse.error(res, error);
     }
@@ -92,11 +108,16 @@ export class LobbyController {
         user_id,
       });
 
-      this.io.to(`lobby-${id}`).emit("lobby:join", {
-        user_id,
-        lobby_id: id,
-        type: "join",
-      });
+      // 로비 네임스페이스를 통해 해당 로비 룸에 이벤트 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("lobby:join", {
+          user_id,
+          lobby_id: id,
+          type: "join",
+          lobby: joinedLobby,
+        });
+      }
 
       return ApiResponse.ok(res, { lobby: joinedLobby }, 201);
     } catch (error) {
@@ -118,11 +139,16 @@ export class LobbyController {
         user_id,
       });
 
-      this.io.to(`lobby-${id}`).emit("lobby:left", {
-        user_id,
-        lobby_id: id,
-        type: "left",
-      });
+      // 로비 네임스페이스를 통해 해당 로비 룸에 이벤트 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("lobby:left", {
+          user_id,
+          lobby_id: id,
+          type: "left",
+          lobby: leftLobby,
+        });
+      }
 
       return ApiResponse.ok(res, leftLobby);
     } catch (error) {
@@ -145,10 +171,15 @@ export class LobbyController {
         target_user_id,
       });
 
-      this.io.to(`lobby-${id}`).emit("lobby:authorize", {
-        lobby_id: id,
-        new_leader_id: target_user_id,
-      });
+      // 로비 네임스페이스를 통해 해당 로비 룸에 이벤트 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("lobby:authorize", {
+          lobby_id: id,
+          new_leader_id: target_user_id,
+          lobby: authorizedLobby,
+        });
+      }
 
       return ApiResponse.ok(res, authorizedLobby);
     } catch (error) {
@@ -170,11 +201,16 @@ export class LobbyController {
         user_id,
       });
 
-      this.io.to(`lobby-${id}`).emit("lobby:ready", {
-        lobby_id: id,
-        user_id,
-        is_read: readyState.is_read,
-      });
+      // 로비 네임스페이스를 통해 해당 로비 룸에 이벤트 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("lobby:ready", {
+          lobby_id: id,
+          user_id,
+          is_ready: readyState.is_ready,
+          player: readyState,
+        });
+      }
 
       return ApiResponse.ok(res, readyState);
     } catch (error) {
@@ -200,24 +236,69 @@ export class LobbyController {
       // 2. 매칭된 게임 정보 추출
       const matchGames = createdMatch.matches; // Game 모델 기반의 배열
 
-      // 3. Socket.io를 통해 해당 로비 방(lobby-{id})에 매칭 완료 알림 전송
-      this.io.to(`lobby-${id}`).emit("match:created", {
-        tournament_id: createdMatch.tournament_id,
-        lobby_id: createdMatch.lobby_id,
-        round: createdMatch.round,
-        total_matches: createdMatch.total_matches,
-        games: matchGames.map(game => ({
-          game_id: game.id,
-          round: game.round,
-          match: game.match,
-          player_one_id: game.player_one_id,
-          player_two_id: game.player_two_id,
-          game_status: game.game_status,
-        })),
-        message: "매칭이 완료되었습니다.",
-      });
+      // 3. 로비 네임스페이스를 통해 해당 로비 룸에 매칭 완료 알림 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("match:created", {
+          tournament_id: createdMatch.tournament_id,
+          lobby_id: createdMatch.lobby_id,
+          round: createdMatch.round,
+          total_matches: createdMatch.total_matches,
+          games: matchGames.map((game) => ({
+            game_id: game.game_id,
+            round: game.round,
+            match: game.match,
+            game_status: game.game_status,
+            player_one: {
+              id: game.player_one.id,
+              nickname: game.player_one.user?.nickname,
+              username: game.player_one.user?.username,
+            },
+            player_two: {
+              id: game.player_two.id,
+              nickname: game.player_two.user?.nickname,
+              username: game.player_two.user?.username,
+            },
+          })),
+          message: "매칭이 완료되었습니다.",
+        });
+      }
 
       return ApiResponse.ok(res, createdMatch);
+    } catch (error) {
+      return ApiResponse.error(res, error);
+    }
+  }
+
+  /**
+   * 게임 시작
+   * @method POST v1/:id/start_game
+   */
+  async start_game(req, res) {
+    try {
+      const { id } = req.params;
+      const { user_id, game_id } = req.body;
+
+      // 1. 게임 시작
+      const gameStartResult = await this.lobbyService.startGame({
+        lobby_id: id,
+        user_id,
+        game_id,
+      });
+
+      // 2. 로비 네임스페이스를 통해 게임 시작 알림 전송
+      const lobbyNamespace = websocketManager.getLobbyNamespace();
+      if (lobbyNamespace) {
+        lobbyNamespace.to(`lobby-${id}`).emit("game:started", {
+          game_id: gameStartResult.game_id,
+          lobby_id: id,
+          tournament_id: gameStartResult.tournament_id,
+          players: gameStartResult.players,
+          message: "게임이 시작되었습니다.",
+        });
+      }
+
+      return ApiResponse.ok(res, gameStartResult);
     } catch (error) {
       return ApiResponse.error(res, error);
     }

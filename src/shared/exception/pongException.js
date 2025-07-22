@@ -31,12 +31,18 @@ class PongException extends Error {
 
   // === 플레이어 관련 에러 ===
   static NOT_REAL_USER = new PongException("존재하지 않는 유저입니다", 404);
+  static USER_NOT_FOUND = new PongException("존재하지 않는 사용자입니다.", 404);
   static ALREADY_IN_LOBBY = new PongException("이미 로비에 참가 중입니다.", 409);
   static NOT_IN_LOBBY = new PongException("해당 로비에 참가하지 않은 사용자입니다.", 403);
   static TARGET_NOT_IN_LOBBY = new PongException("해당 유저가 로비에 참가하지 않았습니다.", 403);
 
   // === 권한 관련 에러 ===
   static NOT_LEADER = new PongException("방장 권한이 없습니다.", 403);
+
+  // === 게임 관련 에러 ===
+  static GAME_NOT_FOUND = new PongException("존재하지 않는 게임입니다.", 404);
+  static GAME_ALREADY_STARTED = new PongException("이미 시작된 게임입니다.", 409);
+  static INVALID_GAME_TOURNAMENT = new PongException("게임이 해당 토너먼트에 속하지 않습니다.", 400);
 
   // === 게임 진행 관련 에러 ===
   static PLAYERS_NOT_READY = new PongException("모든 플레이어가 준비 상태가 아닙니다.", 409);
