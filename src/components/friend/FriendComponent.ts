@@ -93,8 +93,6 @@ export class FriendComponent {
   }
 
   private setupMobileToggleListeners(): void {
-    console.log("setupMobileToggleListeners 호출됨");
-
     // container 안에서 찾기
     const toggleButtonInContainer = this.container.querySelector("#mobile-friend-toggle");
     const closeButtonInContainer = this.container.querySelector("#friend-close-btn");
@@ -105,73 +103,41 @@ export class FriendComponent {
     const closeButtonInDocument = document.querySelector("#friend-close-btn");
     const overlayInDocument = document.querySelector("#friend-overlay");
 
-    console.log("Container에서 찾은 요소들:", {
-      toggleButton: toggleButtonInContainer,
-      closeButton: closeButtonInContainer,
-      overlay: overlayInContainer,
-    });
-
-    console.log("Document에서 찾은 요소들:", {
-      toggleButton: toggleButtonInDocument,
-      closeButton: closeButtonInDocument,
-      overlay: overlayInDocument,
-    });
-
     // 실제 사용할 요소들 (우선순위: container > document)
     const toggleButton = toggleButtonInContainer || toggleButtonInDocument;
     const closeButton = closeButtonInContainer || closeButtonInDocument;
     const overlay = overlayInContainer || overlayInDocument;
 
-    console.log("최종 사용할 요소들:", {
-      toggleButton,
-      closeButton,
-      overlay,
-      containerHTML: this.container.innerHTML.substring(0, 300) + "...",
-    });
-
     // 토글 버튼 클릭
     if (toggleButton) {
-      console.log("토글 버튼 이벤트 리스너 추가");
       toggleButton.addEventListener("click", (e) => {
-        console.log("토글 버튼 클릭됨!");
         e.preventDefault();
         e.stopPropagation();
         this.openFriendPanel();
       });
-    } else {
-      console.error("토글 버튼을 찾을 수 없습니다!");
     }
 
     // 닫기 버튼 클릭
     if (closeButton) {
-      console.log("닫기 버튼 이벤트 리스너 추가");
       closeButton.addEventListener("click", (e) => {
-        console.log("닫기 버튼 클릭됨!");
         e.preventDefault();
         e.stopPropagation();
         this.closeFriendPanel();
       });
-    } else {
-      console.error("닫기 버튼을 찾을 수 없습니다!");
     }
 
     // 오버레이 클릭으로 닫기
     if (overlay) {
-      console.log("오버레이 이벤트 리스너 추가");
       overlay.addEventListener("click", (e) => {
-        console.log("오버레이 클릭됨!");
         e.preventDefault();
         e.stopPropagation();
         this.closeFriendPanel();
       });
-    } else {
-      console.error("오버레이를 찾을 수 없습니다!");
     }
 
     // ESC 키로 닫기 (모바일에서만)
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && window.innerWidth < 1024) {
-        console.log("ESC 키로 친구 패널 닫기");
         this.closeFriendPanel();
       }
     });
@@ -179,15 +145,12 @@ export class FriendComponent {
     // 창 크기 변경 시 처리
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 1024) {
-        console.log("창 크기 변경으로 친구 패널 닫기");
         this.closeFriendPanel();
       }
     });
   }
 
   private openFriendPanel(): void {
-    console.log("openFriendPanel 호출됨");
-
     // container 안에서 찾기
     const panelInContainer = this.container.querySelector("#friend-panel");
     const overlayInContainer = this.container.querySelector("#friend-overlay");
@@ -200,31 +163,16 @@ export class FriendComponent {
     const panel = panelInContainer || panelInDocument;
     const overlay = overlayInContainer || overlayInDocument;
 
-    console.log("패널 열기 - 찾은 요소들:", {
-      panelInContainer,
-      overlayInContainer,
-      panelInDocument,
-      overlayInDocument,
-      panel,
-      overlay,
-    });
-
     if (panel && overlay) {
-      console.log("패널 열기 실행");
       panel.classList.add("show");
       overlay.classList.add("show");
 
       // 스크롤 방지
       document.body.classList.add("friend-overflow-hidden");
-      console.log("패널 열기 완료");
-    } else {
-      console.error("패널 또는 오버레이를 찾을 수 없습니다!", { panel, overlay });
     }
   }
 
   private closeFriendPanel(): void {
-    console.log("closeFriendPanel 호출됨");
-
     // container 안에서 찾기
     const panelInContainer = this.container.querySelector("#friend-panel");
     const overlayInContainer = this.container.querySelector("#friend-overlay");
@@ -237,25 +185,12 @@ export class FriendComponent {
     const panel = panelInContainer || panelInDocument;
     const overlay = overlayInContainer || overlayInDocument;
 
-    console.log("패널 닫기 - 찾은 요소들:", {
-      panelInContainer,
-      overlayInContainer,
-      panelInDocument,
-      overlayInDocument,
-      panel,
-      overlay,
-    });
-
     if (panel && overlay) {
-      console.log("패널 닫기 실행");
       panel.classList.remove("show");
       overlay.classList.remove("show");
 
       // 스크롤 복원
       document.body.classList.remove("friend-overflow-hidden");
-      console.log("패널 닫기 완료");
-    } else {
-      console.error("패널 또는 오버레이를 찾을 수 없습니다!", { panel, overlay });
     }
   }
 
