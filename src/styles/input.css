@@ -735,7 +735,7 @@
   }
 
   .bracket-connector::before {
-    content: '';
+    content: "";
     @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
     @apply w-full h-0.5 bg-slate-300;
   }
@@ -896,7 +896,9 @@
   }
 
   @keyframes loading-dot {
-    0%, 80%, 100% {
+    0%,
+    80%,
+    100% {
       transform: scale(0);
     }
     40% {

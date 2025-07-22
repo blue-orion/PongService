@@ -41,7 +41,7 @@ export class FriendComponent {
     await this.loadFriendsData();
   }
 
-  private render(): void {
+  public render(): void {
     this.container.innerHTML = getFriendComponentTemplate();
   }
 
@@ -211,14 +211,11 @@ export class FriendComponent {
 
     if (panel && overlay) {
       console.log("패널 열기 실행");
-      panel.classList.remove("translate-x-full");
-      panel.classList.add("translate-x-0");
-
-      overlay.classList.remove("opacity-0", "pointer-events-none");
-      overlay.classList.add("opacity-100", "pointer-events-auto");
+      panel.classList.add("show");
+      overlay.classList.add("show");
 
       // 스크롤 방지
-      document.body.style.overflow = "hidden";
+      document.body.classList.add("friend-overflow-hidden");
       console.log("패널 열기 완료");
     } else {
       console.error("패널 또는 오버레이를 찾을 수 없습니다!", { panel, overlay });
@@ -251,14 +248,11 @@ export class FriendComponent {
 
     if (panel && overlay) {
       console.log("패널 닫기 실행");
-      panel.classList.remove("translate-x-0");
-      panel.classList.add("translate-x-full");
-
-      overlay.classList.remove("opacity-100", "pointer-events-auto");
-      overlay.classList.add("opacity-0", "pointer-events-none");
+      panel.classList.remove("show");
+      overlay.classList.remove("show");
 
       // 스크롤 복원
-      document.body.style.overflow = "";
+      document.body.classList.remove("friend-overflow-hidden");
       console.log("패널 닫기 완료");
     } else {
       console.error("패널 또는 오버레이를 찾을 수 없습니다!", { panel, overlay });
@@ -335,7 +329,7 @@ export class FriendComponent {
       return;
     }
 
-    const isVisible = dropdown.classList.contains("opacity-100");
+    const isVisible = dropdown.classList.contains("show");
 
     if (isVisible) {
       this.closeRequestsDropdown(dropdown);
@@ -345,13 +339,11 @@ export class FriendComponent {
   }
 
   private openRequestsDropdown(dropdown: Element): void {
-    dropdown.classList.remove("opacity-0", "-translate-y-2.5", "pointer-events-none");
-    dropdown.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+    dropdown.classList.add("show");
   }
 
   private closeRequestsDropdown(dropdown: Element): void {
-    dropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-    dropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
+    dropdown.classList.remove("show");
   }
 
   private handleContainerClick(e: Event): void {
@@ -396,6 +388,42 @@ export class FriendComponent {
     if (!username.trim()) return;
 
     try {
+      // 자기 자신을 친구로 추가하려는 경우 방지
+      if (this.dataManager.isSelfUsername(username.trim())) {
+        this.showNotification("자기 자신을 친구로 추가할 수 없습니다.");
+        return;
+      }
+
+      // 이미 친구인지 확인
+      const existingFriend = this.dataManager
+        .getFriends()
+        .find((friend) => friend.username?.toLowerCase() === username.trim().toLowerCase());
+
+      if (existingFriend) {
+        this.showNotification("이미 친구로 등록된 사용자입니다.");
+        return;
+      }
+
+      // 이미 친구 요청을 보냈는지 확인
+      const existingSentRequest = this.dataManager
+        .getSentRequests()
+        .find((request) => request.username?.toLowerCase() === username.trim().toLowerCase());
+
+      if (existingSentRequest) {
+        this.showNotification("이미 친구 요청을 보낸 사용자입니다.");
+        return;
+      }
+
+      // 받은 친구 요청 중에 해당 사용자가 있는지 확인
+      const existingReceivedRequest = this.dataManager
+        .getFriendRequests()
+        .find((request) => request.username?.toLowerCase() === username.trim().toLowerCase());
+
+      if (existingReceivedRequest) {
+        this.showNotification("해당 사용자로부터 이미 친구 요청을 받았습니다. 받은 요청에서 수락해주세요.");
+        return;
+      }
+
       const response = await friendService.requestFriend(username);
 
       if (response.success) {
@@ -425,7 +453,7 @@ export class FriendComponent {
   private handleAcceptRequest(target: HTMLElement): void {
     const requestItem = target.closest("[data-relation-id]");
     const relationId = requestItem?.getAttribute("data-relation-id");
-    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const nameElement = requestItem?.querySelector(".friend-request-name");
     const requestName = nameElement?.textContent;
 
     if (relationId && requestName) {
@@ -436,7 +464,7 @@ export class FriendComponent {
   private handleRejectRequest(target: HTMLElement): void {
     const requestItem = target.closest("[data-relation-id]");
     const relationId = requestItem?.getAttribute("data-relation-id");
-    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const nameElement = requestItem?.querySelector(".friend-request-name");
     const requestName = nameElement?.textContent;
 
     if (relationId && requestName) {
@@ -450,7 +478,7 @@ export class FriendComponent {
 
     const friendItem = target.closest("[data-friend-id]");
     const friendId = friendItem?.getAttribute("data-friend-id");
-    const nameElement = friendItem?.querySelector(".text-white");
+    const nameElement = friendItem?.querySelector(".friend-item-name");
     const friendName = nameElement?.textContent?.trim();
 
     let finalFriendName = friendName;
@@ -467,7 +495,7 @@ export class FriendComponent {
   private handleCancelSentRequest(target: HTMLElement): void {
     const requestItem = target.closest("[data-relation-id]");
     const relationId = requestItem?.getAttribute("data-relation-id");
-    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const nameElement = requestItem?.querySelector(".friend-request-name");
     const requestName = nameElement?.textContent;
 
     if (!relationId || !requestName) return;
@@ -578,11 +606,9 @@ export class FriendComponent {
     if (badge) {
       if (count > 0) {
         badge.textContent = count.toString();
-        badge.classList.remove("hidden", "opacity-0", "scale-0");
-        badge.classList.add("opacity-100", "scale-100");
+        badge.classList.add("show");
       } else {
-        badge.classList.add("hidden", "opacity-0", "scale-0");
-        badge.classList.remove("opacity-100", "scale-100");
+        badge.classList.remove("show");
       }
     }
   }
@@ -591,6 +617,6 @@ export class FriendComponent {
     friendWebSocketManager.disconnect();
 
     // 스크롤 복원
-    document.body.style.overflow = "";
+    document.body.classList.remove("friend-overflow-hidden");
   }
 }
