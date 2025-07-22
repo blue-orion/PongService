@@ -184,6 +184,14 @@ export class LobbyListComponent extends Component {
     }
 
     private async createNewLobby(): Promise<void> {
+        // 기존 모달 컨테이너들 정리 (혹시 남아있는 것들)
+        const existingModals = document.querySelectorAll('.modal-container');
+        existingModals.forEach(modal => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        });
+        
         // 모달 컨테이너 생성
         const modalContainer = document.createElement('div');
         modalContainer.className = 'modal-container';
@@ -213,11 +221,22 @@ export class LobbyListComponent extends Component {
             await createLobbyModal.render();
         } catch (error) {
             console.error('로비 생성 모달 렌더링 실패:', error);
-            document.body.removeChild(modalContainer);
+            // 에러 발생 시 모달 컨테이너 제거
+            if (modalContainer.parentNode) {
+                modalContainer.parentNode.removeChild(modalContainer);
+            }
         }
     }
 
     destroy(): void {
+        // 남아있는 모달 컨테이너들 정리
+        const existingModals = document.querySelectorAll('.modal-container');
+        existingModals.forEach(modal => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        });
+        
         this.ui.clearContainer();
     }
 }

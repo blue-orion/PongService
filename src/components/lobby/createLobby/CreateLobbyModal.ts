@@ -290,11 +290,21 @@ export class CreateLobbyModal extends Component {
         
         // 컴포넌트 제거
         this.destroy();
+        
+        // 부모 컨테이너도 DOM에서 제거
+        if (this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
     }
 
     destroy(): void {
         document.removeEventListener('keydown', this.handleEscKey);
         document.body.style.overflow = '';
         this.clearContainer();
+        
+        // 부모 컨테이너도 DOM에서 제거 (이미 제거되었는지 확인)
+        if (this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
     }
 }

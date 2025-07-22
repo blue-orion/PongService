@@ -1,35 +1,5 @@
 import { AuthManager } from "../../../utils/auth";
-
-export interface LobbyData {
-    id: number;
-    name: string;
-    tournamentId: number;
-    maxPlayers: number;
-    status: 'waiting' | 'playing';
-    statusText: string;
-    creatorId: number;
-    createdAt: string;
-    updatedAt: string;
-    tournament: any;
-    players: any[];
-    currentPlayers: number;
-    host: string;
-    isHost: boolean;
-    isPlayerReady: boolean;
-    allPlayersReady: boolean;
-    matchData?: any; // 매칭 정보 추가
-}
-
-export interface SocketEventHandlers {
-    onReadyStateChange: (data: any) => void;
-    onPlayerChange: (data: any) => void;
-    onLobbyUpdate: (data: any) => void;
-    onLeadershipChange: (data: any) => void;
-    onPlayerLeft: (data: any) => void;
-    onPlayerJoined: (data: any) => void;
-    onMatchCreated: (data: any) => void;
-    onConnectionStatusChange: (isConnected: boolean, transport?: string) => void;
-}
+import { LobbyData, SocketEventHandlers } from "../../../types/lobby";
 
 export class LobbyDetailService {
     private lobbyId: string;
@@ -278,8 +248,8 @@ export class LobbyDetailService {
             status: data.lobby_status === 'PENDING' ? 'waiting' : 'playing',
             statusText: data.lobby_status === 'PENDING' ? '대기 중' : '게임 중',
             creatorId: data.creator_id,
-            createdAt: new Date(data.created_at).toLocaleString('ko-KR'),
-            updatedAt: new Date(data.updated_at).toLocaleString('ko-KR'),
+            createdAt: new Date(data.created_at).toLocaleTimeString('ko-KR'),
+            updatedAt: new Date(data.updated_at).toLocaleTimeString('ko-KR'),
             tournament: data.tournament,
             players: activePlayers,
             currentPlayers: activePlayers.length,
