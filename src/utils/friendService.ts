@@ -126,9 +126,13 @@ export class FriendService {
   }
 
   // 친구 요청 취소
-  async cancelFriendRequest(receiverId: string): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/cancel-request/${receiverId}`, {
+  async cancelFriendRequest(receiverId: string, receiverName?: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/cancel-request`, {
       method: "DELETE",
+      body: JSON.stringify({
+        receiverId: parseInt(receiverId),
+        receiverName: receiverName,
+      }),
     });
   }
 }

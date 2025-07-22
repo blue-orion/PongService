@@ -66,8 +66,7 @@ class App {
       if (currentPath === "/login") {
         this.router.navigate("/");
       } else {
-        // 현재 경로 유지하고 친구창 초기화
-        // this.initializeFriendComponent();
+        // 현재 경로 유지
         this.requestNotificationPermission();
         this.router.navigate(currentPath, false);
       }
@@ -107,11 +106,6 @@ class App {
     // 소셜 로그인 콜백 페이지
     this.router.addRoute("/social-callback", async () => {
       await this.loadComponent(SocialCallbackComponent);
-    });
-
-    // 회원가입 페이지
-    this.router.addRoute("/signup", async () => {
-      await this.loadComponent(SignupComponent);
     });
 
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
@@ -220,8 +214,8 @@ class App {
       //     // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
         friendContainer = document.createElement("div");
-        //     friendContainer.id = "friend-container";
-        //     document.body.appendChild(friendContainer);
+        friendContainer.id = "friend-container";
+        document.body.appendChild(friendContainer);
       }
 
       // 친구 컴포넌트 초기화

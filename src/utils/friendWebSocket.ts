@@ -5,11 +5,13 @@ import { AuthManager } from "./auth";
 type SocketIOSocket = ReturnType<typeof io>;
 
 interface FriendNotification {
-  type: "request" | "accepted" | "rejected" | "cancelled";
+  type: "request" | "accepted" | "rejected" | "cancelled" | "status_update" | "user_status";
   payload: {
     relationId?: string;
-    message: string;
+    message?: string;
     userId?: string;
+    status?: string;
+    [key: string]: any;
   };
 }
 
@@ -25,7 +27,7 @@ export class FriendWebSocketManager {
   private onError?: (error: string) => void;
 
   constructor(
-    private serverUrl: string = "http://localhost:3333",
+    private serverUrl: string = import.meta.env.VITE_API_BASE_URL?.replace("/v1", "") || "http://localhost:3333",
     private options = {
       withCredentials: true,
       transports: ["websocket", "polling"] as ["websocket", "polling"],
@@ -34,7 +36,6 @@ export class FriendWebSocketManager {
 
   connect(): void {
     if (this.socket?.connected) {
-      console.log("친구 웹소켓이 이미 연결되어 있습니다.");
       return;
     }
 
@@ -44,7 +45,6 @@ export class FriendWebSocketManager {
       return;
     }
 
-    // 토큰 유효성 검사
     if (!AuthManager.isTokenValid()) {
       console.warn("토큰이 만료되었습니다. 친구 웹소켓 연결을 건너뜁니다.");
       return;
@@ -53,14 +53,7 @@ export class FriendWebSocketManager {
     this.updateConnectionStatus("connecting");
 
     const userId = this.getUserIdFromToken(tokens.accessToken);
-    console.log("친구 웹소켓 연결 시도:", {
-      serverUrl: this.serverUrl,
-      namespace: "/ws/friend",
-      userId: userId,
-      tokenPrefix: tokens.accessToken.substring(0, 20) + "...",
-    });
 
-    // Socket.IO 네임스페이스에 올바르게 연결
     this.socket = io(this.serverUrl + "/ws/friend", {
       ...this.options,
       auth: {
@@ -96,52 +89,48 @@ export class FriendWebSocketManager {
     if (!this.socket) return;
 
     this.socket.on("connect", () => {
-      console.log("친구 서버에 연결됨:", this.socket?.id);
-      console.log("연결된 URL:", this.serverUrl);
       this.updateConnectionStatus("connected");
       this.reconnectAttempts = 0;
     });
 
     this.socket.on("disconnect", (reason) => {
-      console.log("친구 서버 연결 해제:", reason);
       this.updateConnectionStatus("disconnected");
-
       if (reason === "io server disconnect") {
         this.attemptReconnect();
       }
     });
 
     this.socket.on("connect_error", (error) => {
-      console.error("친구 웹소켓 연결 오류:", error);
-      console.error("오류 상세:", {
-        message: error.message,
-        stack: error.stack,
-      });
+      console.error("친구 웹소켓 연결 오류:", error.message);
       this.onError?.(`친구 연결 오류: ${error.message}`);
       this.attemptReconnect();
     });
 
     // 친구 관련 이벤트 리스너 - 백엔드에서 "friend_request" 이벤트로 모든 타입의 알림을 전송
     this.socket.on("friend_request", (notification: FriendNotification) => {
-      console.log("친구 알림 수신:", notification);
+      // 콜백으로 알림 전달
+      this.onFriendNotification?.(notification);
+    });
 
-      // 타입별로 다른 처리
-      switch (notification.type) {
-        case "request":
-          console.log("새 친구 요청:", notification.payload.message);
-          break;
-        case "accepted":
-          console.log("친구 요청 수락됨:", notification.payload.message);
-          break;
-        case "rejected":
-          console.log("친구 요청 거절됨:", notification.payload.message);
-          break;
-        case "cancelled":
-          console.log("친구 요청 취소됨:", notification.payload.message);
-          break;
-        default:
-          console.log("알 수 없는 친구 알림 타입:", notification.type);
-      }
+    // 사용자 상태 업데이트 이벤트 리스너 추가
+    this.socket.on("user_status", (statusData: any) => {
+      // FriendComponent로 전달하기 위해 notification 형태로 변환
+      const notification: FriendNotification = {
+        type: "user_status",
+        payload: statusData.payload || statusData,
+      };
+
+      // 콜백으로 알림 전달
+      this.onFriendNotification?.(notification);
+    });
+
+    // 상태 업데이트 이벤트도 함께 수신 (백엔드에서 다른 이벤트명으로 전송할 수 있음)
+    this.socket.on("status_update", (statusData: any) => {
+      // FriendComponent로 전달하기 위해 notification 형태로 변환
+      const notification: FriendNotification = {
+        type: "status_update",
+        payload: statusData.payload || statusData,
+      };
 
       // 콜백으로 알림 전달
       this.onFriendNotification?.(notification);
@@ -155,7 +144,6 @@ export class FriendWebSocketManager {
 
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log("친구 웹소켓 최대 재연결 시도 횟수를 초과했습니다.");
       this.onError?.("친구 연결에 실패했습니다.");
       return;
     }
@@ -164,7 +152,6 @@ export class FriendWebSocketManager {
     this.updateConnectionStatus("reconnecting");
 
     setTimeout(() => {
-      console.log(`친구 웹소켓 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
       this.connect();
     }, this.reconnectDelay * this.reconnectAttempts);
   }

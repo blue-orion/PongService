@@ -47,15 +47,20 @@ export class AuthManager {
   // JWT 토큰 디코딩
   static decodeJWT(token: string): any {
     try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('JWT 토큰 디코딩 실패:', error);
+      console.error("JWT 토큰 디코딩 실패:", error);
       return null;
     }
   }
@@ -158,10 +163,7 @@ export class AuthManager {
   }
 
   // 인증이 필요한 API 요청
-  static async authenticatedFetch(
-    url: string,
-    options: RequestInit = {},
-  ): Promise<Response> {
+  static async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     let tokens = this.getTokens();
 
     // 토큰이 없으면 로그인 페이지로 리다이렉트
@@ -228,7 +230,49 @@ export class AuthManager {
   }
 
   // 로그아웃
-  static logout(): void {
+  static async logout(): Promise<void> {
+    const tokens = this.getTokens();
+
+    // 백엔드 로그아웃 API 호출
+    if (tokens?.accessToken) {
+      try {
+        const userId = this.getCurrentUserId();
+        const response = await fetch(`${this.API_BASE_URL}/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+          body: JSON.stringify({ id: userId }),
+        });
+
+        if (response.ok) {
+          console.log("✅ 백엔드 로그아웃 성공");
+        } else {
+          console.warn("⚠️ 백엔드 로그아웃 실패:", response.status, response.statusText);
+          try {
+            const errorData = await response.text();
+            console.warn("응답 내용:", errorData);
+
+            // JSON 응답인지 확인하고 파싱 시도
+            try {
+              const jsonData = JSON.parse(errorData);
+              if (jsonData.success === false && response.status === 500) {
+                console.warn("서버 내부 오류이지만 로그아웃 처리는 진행됩니다.");
+              }
+            } catch (parseError) {
+              console.warn("JSON 파싱 실패:", parseError);
+            }
+          } catch (e) {
+            console.warn("응답 내용 읽기 실패");
+          }
+        }
+      } catch (error) {
+        console.error("❌ 로그아웃 API 호출 실패:", error);
+      }
+    }
+
+    // 로컬 토큰 삭제 및 리다이렉트
     this.clearTokens();
     this.redirectToLogin();
   }
