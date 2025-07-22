@@ -87,14 +87,8 @@ export class AuthManager {
 
   // 현재 로그인한 사용자 ID 가져오기
   static getCurrentUserId(): string | null {
-    const tokens = this.getTokens();
-    if (!tokens?.accessToken) {
-      return null;
-    }
-
-    const payload = this.decodeJWT(tokens.accessToken);
-    const userId = payload?.user_id || payload?.id || payload?.sub || null;
-    return userId ? String(userId) : null;
+    // UserManager에서 저장된 사용자 ID 사용
+    return UserManager.getUserId();
   }
 
   // 토큰 삭제 (로그아웃)

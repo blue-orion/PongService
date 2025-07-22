@@ -224,6 +224,17 @@ export class FriendComponent {
     this.container.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
 
+      // 라우팅 처리 (프로필 페이지로 이동)
+      const routeTarget = target.closest("[data-route]") as HTMLElement;
+      if (routeTarget) {
+        e.preventDefault();
+        const route = routeTarget.getAttribute("data-route");
+        if (route && window.router) {
+          window.router.navigate(route);
+        }
+        return;
+      }
+
       if (target.id === "addFriendBtn" || target.closest("#addFriendBtn")) {
         e.preventDefault();
         this.handleAddFriendClick();

@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { AuthManager } from "./auth";
+import { UserManager } from "./user";
 
 // Socket.IO 소켓 타입 정의
 type SocketIOSocket = ReturnType<typeof io>;
@@ -84,15 +85,8 @@ export class FriendWebSocketManager {
   }
 
   private getUserIdFromToken(token: string): string | null {
-    try {
-      // JWT 토큰에서 userId 추출
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      // 백엔드에서 사용하는 필드명에 맞게 userId 추출
-      return payload.userId || payload.id || payload.sub || payload.username;
-    } catch (error) {
-      console.error("토큰에서 userId 추출 실패:", error);
-      return null;
-    }
+    // UserManager에서 저장된 사용자 ID 사용
+    return UserManager.getUserId();
   }
 
   private setupEventListeners(): void {

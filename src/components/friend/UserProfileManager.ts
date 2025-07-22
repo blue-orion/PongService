@@ -1,4 +1,5 @@
 import { AuthManager } from "../../utils/auth";
+import { UserManager } from "../../utils/user";
 import { UserProfile, UserStatus } from "../../types/friend.types";
 
 export class UserProfileManager {
@@ -33,16 +34,8 @@ export class UserProfileManager {
   }
 
   public getCurrentUserId(): string | null {
-    const tokens = AuthManager.getTokens();
-    if (!tokens?.accessToken) return null;
-
-    try {
-      const tokenPayload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
-      return tokenPayload.sub || tokenPayload.userId || tokenPayload.id || tokenPayload.user_id || null;
-    } catch (error) {
-      console.error("토큰 파싱 실패:", error);
-      return null;
-    }
+    // UserManager에서 저장된 사용자 ID 사용
+    return UserManager.getUserId();
   }
 
   public async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -90,18 +83,10 @@ export class UserProfileManager {
   }
 
   private setDefaultProfile(): void {
-    const tokens = AuthManager.getTokens();
-    let nickname = "사용자";
-
-    if (tokens?.accessToken) {
-      try {
-        const payload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
-        const username = payload.username || payload.sub || "사용자";
-        nickname = payload.nickname || username;
-      } catch (error) {
-        // 토큰 디코딩 실패시 기본값 사용
-      }
-    }
+    // UserManager에서 사용자 정보 가져오기
+    const userId = UserManager.getUserId();
+    const username = UserManager.getUsername();
+    const nickname = username || "사용자"; // nickname이 없으면 username 사용
 
     const nicknameElement = this.container.querySelector("#userNickname") as HTMLElement;
     const usernameElement = this.container.querySelector("#userUsername") as HTMLElement;

@@ -1,6 +1,5 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, renderTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class LoginComponent extends Component {
   private formElement: HTMLFormElement | null = null;
@@ -92,7 +91,6 @@ export class LoginComponent extends Component {
 
   async render(): Promise<void> {
     this.clearContainer();
-
     this.container.innerHTML = this.getTemplate();
     this.setupEventListeners();
   }
@@ -160,28 +158,47 @@ export class LoginComponent extends Component {
 
       // 2FA 입력 필드가 아직 없는 경우 (첫 로그인 시도)
       const has2FAInput = !!this.container.querySelector('.twofa-input-container');
+      
       if (!has2FAInput) {
         // 먼저 2FA 활성화 여부 확인
         const is2FAEnabled = await this.check2FAEnabled(username, password);
         
         if (is2FAEnabled) {
-          // 2FA가 활성화된 경우 입력 필드 표시
+          // 2FA가 활성화된 경우 입력 필드 표시하고 토큰 요구
           this.show2FAInput();
           this.showError("2FA가 활성화된 계정입니다. 인증 코드를 입력해주세요.");
           this.setLoading(false);
           return;
+        } else {
+          // 2FA가 비활성화된 경우 바로 로그인 진행
+          await AuthManager.login(username, password);
+          
+          // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
+          if ((window as any).app) {
+            await (window as any).app.initializeFriendComponent();
+          }
+          // 메인 페이지로 이동
+          window.router.navigate("/");
+          return;
         }
       }
 
-      // 로그인 시도 (2FA 비활성화이거나 토큰이 있는 경우)
-      await AuthManager.login(username, password, token || undefined);
+      // 2FA가 활성화되어 있고 토큰이 입력된 경우 로그인 시도
+      if (has2FAInput && token) {
+        await AuthManager.login(username, password, token);
 
-      // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
-      if ((window as any).app) {
-        await (window as any).app.initializeFriendComponent();
+        // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
+        if ((window as any).app) {
+          await (window as any).app.initializeFriendComponent();
+        }
+        // 메인 페이지로 이동
+        window.router.navigate("/");
+      } else if (has2FAInput && !token) {
+        // 2FA 필드가 있지만 토큰이 입력되지 않은 경우
+        this.showError("인증 코드를 입력해주세요.");
+        this.setLoading(false);
+        return;
       }
-      // 메인 페이지로 이동
-      window.router.navigate("/");
       
     } catch (error) {
       console.error("로그인 오류:", error);
@@ -209,46 +226,19 @@ export class LoginComponent extends Component {
       }
 
       const result = await response.json();
+      
+      // API 응답에서 2FA 활성화 여부를 확인
+      // API는 { isValid: boolean } 형태로 응답함
       return result.data?.isValid || false;
       
     } catch (error) {
-      // check API 실패 시에도 로그인을 시도할 수 있도록 false 반환
+      // check API 실패 시에는 에러를 다시 던져서 로그인을 중단
       console.error("2FA 확인 중 오류:", error);
       throw error;
     }
   }
 
-  private async show2FAInput(): Promise<void> {
-    // 기존 2FA 입력 필드가 있으면 제거
-    const existing2FAInput = this.container.querySelector('.twofa-input-container');
-    if (existing2FAInput) {
-      existing2FAInput.remove();
-    }
-
-    try {
-      // 2FA 템플릿 로드
-      const template = await loadTemplate('/src/components/login/login2FA.template.html');
-      
-      // 로그인 버튼 앞에 2FA 입력 필드 삽입
-      const submitButton = this.container.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.insertAdjacentHTML('beforebegin', template);
-        
-        // 2FA 입력 필드에 포커스 및 이벤트 설정
-        const tokenInput = this.container.querySelector('#token') as HTMLInputElement;
-        if (tokenInput) {
-          this.setup2FATokenInput(tokenInput);
-        }
-      }
-    } catch (templateError) {
-      console.error('[LoginComponent] 2FA 템플릿 로드 오류:', templateError);
-      // 템플릿 로드 실패 시 기본 2FA 입력 필드 생성
-      this.show2FAInputFallback();
-    }
-  }
-
-  // 템플릿 로드 실패 시 사용할 폴백
-  private show2FAInputFallback(): void {
+  private show2FAInput(): void {
     // 기존 2FA 입력 필드가 있으면 제거
     const existing2FAInput = this.container.querySelector('.twofa-input-container');
     if (existing2FAInput) {
@@ -282,7 +272,7 @@ export class LoginComponent extends Component {
     if (submitButton) {
       submitButton.insertAdjacentHTML('beforebegin', twoFAHTML);
       
-      // 2FA 입력 필드에 포커스
+      // 2FA 입력 필드에 포커스 및 이벤트 설정
       const tokenInput = this.container.querySelector('#token') as HTMLInputElement;
       if (tokenInput) {
         this.setup2FATokenInput(tokenInput);
@@ -352,11 +342,33 @@ export class LoginComponent extends Component {
   }
 
   destroy(): void {
+    // 이벤트 리스너 정리
     if (this.formElement) {
-      this.formElement.removeEventListener(
-        "submit",
-        this.handleLogin.bind(this),
-      );
+      this.formElement.removeEventListener("submit", this.handleLogin.bind(this));
     }
+
+    const socialButtons = this.container.querySelectorAll(".social-btn");
+    socialButtons.forEach((button) => {
+      button.removeEventListener("click", this.handleSocialLogin.bind(this));
+    });
+
+    const signupLink = this.container.querySelector('.signup-link a');
+    if (signupLink) {
+      signupLink.removeEventListener('click', this.handleSignup.bind(this));
+    }
+
+    // 2FA 모달이나 에러 메시지 정리
+    const existingError = this.container.querySelector(".error-message");
+    if (existingError) {
+      existingError.remove();
+    }
+
+    const existing2FAInput = this.container.querySelector('.twofa-input-container');
+    if (existing2FAInput) {
+      existing2FAInput.remove();
+    }
+
+    // 컨테이너는 앱에서 관리하므로 여기서는 비우지 않음
+    // this.clearContainer();
   }
 }

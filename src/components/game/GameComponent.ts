@@ -31,7 +31,7 @@ export class GameComponent extends Component {
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
   private animationId: number | null = null;
-  private keyState = {
+  private keyState: { [key: string]: boolean } = {
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
@@ -119,8 +119,9 @@ export class GameComponent extends Component {
 
     this.canvas = this.container.querySelector("#gameCanvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
-    this.scoresElement = this.container.querySelector("#scores") as HTMLCanvasElement;
-    this.connectionStatusElement = this.container.querySelector("#connectionStatus")!;
+    this.scoresElement = this.container.querySelector("#scores") as HTMLElement;
+    this.connectionStatusElement = this.container.querySelector("#connectionStatus") as HTMLElement;
+    this.statusElement = this.container.querySelector("#gameStatus") as HTMLElement;
 
     // 게임 초기화 (인증은 이미 앱 레벨에서 확인됨)
     this.initializeGame();
@@ -199,7 +200,7 @@ export class GameComponent extends Component {
   private setupKeyboardControls(): void {
     const keydownHandler = (event: KeyboardEvent) => {
       if (!this.socket) return;
-      let keycode = event.code;
+      let keycode: string = event.code;
       if (event.repeat) return;
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
@@ -223,7 +224,7 @@ export class GameComponent extends Component {
 
     const keyupHandler = (event: KeyboardEvent) => {
       if (!this.socket) return;
-      let keycode = event.code;
+      let keycode: string = event.code;
       // w/s를 ArrowUp/ArrowDown으로 변환
       if (keycode === "KeyW") keycode = "ArrowUp";
       if (keycode === "KeyS") keycode = "ArrowDown";

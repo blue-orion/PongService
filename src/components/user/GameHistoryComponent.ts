@@ -1,6 +1,5 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, renderTemplate } from "../../utils/template-loader";
 
 interface GameRecord {
     id: number;
@@ -149,18 +148,15 @@ export class GameHistoryComponent extends Component {
         };
 
         try {
-            // 템플릿 로드 및 렌더링
-            const template = await loadTemplate('/src/components/user/gameHistory.template.html');
-            const renderedTemplate = renderTemplate(template, templateData);
-            this.container.innerHTML = renderedTemplate;
-            
-            this.setupEventListeners();
-        } catch (templateError) {
-            console.error('[GameHistoryComponent] 템플릿 로드 오류:', templateError);
+            // 직접 HTML 템플릿 렌더링
             this.renderGameHistoryFallback(processedRecords, pageData);
+        } catch (error) {
+            console.error('[GameHistoryComponent] 렌더링 오류:', error);
+            this.showErrorState('게임 기록을 표시할 수 없습니다.');
         }
     }
 
+    // 게임 기록 HTML 템플릿
     private renderGameHistoryFallback(gameRecords: any[], pageData: PageResponse): void {
         const recordsHTML = gameRecords.map(record => `
             <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">

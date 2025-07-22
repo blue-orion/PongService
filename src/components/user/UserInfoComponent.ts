@@ -1,10 +1,10 @@
 import { Component } from "../Component";
 import { UserManager } from "../../utils/user";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, renderTemplate } from "../../utils/template-loader";
 
 export class UserInfoComponent extends Component {
     private userId: string;
+    private currentUsername: string = '';
     private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     constructor(container: HTMLElement, userId: string) {
@@ -76,6 +76,17 @@ export class UserInfoComponent extends Component {
         // 2FA 활성화 여부 확인 (twoFASecret이 있으면 활성화됨)
         const is2faEnabled = !!profileData.twoFASecret;
 
+        // 친구 상태 확인 (다른 사용자의 프로필인 경우에만)
+        let friendStatus = null;
+        if (!isMe) {
+            try {
+                friendStatus = await this.checkFriendStatus(this.userId);
+            } catch (error) {
+                console.error('[UserInfoComponent] 친구 상태 확인 오류:', error);
+                // 친구 상태 확인에 실패해도 계속 진행
+            }
+        }
+
         // 템플릿 데이터 준비
         const templateData = {
             profileImage: profileImage,
@@ -85,23 +96,70 @@ export class UserInfoComponent extends Component {
             statusClasses: this.getStatusClasses(status),
             isMe: isMe,
             is2faEnabled: is2faEnabled,
-            twoFaButtonText: is2faEnabled ? '2FA 비활성화' : '2FA 활성화'
+            twoFaButtonText: is2faEnabled ? '2FA 비활성화' : '2FA 활성화',
+            friendStatus: friendStatus
         };
+        
+        // 친구 관련 메서드에서 사용할 수 있도록 username 저장
+        this.currentUsername = username;
         
         // 디버깅용 로그
         console.log('[UserInfoComponent] 템플릿 데이터:', templateData);
 
-        try {
-            // 템플릿 로드 및 렌더링
-            const template = await loadTemplate('/src/components/user/userInfo.template.html');
-            const renderedTemplate = renderTemplate(template, templateData);
-            this.container.innerHTML = renderedTemplate;
-            
-            this.setupEventListeners();
-        } catch (templateError) {
-            console.error('[UserInfoComponent] 템플릿 로드 오류:', templateError);
-            this.container.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-center font-medium m-5">페이지를 로드하는 중 오류가 발생했습니다.</div>`;
-        }
+        // HTML 직접 렌더링
+        this.container.innerHTML = this.getUserInfoTemplate(templateData);
+        this.setupEventListeners();
+    }
+
+    private getUserInfoTemplate(data: any): string {
+        return `
+<div class="p-5 max-w-2xl mx-auto font-sans">
+    <div class="flex items-center mb-8 pb-4 border-b-2 border-gray-200">
+        <button class="back-btn bg-transparent border-none text-base text-gray-500 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 mr-4 hover:bg-gray-100 hover:text-gray-700">← 뒤로가기</button>
+        <h2 class="m-0 text-gray-900 text-2xl font-semibold">사용자 정보</h2>
+    </div>
+    <div class="relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-8 shadow-xl text-white overflow-hidden">
+        <div class="absolute inset-0 bg-white bg-opacity-10 backdrop-blur-sm rounded-3xl"></div>
+        <div class="relative z-10">
+            <div class="text-center mb-5">
+                ${data.profileImage ? `
+                    <img src="${data.profileImage}" alt="${data.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-30 h-30 rounded-full border-4 border-white border-opacity-30 shadow-xl object-cover transition-transform duration-300 hover:scale-105 mx-auto">
+                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl" style="display: none;">
+                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                ` : `
+                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl">
+                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                `}
+            </div>
+            <div class="text-center mb-6">
+                <h3 class="text-3xl font-bold mb-2.5 text-white drop-shadow-sm">${data.username}</h3>
+                <p class="text-base mb-4 text-white text-opacity-90 font-medium">닉네임: ${data.nickname}</p>
+                <p class="inline-block px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide shadow-lg ${data.statusClasses}">${data.status}</p>
+            </div>
+            ${data.isMe ? `
+                <div class="text-center flex flex-col gap-3 mt-5">
+                    <button class="toggle-2fa-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-white bg-opacity-20 text-white border-white border-opacity-30 hover:bg-white hover:bg-opacity-30 hover:border-white hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36" data-enabled="${data.is2faEnabled}">${data.twoFaButtonText}</button>
+                    <button class="edit-profile-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">내 정보 변경</button>
+                    <button class="view-my-stats-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">전적 보기</button>
+                    <button class="deactivate-account-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-red-500 bg-opacity-20 text-white border-red-500 border-opacity-30 hover:bg-red-500 hover:bg-opacity-30 hover:border-red-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">회원 탈퇴</button>
+                </div>
+            ` : `
+                <div class="text-center flex flex-col gap-3 mt-5">
+                    <button class="view-stats-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">전적 보기</button>
+                    ${this.getFriendButtonHtml(data.friendStatus)}
+                </div>
+            `}
+        </div>
+    </div>
+    <div class="user-info-error bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-center font-medium m-5 hidden"></div>
+</div>
+        `;
     }
 
     private setupEventListeners(): void {
@@ -161,6 +219,22 @@ export class UserInfoComponent extends Component {
         if (addFriendBtn) {
             addFriendBtn.addEventListener('click', () => {
                 this.addFriend();
+            });
+        }
+
+        // 친구 해제 버튼
+        const removeFriendBtn = this.container.querySelector('.remove-friend-btn');
+        if (removeFriendBtn) {
+            removeFriendBtn.addEventListener('click', () => {
+                this.removeFriend();
+            });
+        }
+
+        // 친구 요청 취소 버튼
+        const cancelFriendRequestBtn = this.container.querySelector('.cancel-friend-request-btn');
+        if (cancelFriendRequestBtn) {
+            cancelFriendRequestBtn.addEventListener('click', () => {
+                this.cancelFriendRequest();
             });
         }
     }
@@ -276,8 +350,103 @@ export class UserInfoComponent extends Component {
         }
     }
 
-    private addFriend(): void {
-        alert(`사용자 ${this.userId}를 친구로 추가 요청합니다. (구현 예정)`);
+    private async addFriend(): Promise<void> {
+        try {
+            // 친구 컴포넌트에서 사용하는 것과 동일한 API 사용
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/friends/add`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: this.currentUsername || this.userId
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '친구 추가 요청에 실패했습니다.');
+            }
+
+            alert('친구 요청을 보냈습니다!');
+            // 페이지 새로고침하여 버튼 상태 업데이트
+            this.render();
+        } catch (error) {
+            console.error('[UserInfoComponent] 친구 추가 오류:', error);
+            const message = error instanceof Error ? error.message : '친구 추가 중 오류가 발생했습니다.';
+            alert(message);
+        }
+    }
+
+    private async removeFriend(): Promise<void> {
+        try {
+            const confirmed = confirm('정말로 친구를 해제하시겠습니까?');
+            if (!confirmed) return;
+
+            // 친구 해제 API - 친구 ID나 관계 ID로 삭제
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/friends/delete`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        friendId: this.userId // 또는 relationId를 사용할 수도 있음
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '친구 해제에 실패했습니다.');
+            }
+
+            alert('친구가 해제되었습니다.');
+            // 페이지 새로고침하여 버튼 상태 업데이트
+            this.render();
+        } catch (error) {
+            console.error('[UserInfoComponent] 친구 해제 오류:', error);
+            const message = error instanceof Error ? error.message : '친구 해제 중 오류가 발생했습니다.';
+            alert(message);
+        }
+    }
+
+    private async cancelFriendRequest(): Promise<void> {
+        try {
+            const confirmed = confirm('친구 요청을 취소하시겠습니까?');
+            if (!confirmed) return;
+
+            // 친구 요청 취소 API
+            const response = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/friends/cancel`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: this.userId // 또는 relationId를 사용할 수도 있음
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '친구 요청 취소에 실패했습니다.');
+            }
+
+            alert('친구 요청을 취소했습니다.');
+            // 페이지 새로고침하여 버튼 상태 업데이트
+            this.render();
+        } catch (error) {
+            console.error('[UserInfoComponent] 친구 요청 취소 오류:', error);
+            const message = error instanceof Error ? error.message : '친구 요청 취소 중 오류가 발생했습니다.';
+            alert(message);
+        }
     }
 
     private getStatusClasses(status: string): string {
@@ -361,32 +530,7 @@ export class UserInfoComponent extends Component {
     }
 
     // 2FA 설정 모달 표시
-    private async show2FASetupModal(qrCodeDataURL: string): Promise<void> {
-        try {
-            // 모달 템플릿 로드
-            const modalTemplate = await loadTemplate('/src/components/user/userInfo2FAModal.template.html');
-            
-            // 템플릿 데이터 준비
-            const modalData = {
-                qrCodeDataURL: qrCodeDataURL,
-                qrCodeDataURLPreview: qrCodeDataURL.substring(0, 50)
-            };
-            
-            // 템플릿 렌더링 후 body에 추가
-            const renderedModal = renderTemplate(modalTemplate, modalData);
-            document.body.insertAdjacentHTML('beforeend', renderedModal);
-            
-            // 이벤트 리스너 추가
-            this.setup2FAModalEvents();
-        } catch (templateError) {
-            console.error('[UserInfoComponent] 모달 템플릿 로드 오류:', templateError);
-            // 템플릿 로드 실패 시 기본 모달 생성
-            this.show2FASetupModalFallback(qrCodeDataURL);
-        }
-    }
-    
-    // 템플릿 로드 실패 시 사용할 폴백 모달
-    private show2FASetupModalFallback(qrCodeDataURL: string): void {
+    private show2FASetupModal(qrCodeDataURL: string): void {
         // 모달 HTML 생성
         const modalHTML = `
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="twofa-modal">
@@ -546,6 +690,81 @@ export class UserInfoComponent extends Component {
         modal?.remove();
     }
 
+    // 친구 상태에 따른 버튼 HTML 생성
+    private getFriendButtonHtml(friendStatus: string): string {
+        switch (friendStatus) {
+            case 'friend':
+                return `<button class="remove-friend-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-red-500 bg-opacity-20 text-white border-red-500 border-opacity-30 hover:bg-red-500 hover:bg-opacity-30 hover:border-red-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">친구 해제</button>`;
+            case 'pending':
+                return `<button class="cancel-friend-request-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-yellow-500 bg-opacity-20 text-white border-yellow-500 border-opacity-30 hover:bg-yellow-500 hover:bg-opacity-30 hover:border-yellow-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">요청 취소</button>`;
+            case 'none':
+            default:
+                return `<button class="add-friend-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-white bg-opacity-20 text-white border-white border-opacity-30 hover:bg-white hover:bg-opacity-30 hover:border-white hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">친구 추가</button>`;
+        }
+    }
+
+    // 친구 상태 확인 메서드
+    private async checkFriendStatus(userId: string): Promise<string> {
+        try {
+            // 여러 가능한 API 엔드포인트를 시도해보자
+            console.log('[UserInfoComponent] 친구 상태 확인 시작:', userId);
+            
+            // 먼저 친구 목록에서 해당 사용자를 찾아보기
+            const friendsResponse = await AuthManager.authenticatedFetch(
+                `${UserInfoComponent.API_BASE_URL}/friends`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (friendsResponse.ok) {
+                const friendsData = await friendsResponse.json();
+                console.log('[UserInfoComponent] 친구 목록 응답:', friendsData);
+                
+                // 친구 목록에서 해당 사용자 찾기
+                const friends = friendsData.data?.friends || [];
+                const isFriend = friends.some((friend: any) => 
+                    String(friend.id) === String(userId) || 
+                    String(friend.userId) === String(userId) ||
+                    String(friend.friendId) === String(userId)
+                );
+                
+                if (isFriend) {
+                    console.log('[UserInfoComponent] 이미 친구임');
+                    return 'friend';
+                }
+
+                // 받은 친구 요청에서 확인
+                const receivedRequests = friendsData.data?.receivedRequests || [];
+                const hasReceivedRequest = receivedRequests.some((request: any) => 
+                    String(request.senderId) === String(userId) ||
+                    String(request.userId) === String(userId)
+                );
+
+                // 보낸 친구 요청에서 확인
+                const sentRequests = friendsData.data?.sentRequests || [];
+                const hasSentRequest = sentRequests.some((request: any) => 
+                    String(request.receiverId) === String(userId) ||
+                    String(request.userId) === String(userId)
+                );
+
+                if (hasReceivedRequest || hasSentRequest) {
+                    console.log('[UserInfoComponent] 친구 요청 대기 중');
+                    return 'pending';
+                }
+            }
+
+            console.log('[UserInfoComponent] 친구 관계 없음');
+            return 'none';
+        } catch (error) {
+            console.error('[UserInfoComponent] 친구 상태 확인 오류:', error);
+            return 'none';
+        }
+    }
+
     destroy(): void {
         // 이벤트 리스너 정리
         const backBtn = this.container.querySelector('.back-btn');
@@ -581,6 +800,16 @@ export class UserInfoComponent extends Component {
         const addFriendBtn = this.container.querySelector('.add-friend-btn');
         if (addFriendBtn) {
             addFriendBtn.removeEventListener('click', () => {});
+        }
+
+        const removeFriendBtn = this.container.querySelector('.remove-friend-btn');
+        if (removeFriendBtn) {
+            removeFriendBtn.removeEventListener('click', () => {});
+        }
+
+        const cancelFriendRequestBtn = this.container.querySelector('.cancel-friend-request-btn');
+        if (cancelFriendRequestBtn) {
+            cancelFriendRequestBtn.removeEventListener('click', () => {});
         }
 
         // 2FA 모달이 열려있다면 닫기

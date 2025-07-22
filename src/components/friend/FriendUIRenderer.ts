@@ -55,14 +55,14 @@ export class FriendUIRenderer {
 
     return `
       <div class="friend-item ${opacityClass}" data-friend-id="${friend.id}" data-relation-id="${friend.relationId}">
-        <div class="friend-item-avatar ${avatarClass}" ${
+        <div class="friend-item-avatar ${avatarClass} cursor-pointer" data-route="/info/${friend.id}" ${
       friend.avatar ? `style="background-image: url('${friend.avatar}');"` : ""
     }>
           <div class="friend-item-status-indicator ${statusIndicatorClass}"></div>
         </div>
         <div class="friend-item-info">
-          <div class="friend-item-name">${friend.name}</div>
-          <div class="friend-item-username">${friend.username || friend.name}</div>
+          <div class="friend-item-name cursor-pointer" data-route="/info/${friend.id}">${friend.name}</div>
+          <div class="friend-item-username cursor-pointer" data-route="/info/${friend.id}">${friend.username || friend.name}</div>
           <div class="friend-item-status ${statusTextClass}">${statusText}</div>
         </div>
         <div class="friend-item-actions">
@@ -94,15 +94,15 @@ export class FriendUIRenderer {
         const requestsHTML = friendRequests
           .map((request) => {
             const avatarContent = request.avatar
-              ? `<div class="friend-request-avatar-with-image" style="background-image: url('${request.avatar}');"></div>`
-              : `<div class="friend-request-avatar-default"></div>`;
+              ? `<div class="friend-request-avatar-with-image cursor-pointer" data-route="/info/${request.id}" style="background-image: url('${request.avatar}');"></div>`
+              : `<div class="friend-request-avatar-default cursor-pointer" data-route="/info/${request.id}"></div>`;
 
             return `
           <div class="friend-request-item" data-relation-id="${request.relationId}">
             ${avatarContent}
             <div class="friend-request-info">
-              <div class="friend-request-name">${request.name}</div>
-              <div class="friend-request-username">${request.username}</div>
+              <div class="friend-request-name cursor-pointer" data-route="/info/${request.id}">${request.name}</div>
+              <div class="friend-request-username cursor-pointer" data-route="/info/${request.id}">${request.username}</div>
               <div class="friend-request-status">친구 요청</div>
             </div>
             <div class="friend-request-actions">
@@ -138,15 +138,15 @@ export class FriendUIRenderer {
         const sentRequestsHTML = sentRequests
           .map((request) => {
             const avatarContent = request.avatar
-              ? `<div class="friend-request-avatar-with-image" style="background-image: url('${request.avatar}');"></div>`
-              : `<div class="friend-sent-request-avatar-default"></div>`;
+              ? `<div class="friend-request-avatar-with-image cursor-pointer" data-route="/info/${request.id}" style="background-image: url('${request.avatar}');"></div>`
+              : `<div class="friend-sent-request-avatar-default cursor-pointer" data-route="/info/${request.id}"></div>`;
 
             return `
           <div class="friend-sent-request-item" data-relation-id="${request.relationId}">
             ${avatarContent}
             <div class="friend-request-info">
-              <div class="friend-request-name">${request.name}</div>
-              <div class="friend-request-username">${request.username}</div>
+              <div class="friend-request-name cursor-pointer" data-route="/info/${request.id}">${request.name}</div>
+              <div class="friend-request-username cursor-pointer" data-route="/info/${request.id}">${request.username}</div>
               <div class="friend-request-status">요청 대기 중</div>
             </div>
             <div class="friend-request-actions">
