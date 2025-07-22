@@ -15,9 +15,50 @@ export class FriendDataManager {
       }
       this.userProfileManager = userProfileManager;
     } catch (error) {
-      console.error("FriendDataManager 초기화 실패:", error);
+      this.showErrorModal("FriendDataManager 초기화 실패", error instanceof Error ? error.message : "알 수 없는 오류");
       throw error;
     }
+  }
+
+  private showErrorModal(title: string, message: string): void {
+    // 기존 에러 모달이 있다면 제거
+    const existingModal = document.querySelector(".friend-error-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // 에러 모달 HTML 생성
+    const modalHTML = `
+      <div class="friend-error-modal-overlay show">
+        <div class="friend-error-modal">
+          <div class="friend-error-modal-header">
+            <div class="friend-error-modal-title">
+              <span>⚠️</span>
+              <span>${title}</span>
+            </div>
+          </div>
+          <div class="friend-error-modal-content">
+            <div class="friend-error-modal-message">${message}</div>
+          </div>
+          <div class="friend-error-modal-footer">
+            <button class="friend-error-modal-button" onclick="this.closest('.friend-error-modal-overlay').remove()">
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // body에 모달 추가
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    // 3초 후 자동으로 모달 제거 (옵션)
+    setTimeout(() => {
+      const modal = document.querySelector(".friend-error-modal-overlay");
+      if (modal) {
+        modal.remove();
+      }
+    }, 5000);
   }
 
   public async loadAllData(): Promise<void> {
@@ -25,6 +66,13 @@ export class FriendDataManager {
       await Promise.all([this.loadFriends(), this.loadFriendRequests(), this.loadSentRequests()]);
     } catch (error) {
       console.error("친구 데이터 로드 실패:", error);
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "친구 목록을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      this.showErrorModal("친구 데이터 로드 실패", errorMessage);
+
       // 개별 로드 시도
       try {
         await this.loadFriends();
@@ -128,6 +176,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("친구 목록 로드 중 예상치 못한 오류:", error);
       this.friends = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "친구 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("친구 목록 로드 오류", errorMessage);
       throw error; // 상위에서 처리할 수 있도록 re-throw
     }
   }
@@ -213,6 +267,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("친구 요청 목록 로드 중 예상치 못한 오류:", error);
       this.friendRequests = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "받은 친구 요청 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("친구 요청 로드 오류", errorMessage);
       throw error;
     }
   }
@@ -304,6 +364,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("보낸 요청 목록 로드 중 예상치 못한 오류:", error);
       this.sentRequests = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "보낸 친구 요청 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("보낸 요청 로드 오류", errorMessage);
       throw error;
     }
   }

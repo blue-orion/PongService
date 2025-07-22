@@ -59,6 +59,10 @@ export class UserProfileManager {
       });
 
       if (!response.ok) {
+        if (response.status >= 500) {
+          console.error("서버 오류:", response.status, response.statusText);
+          throw new Error("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
         console.error("프로필 정보 가져오기 실패:", response.status, response.statusText);
         return null;
       }
