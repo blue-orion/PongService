@@ -19,71 +19,108 @@ interface FriendRequest {
   relationId: string;
 }
 
+interface SentRequest {
+  id: string;
+  name: string;
+  username: string;
+  avatar?: string;
+  relationId: string;
+}
+
 export class FriendComponent {
   private container: HTMLElement;
   private friends: Friend[] = [];
   private friendRequests: FriendRequest[] = [];
+  private sentRequests: SentRequest[] = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
-    // 웹소켓 연결 활성화
     this.initializeWebSocket();
   }
 
   private getTemplate(): string {
     return `
-<div class="friend-sidebar">
+<div class="fixed top-0 right-0 w-80 h-full bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-xl border-l border-white/20 z-50 shadow-2xl">
   <!-- 친구창 헤더 -->
-  <div class="friend-header">
-    <h3>친구 목록</h3>
+  <div class="p-4 border-b border-white/20 bg-white/5">
+    <h3 class="text-xl font-bold text-white text-center tracking-wide">친구 목록</h3>
   </div>
 
   <!-- 사용자 프로필 -->
-  <div class="user-profile">
-    <div class="user-avatar" id="userAvatar"></div>
-    <div class="user-info">
-      <div class="user-nickname" id="userNickname">사용자</div>
-      <div class="user-username" id="userUsername">@username</div>
-      <div class="user-status">온라인</div>
+  <div class="p-4 border-b border-white/20 bg-white/5">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 border-2 border-white/30" id="userAvatar"></div>
+      <div class="flex-1">
+        <div class="text-white font-semibold text-sm" id="userNickname">사용자</div>
+        <div class="text-white/60 text-xs" id="userUsername">@username</div>
+        <div class="text-green-400 text-xs font-medium">온라인</div>
+      </div>
     </div>
+    
     <!-- 친구 요청 보관함 -->
-    <div class="friend-requests-box" id="friendRequestsBox">
-      <button class="requests-toggle" id="requestsToggle">
-        <span class="requests-icon">📮</span>
-        <span class="requests-count" id="requestsCount">0</span>
+    <div class="relative mb-2" id="friendRequestsBox">
+      <button class="w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg px-3 py-2 flex items-center justify-between transition-all duration-200 hover:scale-[1.02]" id="requestsToggle">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📮</span>
+          <span class="text-white text-sm font-medium">받은 요청</span>
+        </div>
+        <span class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold hidden" id="requestsCount">0</span>
       </button>
-      <div class="requests-dropdown" id="requestsDropdown">
-        <div class="requests-header">받은 친구 요청</div>
-        <div class="requests-list" id="requestsList">
+      <div class="absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/30 opacity-0 -translate-y-2.5 pointer-events-none transition-all duration-300 z-50" id="requestsDropdown">
+        <div class="p-3 border-b border-white/20 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-t-xl">
+          <div class="text-gray-800 font-bold text-sm">받은 친구 요청</div>
+        </div>
+        <div class="max-h-60 overflow-y-auto" id="requestsList">
           <!-- 친구 요청들이 여기에 동적으로 추가됩니다 -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- 보낸 요청 보관함 -->
+    <div class="relative" id="sentRequestsBox">
+      <button class="w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg px-3 py-2 flex items-center justify-between transition-all duration-200 hover:scale-[1.02]" id="sentRequestsToggle">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📤</span>
+          <span class="text-white text-sm font-medium">보낸 요청</span>
+        </div>
+        <span class="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold hidden" id="sentRequestsCount">0</span>
+      </button>
+      <div class="absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/30 opacity-0 -translate-y-2.5 pointer-events-none transition-all duration-300 z-50" id="sentRequestsDropdown">
+        <div class="p-3 border-b border-white/20 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-t-xl">
+          <div class="text-gray-800 font-bold text-sm">보낸 친구 요청</div>
+        </div>
+        <div class="max-h-60 overflow-y-auto" id="sentRequestsList">
+          <!-- 보낸 요청들이 여기에 동적으로 추가됩니다 -->
         </div>
       </div>
     </div>
   </div>
 
   <!-- 친구창 내용 -->
-  <div class="friend-content" id="friendContent">
+  <div class="flex-1 overflow-hidden flex flex-col" id="friendContent">
     <!-- 친구 추가 -->
-    <div class="friend-add-section">
-      <div class="add-friend-form">
-        <input type="text" placeholder="사용자명으로 친구 추가" class="add-friend-input" id="addFriendInput" />
-        <button class="add-friend-btn" id="addFriendBtn">+</button>
+    <div class="p-4 border-b border-white/20 bg-white/5">
+      <div class="flex gap-2">
+        <input type="text" placeholder="사용자명으로 친구 추가" class="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent min-w-0" id="addFriendInput" />
+        <button class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg font-bold transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 flex-shrink-0 min-w-[44px] flex items-center justify-center" id="addFriendBtn">+</button>
       </div>
     </div>
 
-    <!-- 온라인 친구들 -->
-    <div class="friend-section"></div>
+    <!-- 친구 목록 스크롤 영역 -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <!-- 온라인 친구들 -->
+      <div>
+        <div class="text-white/80 text-sm font-semibold mb-2 px-1" id="onlineTitle">온라인 - 0</div>
+        <div class="space-y-2" id="onlineList">
+          <!-- 온라인 친구들이 여기에 동적으로 추가됩니다 -->
+        </div>
+      </div>
 
-    <!-- 오프라인 친구들 -->
-    <div class="friend-section">
-      <div class="section-title">오프라인 - 1</div>
-      <div class="friend-list">
-        <div class="friend-item offline">
-          <div class="friend-avatar"></div>
-          <div class="friend-info">
-            <div class="friend-name">gitkim</div>
-            <div class="friend-status">오프라인</div>
-          </div>
+      <!-- 오프라인 친구들 -->
+      <div>
+        <div class="text-white/80 text-sm font-semibold mb-2 px-1" id="offlineTitle">오프라인 - 0</div>
+        <div class="space-y-2" id="offlineList">
+          <!-- 오프라인 친구들이 여기에 동적으로 추가됩니다 -->
         </div>
       </div>
     </div>
@@ -95,35 +132,29 @@ export class FriendComponent {
   public async render(): Promise<void> {
     this.container.innerHTML = this.getTemplate();
 
-    this.loadStyles();
-
     // 사용자 프로필 설정
     this.setupUserProfile();
     await this.loadFriendsData();
     this.setupEventListeners();
     this.renderFriendItems();
-    this.updateFriendList();
-    this.updateRequestsBox(); // 친구 요청 보관함 업데이트 추가
+    this.updateRequestsBox();
+    this.updateSentRequestsBox();
 
     // 브라우저 알림 권한 요청
     this.requestNotificationPermission();
   }
 
   private initializeWebSocket(): void {
-    // 친구 웹소켓 연결
     friendWebSocketManager.connect();
 
-    // 친구 알림 수신 리스너
     friendWebSocketManager.onFriendNotificationReceived((notification) => {
       this.handleFriendNotification(notification);
     });
 
-    // 연결 상태 변경 리스너
     friendWebSocketManager.onConnectionStatusChange((status) => {
       console.log("친구 웹소켓 연결 상태:", status);
     });
 
-    // 오류 리스너
     friendWebSocketManager.onErrorOccurred((error) => {
       console.error("친구 웹소켓 오류:", error);
     });
@@ -131,213 +162,222 @@ export class FriendComponent {
 
   private handleFriendNotification(notification: any): void {
     const { type, payload } = notification;
-    console.log(`친구 알림 처리: ${type}`, payload);
 
     switch (type) {
       case "request":
-        // 새로운 친구 요청 수신
-        // 새로운 친구 요청을 로컬 배열에 추가
-        const requestData = payload.requestData || payload;
-        const newRequest: FriendRequest = {
-          id: requestData.id || requestData.sender_id || Date.now().toString(),
-          name:
-            requestData.name ||
-            requestData.sender?.nickname ||
-            requestData.sender?.username ||
-            requestData.username ||
-            "알 수 없는 사용자",
-          username: requestData.username || requestData.sender?.username || requestData.sender?.name || "unknown",
-          relationId: requestData.relationId || requestData.id || Date.now().toString(),
-        };
-
-        // 중복 체크 후 추가
-        const isDuplicate = this.friendRequests.some(
-          (req) => req.relationId === newRequest.relationId || req.username === newRequest.username
-        );
-
-        if (!isDuplicate) {
-          this.friendRequests.push(newRequest);
-          console.log("새로운 친구 요청 추가됨:", newRequest);
-
-          // UI 즉시 업데이트
-          this.updateRequestsBox();
-
-          // 알림 표시
-          this.showNotification(`새로운 친구 요청: ${newRequest.name}`);
-        }
+        this.handleFriendRequestReceived(payload);
         break;
-
       case "accepted":
-        // 친구 요청 수락됨 - 보낸 요청이 수락된 경우
-        // 새 친구를 친구 목록에 추가
-        const friendData = payload.friendData || payload;
-        const newFriend: Friend = {
-          id: friendData.id || friendData.friend_id || Date.now().toString(),
-          name: friendData.name || friendData.nickname || friendData.username || "새 친구",
-          username: friendData.username || friendData.name || "unknown",
-          status: "offline" as "online" | "offline" | "in-game",
-          relationId: friendData.relationId || friendData.id || Date.now().toString(),
-        };
-
-        // 중복 체크 후 추가
-        const isDuplicateFriend = this.friends.some(
-          (friend) => friend.id === newFriend.id || friend.username === newFriend.username
-        );
-
-        if (!isDuplicateFriend) {
-          this.friends.push(newFriend);
-          console.log("새로운 친구 추가됨:", newFriend);
-
-          // UI 즉시 업데이트
-          this.renderFriendItems();
-          this.updateFriendList();
-
-          // 알림 표시
-          this.showNotification(`${newFriend.name}님이 친구 요청을 수락했습니다.`);
-        }
+        this.handleFriendRequestAccepted(payload);
         break;
-
       case "rejected":
-        // 친구 요청 거절됨
-        this.showNotification(`친구 요청이 거절되었습니다: ${payload.message || ""}`);
-        // 거절된 경우 특별한 UI 변경 없음
+        this.handleFriendRequestRejected(payload);
         break;
-
       case "cancelled":
-        // 친구 요청 취소됨
-        // 취소된 요청을 로컬에서 제거
-        const requestId = payload.relationId || payload.requestId || payload.id;
-        const username = payload.username || payload.sender?.username;
-
-        if (requestId || username) {
-          const beforeCount = this.friendRequests.length;
-          this.friendRequests = this.friendRequests.filter(
-            (req) => req.relationId !== requestId && req.username !== username && req.id !== requestId
-          );
-
-          if (this.friendRequests.length < beforeCount) {
-            console.log("친구 요청 취소됨:", { requestId, username });
-            // UI 즉시 업데이트
-            this.updateRequestsBox();
-
-            // 알림 표시
-            this.showNotification(`친구 요청이 취소되었습니다.`);
-          }
-        }
+        this.handleFriendRequestCancelled(payload);
         break;
-
       case "deleted":
-        // 친구 삭제됨
         this.handleFriendDeleted(payload);
-        this.showNotification(`친구가 삭제되었습니다: ${payload.message || ""}`);
         break;
-
       case "status_changed":
-        // 친구 상태 변경 (온라인/오프라인/게임중)
         this.handleFriendStatusChanged(payload);
         break;
-
-      case "online":
-        // 친구 온라인 상태
-        this.handleFriendStatusChanged({ ...payload, status: "online" });
-        break;
-
-      case "offline":
-        // 친구 오프라인 상태
-        this.handleFriendStatusChanged({ ...payload, status: "offline" });
-        break;
-
-      case "in_game":
-        // 친구 게임중 상태
-        this.handleFriendStatusChanged({ ...payload, status: "in-game" });
-        break;
-
       default:
         console.log("알 수 없는 친구 알림:", notification);
     }
   }
 
-  private showNotification(message: string, updateUI: boolean = false): void {
-    // 콘솔에 로그
-    console.log("친구 알림:", message);
+  private getCurrentUserId(): string | null {
+    const tokens = AuthManager.getTokens();
+    if (!tokens?.accessToken) return null;
 
-    // 브라우저 알림 권한 확인 및 요청
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          this.displayBrowserNotification(message);
-        }
-      });
-    } else if (Notification.permission === "granted") {
-      this.displayBrowserNotification(message);
-    }
-
-    // UI 업데이트가 필요한 경우에만 호출
-    if (updateUI) {
-      this.updateRequestsBox();
+    try {
+      const tokenPayload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
+      return tokenPayload.sub || tokenPayload.userId || tokenPayload.id || tokenPayload.user_id || null;
+    } catch (error) {
+      console.error("토큰 파싱 실패:", error);
+      return null;
     }
   }
 
-  private displayBrowserNotification(message: string): void {
-    new Notification("친구 알림", {
-      body: message,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
-      tag: "friend-notification", // 같은 태그의 알림은 덮어씀
-      requireInteraction: false, // 자동으로 사라짐
-      silent: false,
-    });
+  private handleFriendRequestReceived(payload: any): void {
+    const requestData = payload.requestData || payload;
+    const currentUserId = this.getCurrentUserId();
+
+    // 자신이 보낸 요청인지 확인
+    if (requestData.senderId?.toString() === currentUserId?.toString()) {
+      // 보낸 요청 목록에 추가
+      const newSentRequest: SentRequest = {
+        id: requestData.receiverId || Date.now().toString(),
+        name: requestData.receiverUsername || "알 수 없는 사용자",
+        username: requestData.receiverUsername || "unknown",
+        relationId: requestData.relationId || requestData.id || Date.now().toString(),
+      };
+
+      const isDuplicate = this.sentRequests.some((req) => req.relationId === newSentRequest.relationId);
+      if (!isDuplicate) {
+        this.sentRequests.push(newSentRequest);
+        this.updateSentRequestsBox();
+        this.showNotification(`${newSentRequest.name}님에게 친구 요청을 보냈습니다.`);
+      }
+    } else {
+      // 받은 요청 목록에 추가
+      const newRequest: FriendRequest = {
+        id: requestData.senderId || requestData.sender_id || Date.now().toString(),
+        name:
+          requestData.senderUsername ||
+          requestData.sender?.nickname ||
+          requestData.sender?.username ||
+          requestData.name ||
+          "알 수 없는 사용자",
+        username: requestData.senderUsername || requestData.sender?.username || requestData.username || "unknown",
+        relationId: requestData.relationId || requestData.id || Date.now().toString(),
+      };
+
+      const isDuplicate = this.friendRequests.some((req) => req.relationId === newRequest.relationId);
+      if (!isDuplicate) {
+        this.friendRequests.push(newRequest);
+        this.updateRequestsBox();
+        this.showNotification(`새로운 친구 요청: ${newRequest.name}`);
+      }
+    }
+  }
+
+  private handleFriendRequestAccepted(payload: any): void {
+    const requestData = payload.requestData || payload;
+    const currentUserId = this.getCurrentUserId();
+
+    // 수락된 요청을 보관함에서 제거 (relationId로 매칭)
+    this.friendRequests = this.friendRequests.filter((request) => request.relationId !== requestData.relationId);
+    this.sentRequests = this.sentRequests.filter((request) => request.relationId !== requestData.relationId);
+
+    // 상대방 ID 결정 (senderId나 receiverId 중 현재 사용자가 아닌 것)
+    const friendId = requestData.senderId === currentUserId ? requestData.receiverId : requestData.senderId;
+
+    // 친구 목록 다시 로드해서 정확한 정보 가져오기
+    this.loadFriends()
+      .then(() => {
+        this.renderFriendItems();
+        this.updateRequestsBox();
+        this.updateSentRequestsBox();
+        this.showNotification("친구 요청이 수락되었습니다.");
+      })
+      .catch((error) => {
+        console.error("친구 목록 재로드 실패:", error);
+        // 실패시 임시로 추가
+        const tempFriend: Friend = {
+          id: friendId?.toString() || Date.now().toString(),
+          name: `사용자${friendId}`,
+          username: "unknown",
+          status: "offline",
+          relationId: requestData.relationId || Date.now().toString(),
+        };
+        this.addFriendToList(tempFriend);
+        this.updateRequestsBox();
+        this.updateSentRequestsBox();
+      });
+  }
+
+  private handleFriendRequestRejected(payload: any): void {
+    const requestData = payload.requestData || payload;
+
+    // 거절된 요청을 보낸 요청 목록에서 제거 (relationId로 매칭)
+    const removedRequest = this.sentRequests.find((request) => request.relationId === requestData.relationId);
+    this.sentRequests = this.sentRequests.filter((request) => request.relationId !== requestData.relationId);
+
+    // UI 업데이트
+    this.updateSentRequestsBox();
+
+    // 알림 표시
+    if (removedRequest) {
+      this.showNotification(`${removedRequest.name}님이 친구 요청을 거절했습니다.`);
+    } else {
+      this.showNotification("친구 요청이 거절되었습니다.");
+    }
+  }
+
+  private handleFriendRequestCancelled(payload: any): void {
+    const requestData = payload.requestData || payload;
+    const currentUserId = this.getCurrentUserId();
+
+    // 취소된 요청을 적절한 목록에서 제거
+    if (requestData.senderId?.toString() === currentUserId?.toString()) {
+      // 자신이 취소한 경우 - 보낸 요청 목록에서 제거
+      const removedRequest = this.sentRequests.find((request) => request.relationId === requestData.relationId);
+      this.sentRequests = this.sentRequests.filter((request) => request.relationId !== requestData.relationId);
+      this.updateSentRequestsBox();
+
+      if (removedRequest) {
+        this.showNotification(`${removedRequest.name}님에게 보낸 친구 요청을 취소했습니다.`);
+      }
+    } else {
+      // 상대방이 취소한 경우 - 받은 요청 목록에서 제거
+      const removedRequest = this.friendRequests.find((request) => request.relationId === requestData.relationId);
+      this.friendRequests = this.friendRequests.filter((request) => request.relationId !== requestData.relationId);
+      this.updateRequestsBox();
+
+      if (removedRequest) {
+        this.showNotification(`${removedRequest.name}님이 친구 요청을 취소했습니다.`);
+      } else {
+        this.showNotification("친구 요청이 취소되었습니다.");
+      }
+    }
+  }
+
+  private addFriendToList(newFriend: Friend): void {
+    const isDuplicate = this.friends.some((friend) => friend.id === newFriend.id);
+    if (!isDuplicate) {
+      this.friends.push(newFriend);
+      this.renderFriendItems();
+      this.showNotification(`${newFriend.name}님이 친구 요청을 수락했습니다.`);
+    }
+  }
+
+  private showNotification(message: string): void {
+    console.log("친구 알림:", message);
+
+    if (Notification.permission === "granted") {
+      new Notification("친구 알림", {
+        body: message,
+        icon: "/favicon.ico",
+        tag: "friend-notification",
+        requireInteraction: false,
+        silent: false,
+      });
+    }
   }
 
   private handleFriendDeleted(payload: any): void {
-    // 삭제된 친구의 ID나 username을 추출
-    const deletedFriendId = payload.friendId || payload.deletedFriendId || payload.id;
-    const deletedFriendName = payload.friendName || payload.username || payload.nickname;
+    const requestData = payload.requestData || payload;
+    const currentUserId = this.getCurrentUserId();
+
+    // 삭제할 친구 ID 결정 (senderId나 receiverId 중 현재 사용자가 아닌 것)
+    const deletedFriendId = requestData.senderId === currentUserId ? requestData.receiverId : requestData.senderId;
 
     if (deletedFriendId) {
-      // 로컬 친구 목록에서 해당 친구 제거
-      this.friends = this.friends.filter(
-        (friend) => friend.id !== deletedFriendId.toString() && friend.username !== deletedFriendName
-      );
-
-      // UI 즉시 업데이트 (API 재호출 없이)
+      // 친구 목록에서 해당 친구 제거
+      this.friends = this.friends.filter((friend) => friend.id !== deletedFriendId.toString());
       this.renderFriendItems();
-      this.updateFriendList();
-
-      console.log(`친구 목록에서 ${deletedFriendName || deletedFriendId} 제거됨`);
+      this.showNotification("친구가 삭제되었습니다.");
     }
   }
 
   private handleFriendStatusChanged(payload: any): void {
     const friendId = payload.friendId || payload.userId || payload.id;
-    const friendUsername = payload.username || payload.name;
     const newStatus = this.convertStatus(payload.status || "OFFLINE");
 
-    if (friendId || friendUsername) {
-      // 친구 목록에서 해당 친구 찾아서 상태 업데이트
-      const friendIndex = this.friends.findIndex(
-        (friend) => friend.id === friendId?.toString() || friend.username === friendUsername
-      );
-
+    if (friendId) {
+      const friendIndex = this.friends.findIndex((friend) => friend.id === friendId?.toString());
       if (friendIndex !== -1) {
         const oldStatus = this.friends[friendIndex].status;
         this.friends[friendIndex].status = newStatus;
 
-        // 상태가 실제로 변경된 경우에만 UI 업데이트와 알림
         if (oldStatus !== newStatus) {
-          const friendName = this.friends[friendIndex].name;
-
-          // UI 즉시 업데이트
           this.renderFriendItems();
-          this.updateFriendList();
 
-          // 상태 변경 알림 (조용하게)
-          const statusText = newStatus === "online" ? "온라인" : newStatus === "in-game" ? "게임중" : "오프라인";
-          console.log(`${friendName}님이 ${statusText} 상태로 변경됨`);
-
-          // 온라인 상태로 변경시에만 알림 표시
+          // 온라인 상태로 변경시에만 알림
           if (newStatus === "online" && oldStatus === "offline") {
-            this.showNotification(`${friendName}님이 온라인 상태입니다.`);
+            this.showNotification(`${this.friends[friendIndex].name}님이 온라인 상태입니다.`);
           }
         }
       }
@@ -393,45 +433,34 @@ export class FriendComponent {
     }
   }
 
-  private loadStyles(): void {
-    // 이미 로드되었는지 확인
-    if (!document.querySelector('link[href*="friend.css"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "/src/styles/friend.css";
-      document.head.appendChild(link);
-    }
-  }
-
   private async loadFriendsData(): Promise<void> {
     try {
       await this.loadFriends();
       await this.loadFriendRequests();
+      await this.loadSentRequests(); // 보낸 요청도 로드
       this.renderFriendItems();
-      this.updateFriendList();
-      this.updateRequestsBox(); // 친구 요청 보관함 업데이트 추가
+      this.updateRequestsBox();
+      this.updateSentRequestsBox();
     } catch (error) {
       console.error("친구 데이터 로드 실패:", error);
       this.friends = [];
       this.friendRequests = [];
-      this.updateFriendList();
+      this.sentRequests = [];
       this.renderFriendItems();
-      this.updateRequestsBox(); // 에러 시에도 보관함 업데이트
+      this.updateRequestsBox();
+      this.updateSentRequestsBox();
     }
   }
 
   private async loadFriends(): Promise<void> {
     const response = await friendService.getFriendsList();
 
-    console.log("친구 목록 응답:", response);
-
     if (!response.success || !response.data) {
       this.friends = [];
-      console.log("친구 목록 로드 실패 또는 데이터 없음");
       return;
     }
 
-    // 중첩된 응답 구조 처리
+    // 응답 구조 처리
     let friendsData: any[] = [];
     if (response.data.friends && Array.isArray(response.data.friends)) {
       friendsData = response.data.friends;
@@ -439,18 +468,14 @@ export class FriendComponent {
       friendsData = (response.data as any).data.friends;
     }
 
-    console.log("원본 친구 데이터:", friendsData);
-
     this.friends = friendsData.map((friend: any) => ({
       id: friend.id.toString(),
       name: friend.nickname || friend.username,
       username: friend.username,
       status: this.convertStatus(friend.status),
       avatar: friend.profile_image,
-      relationId: friend.relationId?.toString() || friend.id.toString(), // relationId 우선, 없으면 id 사용
+      relationId: friend.relationId?.toString() || friend.id.toString(),
     }));
-
-    console.log("변환된 친구 목록:", this.friends);
   }
 
   private async loadFriendRequests(): Promise<void> {
@@ -461,7 +486,7 @@ export class FriendComponent {
       return;
     }
 
-    // 다양한 응답 구조 처리
+    // 응답 구조 처리
     let requestsArray: any[] = [];
     if (Array.isArray(response.data)) {
       requestsArray = response.data;
@@ -469,17 +494,43 @@ export class FriendComponent {
       requestsArray = (response.data as any).data;
     } else if ((response.data as any).content && Array.isArray((response.data as any).content)) {
       requestsArray = (response.data as any).content;
-    } else {
-      console.warn("친구 요청 데이터 구조를 인식할 수 없음:", response.data);
-      requestsArray = [];
     }
 
     this.friendRequests = requestsArray.map((request: any) => ({
       id: request.id?.toString() || "unknown",
-      name:
-        request.sender?.nickname || request.sender?.username || request.sender?.name || `사용자 ${request.sender_id}`,
-      username: request.sender?.username || request.sender?.name || `사용자 ${request.sender_id}`,
-      avatar: request.sender?.profile_image || request.sender?.avatar || null,
+      name: request.sender?.nickname || request.sender?.username || `사용자 ${request.sender_id}`,
+      username: request.sender?.username || `사용자 ${request.sender_id}`,
+      avatar: request.sender?.profile_image || null,
+      relationId: request.id?.toString() || "unknown",
+    }));
+  }
+
+  private async loadSentRequests(): Promise<void> {
+    const response = await friendService.getSentRequests();
+
+    if (!response.success || !response.data) {
+      this.sentRequests = [];
+      return;
+    }
+
+    // 응답 구조 처리
+    let requestsArray: any[] = [];
+
+    if (Array.isArray(response.data)) {
+      requestsArray = response.data;
+    } else if ((response.data as any).data?.content && Array.isArray((response.data as any).data.content)) {
+      requestsArray = (response.data as any).data.content;
+    } else if ((response.data as any).data && Array.isArray((response.data as any).data)) {
+      requestsArray = (response.data as any).data;
+    } else if ((response.data as any).content && Array.isArray((response.data as any).content)) {
+      requestsArray = (response.data as any).content;
+    }
+
+    this.sentRequests = requestsArray.map((request: any) => ({
+      id: request.receiver_id?.toString() || request.receiver?.id?.toString() || "unknown",
+      name: request.receiver?.nickname || request.receiver?.username || `사용자 ${request.receiver_id || "unknown"}`,
+      username: request.receiver?.username || `사용자 ${request.receiver_id || "unknown"}`,
+      avatar: request.receiver?.profile_image || undefined,
       relationId: request.id?.toString() || "unknown",
     }));
   }
@@ -499,138 +550,145 @@ export class FriendComponent {
     // 친구 요청 보관함 토글
     const requestsToggle = this.container.querySelector("#requestsToggle");
     const requestsDropdown = this.container.querySelector("#requestsDropdown");
-
     requestsToggle?.addEventListener("click", (e) => {
-      console.log("Requests toggle clicked");
       e.stopPropagation();
+      this.toggleRequestsDropdown(requestsDropdown);
+    });
 
-      if (requestsDropdown) {
-        const isVisible = requestsDropdown.classList.contains("opacity-100");
-        if (isVisible) {
-          // 숨기기
-          requestsDropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-          requestsDropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
-        } else {
-          // 보이기
-          requestsDropdown.classList.remove("opacity-0", "-translate-y-2.5", "pointer-events-none");
-          requestsDropdown.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
-        }
-      }
+    // 보낸 요청 보관함 토글
+    const sentRequestsToggle = this.container.querySelector("#sentRequestsToggle");
+    const sentRequestsDropdown = this.container.querySelector("#sentRequestsDropdown");
+    sentRequestsToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.toggleRequestsDropdown(sentRequestsDropdown);
     });
 
     // 드롭다운 외부 클릭시 닫기
     document.addEventListener("click", (e) => {
-      if (!this.container.contains(e.target as Node) && requestsDropdown) {
-        requestsDropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-        requestsDropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
+      if (!this.container.contains(e.target as Node)) {
+        if (requestsDropdown) this.closeRequestsDropdown(requestsDropdown);
+        if (sentRequestsDropdown) this.closeRequestsDropdown(sentRequestsDropdown);
       }
     });
 
     // 친구 추가
     const addFriendBtn = this.container.querySelector("#addFriendBtn");
     const addFriendInput = this.container.querySelector("#addFriendInput") as HTMLInputElement;
-
     addFriendBtn?.addEventListener("click", () => this.addFriend(addFriendInput.value));
     addFriendInput?.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        this.addFriend(addFriendInput.value);
-      }
+      if (e.key === "Enter") this.addFriend(addFriendInput.value);
     });
 
-    // 친구 요청 수락/거절 (새로운 보관함 방식)
-    this.container.addEventListener("click", (e) => {
-      const target = e.target as HTMLElement;
-      console.log("Click event target:", target, "Text content:", target.textContent);
+    // 클릭 이벤트 위임
+    this.container.addEventListener("click", (e) => this.handleContainerClick(e));
+  }
 
-      // 친구 요청 수락/거절 버튼 처리
-      if (target.textContent === "✓") {
-        console.log("Accept button clicked");
-        const requestItem = target.closest("[data-relation-id]");
-        const relationId = requestItem?.getAttribute("data-relation-id");
-        const nameElement = requestItem?.querySelector(".text-gray-800");
-        const requestName = nameElement?.textContent;
-        console.log("Request data:", { relationId, requestName });
-        if (relationId && requestName) {
-          this.acceptFriendRequestById(relationId, requestName);
-        }
-      }
+  private toggleRequestsDropdown(dropdown: Element | null): void {
+    if (!dropdown) return;
 
-      if (target.textContent === "✗") {
-        console.log("Reject button clicked");
-        const requestItem = target.closest("[data-relation-id]");
-        const relationId = requestItem?.getAttribute("data-relation-id");
-        const nameElement = requestItem?.querySelector(".text-gray-800");
-        const requestName = nameElement?.textContent;
-        console.log("Request data:", { relationId, requestName });
-        if (relationId && requestName) {
-          this.rejectFriendRequestById(relationId, requestName);
-        }
-      }
+    const isVisible = dropdown.classList.contains("opacity-100");
+    if (isVisible) {
+      this.closeRequestsDropdown(dropdown);
+    } else {
+      this.openRequestsDropdown(dropdown);
+    }
+  }
 
-      // 친구 버튼들 처리
-      if (target.textContent === "💬") {
-        console.log("Message button clicked");
-        const friendItem = target.closest("[data-friend-id]");
-        const nameElements = friendItem?.querySelectorAll(".text-white");
-        const friendName = nameElements?.[0]?.textContent;
-        console.log("Friend data:", { friendName });
-        if (friendName) {
-          this.sendMessage(friendName);
-        }
-      }
+  private openRequestsDropdown(dropdown: Element): void {
+    dropdown.classList.remove("opacity-0", "-translate-y-2.5", "pointer-events-none");
+    dropdown.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+  }
 
-      if (target.textContent === "🎮") {
-        console.log("Game invite button clicked");
-        const friendItem = target.closest("[data-friend-id]");
-        const nameElements = friendItem?.querySelectorAll(".text-white");
-        const friendName = nameElements?.[0]?.textContent;
-        console.log("Friend data:", { friendName });
-        if (friendName) {
-          this.inviteToGame(friendName);
-        }
-      }
+  private closeRequestsDropdown(dropdown: Element): void {
+    dropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
+    dropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
+  }
 
-      if (target.textContent === "🗑️") {
-        console.log("Delete button clicked", target);
-        e.preventDefault();
-        e.stopPropagation();
+  private handleContainerClick(e: Event): void {
+    const target = e.target as HTMLElement;
+    const text = target.textContent;
 
-        // 버튼에서 직접 속성 가져오기
-        let relationId = target.getAttribute("data-relation-id");
-        let friendId = target.getAttribute("data-friend-id");
+    // 보낸 요청함의 취소 버튼인지 확인
+    const requestItem = target.closest("[data-relation-id]");
+    const sentRequestsList = this.container.querySelector("#sentRequestsList");
 
-        // 만약 버튼에 없다면 부모 요소에서 찾기
-        if (!relationId || !friendId) {
-          const friendItem = target.closest("[data-friend-id]");
-          relationId = relationId || friendItem?.getAttribute("data-relation-id") || null;
-          friendId = friendId || friendItem?.getAttribute("data-friend-id") || null;
-        }
+    if (text === "✗" && requestItem && sentRequestsList?.contains(requestItem)) {
+      this.handleCancelSentRequest(target);
+      return;
+    }
 
-        const friendItem = target.closest("[data-friend-id]");
-        const nameElements = friendItem?.querySelectorAll(".text-white");
-        const friendName = nameElements?.[0]?.textContent;
+    switch (text) {
+      case "✓":
+        this.handleAcceptRequest(target);
+        break;
+      case "✗":
+        this.handleRejectRequest(target);
+        break;
+      case "🗑️":
+        this.handleDeleteFriend(target, e);
+        break;
+    }
+  }
 
-        console.log("Delete data:", {
-          relationId,
-          friendId,
-          friendName,
-          buttonElement: target,
-          friendItem: friendItem,
-          nameElements: nameElements,
-        });
+  private handleAcceptRequest(target: HTMLElement): void {
+    const requestItem = target.closest("[data-relation-id]");
+    const relationId = requestItem?.getAttribute("data-relation-id");
+    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const requestName = nameElement?.textContent;
 
-        if (friendId) {
-          this.deleteFriend(friendId, friendName || "알 수 없는 친구");
-        } else {
-          console.error("삭제에 필요한 데이터가 부족합니다:", { relationId, friendId, friendName });
-          alert("삭제에 필요한 정보를 찾을 수 없습니다.");
-        }
-      }
-    });
+    if (relationId && requestName) {
+      this.acceptFriendRequestById(relationId, requestName);
+    }
+  }
+
+  private handleRejectRequest(target: HTMLElement): void {
+    const requestItem = target.closest("[data-relation-id]");
+    const relationId = requestItem?.getAttribute("data-relation-id");
+    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const requestName = nameElement?.textContent;
+
+    if (relationId && requestName) {
+      this.rejectFriendRequestById(relationId, requestName);
+    }
+  }
+
+  private handleDeleteFriend(target: HTMLElement, e: Event): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const friendItem = target.closest("[data-friend-id]");
+    const friendId = friendItem?.getAttribute("data-friend-id");
+    const nameElement = friendItem?.querySelector(".text-white");
+    const friendName = nameElement?.textContent?.trim() || "알 수 없는 친구";
+
+    if (friendId) {
+      this.deleteFriend(friendId, friendName);
+    }
+  }
+
+  private handleCancelSentRequest(target: HTMLElement): void {
+    const requestItem = target.closest("[data-relation-id]");
+    const relationId = requestItem?.getAttribute("data-relation-id");
+    const nameElement = requestItem?.querySelector(".text-gray-800");
+    const requestName = nameElement?.textContent;
+
+    if (!relationId || !requestName) return;
+
+    const sentRequest = this.sentRequests.find((req) => req.relationId.toString() === relationId.toString());
+
+    if (sentRequest) {
+      this.cancelFriendRequest(sentRequest.id, requestName);
+    }
   }
 
   private renderFriendItems(): void {
-    // 온라인 친구들 렌더링
+    this.renderOnlineFriends();
+    this.renderOfflineFriends();
+    this.updateRequestsBox();
+    this.updateSentRequestsBox();
+  }
+
+  private renderOnlineFriends(): void {
     const onlineFriends = this.friends.filter((f) => f.status !== "offline");
     const onlineList = this.container.querySelector("#onlineList");
     const onlineTitle = this.container.querySelector("#onlineTitle");
@@ -640,37 +698,14 @@ export class FriendComponent {
     }
 
     if (onlineList) {
-      if (onlineFriends.length === 0) {
-        onlineList.innerHTML = '<div class="text-white/60 text-sm text-center p-4 italic">온라인 친구가 없습니다</div>';
-      } else {
-        const onlineHTML = onlineFriends
-          .map(
-            (friend) => `
-          <div class="group flex items-center p-3 bg-white/10 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-white/15" data-friend-id="${
-            friend.id
-          }" data-relation-id="${friend.relationId}">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-500 mr-3 relative after:absolute after:-bottom-0.5 after:-right-0.5 after:w-3 after:h-3 after:bg-green-500 after:border-2 after:border-white after:rounded-full"></div>
-            <div class="flex-1">
-              <div class="text-white font-medium text-sm mb-0.5">${friend.name}</div>
-              <div class="text-white/60 text-xs font-normal mb-0.5">${friend.username || friend.name}</div>
-              <div class="text-white/70 text-xs">${friend.status === "in-game" ? "게임 중" : "대기 중"}</div>
-            </div>
-            <div class="flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              <button class="bg-white/20 border-0 text-white w-7 h-7 rounded cursor-pointer flex items-center justify-center text-xs transition-colors duration-200 hover:bg-white/30" title="메시지">💬</button>
-              <button class="bg-white/20 border-0 text-white w-7 h-7 rounded cursor-pointer flex items-center justify-center text-xs transition-colors duration-200 hover:bg-white/30" title="게임 초대">🎮</button>
-              <button class="bg-white/20 border-0 text-white w-7 h-7 rounded cursor-pointer flex items-center justify-center text-xs transition-all duration-200 hover:bg-red-500/80 hover:scale-110" title="친구 삭제" data-friend-id="${
-                friend.id
-              }" data-relation-id="${friend.relationId}">🗑️</button>
-            </div>
-          </div>
-        `
-          )
-          .join("");
-        onlineList.innerHTML = onlineHTML;
-      }
+      onlineList.innerHTML =
+        onlineFriends.length === 0
+          ? '<div class="text-white/60 text-sm text-center p-4 italic">온라인 친구가 없습니다</div>'
+          : onlineFriends.map((friend) => this.createFriendHTML(friend, true)).join("");
     }
+  }
 
-    // 오프라인 친구들 렌더링
+  private renderOfflineFriends(): void {
     const offlineFriends = this.friends.filter((f) => f.status === "offline");
     const offlineList = this.container.querySelector("#offlineList");
     const offlineTitle = this.container.querySelector("#offlineTitle");
@@ -680,55 +715,39 @@ export class FriendComponent {
     }
 
     if (offlineList) {
-      if (offlineFriends.length === 0) {
-        offlineList.innerHTML =
-          '<div class="text-white/60 text-sm text-center p-4 italic">오프라인 친구가 없습니다</div>';
-      } else {
-        const offlineHTML = offlineFriends
-          .map(
-            (friend) => `
-          <div class="group flex items-center p-3 bg-white/10 rounded-lg transition-colors duration-200 cursor-pointer hover:bg-white/15 opacity-60" data-friend-id="${
-            friend.id
-          }" data-relation-id="${friend.relationId}">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-500 mr-3 relative after:absolute after:-bottom-0.5 after:-right-0.5 after:w-3 after:h-3 after:bg-gray-500 after:border-2 after:border-white after:rounded-full"></div>
-            <div class="flex-1">
-              <div class="text-white font-medium text-sm mb-0.5">${friend.name}</div>
-              <div class="text-white/60 text-xs font-normal mb-0.5">${friend.username || friend.name}</div>
-              <div class="text-white/70 text-xs">오프라인</div>
-            </div>
-            <div class="flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              <button class="bg-white/20 border-0 text-white w-7 h-7 rounded cursor-pointer flex items-center justify-center text-xs transition-all duration-200 hover:bg-red-500/80 hover:scale-110" title="친구 삭제" data-friend-id="${
-                friend.id
-              }" data-relation-id="${friend.relationId}">🗑️</button>
-            </div>
-          </div>
-        `
-          )
-          .join("");
-        offlineList.innerHTML = offlineHTML;
-      }
+      offlineList.innerHTML =
+        offlineFriends.length === 0
+          ? '<div class="text-white/60 text-sm text-center p-4 italic">오프라인 친구가 없습니다</div>'
+          : offlineFriends.map((friend) => this.createFriendHTML(friend, false)).join("");
     }
-
-    // 친구 요청 보관함 업데이트
-    this.updateRequestsBox();
   }
 
-  private updateFriendList(): void {
-    // 온라인/오프라인 친구 목록 업데이트
-    const onlineFriends = this.friends.filter((f) => f.status !== "offline");
-    const offlineFriends = this.friends.filter((f) => f.status === "offline");
+  private createFriendHTML(friend: Friend, isOnline: boolean): string {
+    const statusColor = isOnline ? "green" : "gray";
+    const statusText = friend.status === "in-game" ? "게임 중" : isOnline ? "대기 중" : "오프라인";
+    const opacity = isOnline ? "" : "opacity-70";
 
-    // 온라인 섹션 업데이트
-    const onlineTitle = this.container.querySelector("#onlineTitle");
-    if (onlineTitle) {
-      onlineTitle.textContent = `온라인 - ${onlineFriends.length}`;
-    }
-
-    // 오프라인 섹션 업데이트
-    const offlineTitle = this.container.querySelector("#offlineTitle");
-    if (offlineTitle) {
-      offlineTitle.textContent = `오프라인 - ${offlineFriends.length}`;
-    }
+    return `
+      <div class="group flex items-center p-3 bg-white/10 rounded-lg transition-all duration-200 cursor-pointer hover:bg-white/20 ${opacity}" data-friend-id="${
+      friend.id
+    }" data-relation-id="${friend.relationId}">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-${statusColor}-400 to-${
+      statusColor === "green" ? "blue" : "gray"
+    }-${statusColor === "green" ? "500" : "600"} mr-3 border-2 border-white/30 relative">
+          <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-${statusColor}-500 border-2 border-white rounded-full"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-white font-semibold text-sm truncate">${friend.name}</div>
+          <div class="text-white/70 text-xs truncate">${friend.username || friend.name}</div>
+          <div class="text-${statusColor === "green" ? "green" : "gray"}-400 text-xs font-medium">${statusText}</div>
+        </div>
+        <div class="flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <button class="bg-white/20 hover:bg-red-500 border-0 text-white w-8 h-8 rounded-lg cursor-pointer flex items-center justify-center text-sm transition-all duration-200 hover:scale-110" title="친구 삭제" data-friend-id="${
+            friend.id
+          }" data-relation-id="${friend.relationId}">🗑️</button>
+        </div>
+      </div>
+    `;
   }
 
   // 친구 요청 보관함 업데이트
@@ -747,28 +766,68 @@ export class FriendComponent {
 
     if (requestsList) {
       if (this.friendRequests.length === 0) {
-        requestsList.innerHTML =
-          '<div class="p-5 px-4 text-center text-gray-500 text-sm">받은 친구 요청이 없습니다</div>';
+        requestsList.innerHTML = '<div class="p-6 text-center text-gray-500 text-sm">받은 친구 요청이 없습니다</div>';
       } else {
         const requestsHTML = this.friendRequests
           .map(
             (request) => `
-          <div class="p-3 px-4 border-b border-white/10 flex items-center gap-2.5 transition-colors duration-200 hover:bg-indigo-500/5 last:border-b-0 last:rounded-b-xl" data-relation-id="${request.relationId}">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-teal-400 border-2 border-white/30"></div>
-            <div class="flex-1">
-              <div class="text-gray-800 font-semibold text-sm mb-0.5">${request.name}</div>
-              <div class="text-gray-500 text-xs font-normal mb-0.5">${request.username}</div>
+          <div class="p-3 border-b border-white/10 flex items-center gap-3 transition-colors duration-200 hover:bg-indigo-50 last:border-b-0" data-relation-id="${request.relationId}">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-teal-400 border-2 border-white/50"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-gray-800 font-bold text-sm truncate">${request.name}</div>
+              <div class="text-gray-600 text-xs truncate">${request.username}</div>
               <div class="text-gray-500 text-xs">친구 요청</div>
             </div>
-            <div class="flex gap-1.5">
-              <button class="w-7 h-7 border-0 rounded-md cursor-pointer flex items-center justify-center text-sm font-semibold transition-all duration-200 bg-green-500 text-white hover:bg-green-600 hover:scale-105" title="수락">✓</button>
-              <button class="w-7 h-7 border-0 rounded-md cursor-pointer flex items-center justify-center text-sm font-semibold transition-all duration-200 bg-red-500 text-white hover:bg-red-600 hover:scale-105" title="거절">✗</button>
+            <div class="flex gap-2">
+              <button class="w-8 h-8 border-0 rounded-lg cursor-pointer flex items-center justify-center text-sm font-bold transition-all duration-200 bg-green-500 text-white hover:bg-green-600 hover:scale-105" title="수락">✓</button>
+              <button class="w-8 h-8 border-0 rounded-lg cursor-pointer flex items-center justify-center text-sm font-bold transition-all duration-200 bg-red-500 text-white hover:bg-red-600 hover:scale-105" title="거절">✗</button>
             </div>
           </div>
         `
           )
           .join("");
         requestsList.innerHTML = requestsHTML;
+      }
+    }
+  }
+
+  // 보낸 요청 보관함 업데이트
+  private updateSentRequestsBox(): void {
+    const sentRequestsCount = this.container.querySelector("#sentRequestsCount") as HTMLElement;
+    const sentRequestsList = this.container.querySelector("#sentRequestsList") as HTMLElement;
+
+    if (sentRequestsCount) {
+      sentRequestsCount.textContent = this.sentRequests.length.toString();
+      if (this.sentRequests.length === 0) {
+        sentRequestsCount.classList.add("hidden");
+      } else {
+        sentRequestsCount.classList.remove("hidden");
+      }
+    }
+
+    if (sentRequestsList) {
+      if (this.sentRequests.length === 0) {
+        sentRequestsList.innerHTML =
+          '<div class="p-6 text-center text-gray-500 text-sm">보낸 친구 요청이 없습니다</div>';
+      } else {
+        const sentRequestsHTML = this.sentRequests
+          .map(
+            (request) => `
+          <div class="p-3 border-b border-white/10 flex items-center gap-3 transition-colors duration-200 hover:bg-blue-50 last:border-b-0" data-relation-id="${request.relationId}">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-green-400 border-2 border-white/50"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-gray-800 font-bold text-sm truncate">${request.name}</div>
+              <div class="text-gray-600 text-xs truncate">${request.username}</div>
+              <div class="text-gray-500 text-xs">요청 대기 중</div>
+            </div>
+            <div class="flex gap-2">
+              <button class="w-8 h-8 border-0 rounded-lg cursor-pointer flex items-center justify-center text-sm font-bold transition-all duration-200 bg-gray-500 text-white hover:bg-red-600 hover:scale-105" title="취소">✗</button>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+        sentRequestsList.innerHTML = sentRequestsHTML;
       }
     }
   }
@@ -780,28 +839,11 @@ export class FriendComponent {
       const response = await friendService.requestFriend(username);
 
       if (response.success) {
-        // 프론트엔드에서 새로운 친구 요청을 보낸 요청 목록에 추가
-        const newSentRequest: FriendRequest = {
-          id: Date.now().toString(), // 임시 ID
-          name: username,
-          username: username,
-          relationId: Date.now().toString() + "_sent",
-        };
-
-        // 보낸 요청 목록에 추가 (별도 배열이 있다면)
-        // this.sentRequests.push(newSentRequest);
-
-        // 입력 필드 초기화
         const input = this.container.querySelector("#addFriendInput") as HTMLInputElement;
         if (input) input.value = "";
 
-        // 성공 알림
         this.showNotification(`${username}에게 친구 요청을 보냈습니다.`);
-
-        // API 호출 없이 UI만 업데이트
-        console.log(`친구 요청 전송됨: ${username}`);
       } else {
-        console.error("친구 요청 실패:", response.message);
         this.showNotification(`친구 요청 실패: ${response.message || "알 수 없는 오류"}`);
       }
     } catch (error) {
@@ -815,41 +857,35 @@ export class FriendComponent {
       const response = await friendService.acceptFriendRequest(relationId);
 
       if (response.success) {
-        console.log(`친구 요청 수락 성공: ${friendName}`);
-
-        // 수락된 요청을 친구 요청 목록에서 제거
+        // 수락된 요청을 목록에서 제거하고 친구로 추가
         const acceptedRequest = this.friendRequests.find((request) => request.relationId === relationId);
         this.friendRequests = this.friendRequests.filter((request) => request.relationId !== relationId);
 
-        // 수락된 사용자를 친구 목록에 추가
         if (acceptedRequest) {
           const newFriend: Friend = {
             id: acceptedRequest.id,
             name: acceptedRequest.name,
             username: acceptedRequest.username,
-            status: "offline" as "online" | "offline" | "in-game",
+            status: "offline",
             relationId: relationId,
           };
-          this.friends.push(newFriend);
+
+          const isDuplicate = this.friends.some((friend) => friend.id === newFriend.id);
+          if (!isDuplicate) {
+            this.friends.push(newFriend);
+          }
         }
 
-        // UI 즉시 업데이트 (API 재호출 없이)
         this.renderFriendItems();
-        this.updateFriendList();
         this.updateRequestsBox();
 
-        // 드롭다운 닫기
         const requestsDropdown = this.container.querySelector("#requestsDropdown");
         if (requestsDropdown) {
-          requestsDropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-          requestsDropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
+          this.closeRequestsDropdown(requestsDropdown);
         }
 
-        // 성공 알림 표시
         this.showNotification(`${friendName}님이 친구 목록에 추가되었습니다.`);
-        console.log(`친구 목록에 추가됨: ${friendName}`);
       } else {
-        console.error("친구 요청 수락 실패:", response.message);
         this.showNotification(`친구 요청 수락 실패: ${response.message || "알 수 없는 오류"}`);
       }
     } catch (error) {
@@ -863,26 +899,16 @@ export class FriendComponent {
       const response = await friendService.rejectFriendRequest(relationId);
 
       if (response.success) {
-        console.log(`친구 요청 거절 성공: ${friendName}`);
-
-        // 친구 요청 목록에서 해당 요청 제거
         this.friendRequests = this.friendRequests.filter((request) => request.relationId !== relationId);
-
-        // UI 즉시 업데이트 (API 재호출 없이)
         this.updateRequestsBox();
 
-        // 드롭다운 닫기
         const requestsDropdown = this.container.querySelector("#requestsDropdown");
         if (requestsDropdown) {
-          requestsDropdown.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-          requestsDropdown.classList.add("opacity-0", "-translate-y-2.5", "pointer-events-none");
+          this.closeRequestsDropdown(requestsDropdown);
         }
 
-        // 성공 알림 표시
         this.showNotification(`${friendName}님의 친구 요청을 거절했습니다.`);
-        console.log(`친구 요청 거절됨: ${friendName}`);
       } else {
-        console.error("친구 요청 거절 실패:", response.message);
         this.showNotification(`친구 요청 거절 실패: ${response.message || "알 수 없는 오류"}`);
       }
     } catch (error) {
@@ -891,54 +917,24 @@ export class FriendComponent {
     }
   }
 
-  private sendMessage(friendName: string): void {
-    console.log(`메시지 보내기: ${friendName}`);
-    // TODO: 메시지 창 열기
-    alert(`${friendName}에게 메시지를 보냅니다.`);
-  }
-
   private async deleteFriend(friendId: string, friendName: string): Promise<void> {
-    // 확인 대화상자
     const confirmed = confirm(`정말로 ${friendName}님을 친구에서 삭제하시겠습니까?`);
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
-      // 인증 확인
       const tokens = AuthManager.getTokens();
       if (!tokens?.accessToken) {
         alert("인증 정보가 없습니다. 다시 로그인해주세요.");
         return;
       }
 
-      console.log(`친구 삭제 요청:`, {
-        friendId,
-        friendName,
-        currentFriends: this.friends,
-      });
-
       const response = await friendService.deleteFriend(friendId);
 
-      console.log("친구 삭제 응답:", response);
-
       if (response.success) {
-        // 친구 목록에서 제거 (relationId와 id 둘 다 확인)
-        const beforeCount = this.friends.length;
         this.friends = this.friends.filter((friend) => friend.id !== friendId);
-        const afterCount = this.friends.length;
-
-        console.log(`친구 목록 업데이트: ${beforeCount} -> ${afterCount}`);
-
-        // UI 새로고침
         this.renderFriendItems();
-        this.updateFriendList();
-
-        // 성공 알림
         this.showNotification(`${friendName}님을 친구에서 삭제했습니다.`);
-        console.log(`친구 삭제 성공: ${friendName}`);
       } else {
-        console.error("친구 삭제 실패:", response.message);
         alert(`친구 삭제 실패: ${response.message || "알 수 없는 오류"}`);
       }
     } catch (error) {
@@ -947,14 +943,27 @@ export class FriendComponent {
     }
   }
 
-  private inviteToGame(friendName: string): void {
-    console.log(`게임 초대: ${friendName}`);
-    // TODO: 게임 초대 로직
-    alert(`${friendName}을 게임에 초대했습니다.`);
+  private async cancelFriendRequest(receiverId: string, receiverName: string): Promise<void> {
+    const confirmed = confirm(`정말로 ${receiverName}님에게 보낸 친구 요청을 취소하시겠습니까?`);
+    if (!confirmed) return;
+
+    try {
+      const response = await friendService.cancelFriendRequest(receiverId, receiverName);
+
+      if (response.success) {
+        this.sentRequests = this.sentRequests.filter((request) => request.id !== receiverId);
+        this.updateSentRequestsBox();
+        this.showNotification(`${receiverName}님에게 보낸 친구 요청을 취소했습니다.`);
+      } else {
+        this.showNotification(`친구 요청 취소 실패: ${response.message || "알 수 없는 오류"}`);
+      }
+    } catch (error) {
+      console.error("친구 요청 취소 오류:", error);
+      this.showNotification("친구 요청 취소 중 오류가 발생했습니다.");
+    }
   }
 
   public destroy(): void {
-    // 웹소켓 연결만 해제하고 UI는 유지
     friendWebSocketManager.disconnect();
   }
 }
