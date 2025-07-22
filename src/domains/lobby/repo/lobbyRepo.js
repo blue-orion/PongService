@@ -129,6 +129,7 @@ export class LobbyRepository {
     return await prisma.lobbyPlayer.findFirst({
       where: {
         user_id: user_id,
+        enabled: true,
         lobby: {
           enabled: true,
         },

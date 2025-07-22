@@ -140,6 +140,7 @@ export class Helpers {
 
   async _findActiveLobbyByUserId(userId) {
     const existingLobby = await this.lobbyRepository.findActiveLobbyByUserId(userId);
+    console.log(existingLobby);
     if (existingLobby) {
       throw PongException.ALREADY_IN_LOBBY;
     }
