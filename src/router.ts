@@ -1,7 +1,7 @@
 // 라우터 시스템
 export class Router {
   private routes: Map<string, (params?: any) => void | Promise<void>> = new Map();
-  private dynamicRoutes: Array<{pattern: RegExp, handler: (params: any) => void | Promise<void>}> = [];
+  private dynamicRoutes: Array<{ pattern: RegExp; handler: (params: any) => void | Promise<void> }> = [];
   private currentRoute: string = "";
 
   constructor() {
@@ -19,12 +19,12 @@ export class Router {
   // 동적 라우트 등록 (매개변수 포함)
   addDynamicRoute(pattern: string, handler: (params: any) => void | Promise<void>): void {
     // /lobby/:id 형태를 정규식으로 변환
-    const regexPattern = pattern.replace(/:[^/]+/g, '([^/]+)');
+    const regexPattern = pattern.replace(/:[^/]+/g, "([^/]+)");
     const regex = new RegExp(`^${regexPattern}$`);
-    
+
     // 매개변수 이름 추출
-    const paramNames = pattern.match(/:[^/]+/g)?.map(param => param.substring(1)) || [];
-    
+    const paramNames = pattern.match(/:[^/]+/g)?.map((param) => param.substring(1)) || [];
+
     this.dynamicRoutes.push({
       pattern: regex,
       handler: (path: string) => {
@@ -36,12 +36,13 @@ export class Router {
           });
           return handler(params);
         }
-      }
+      },
     });
   }
 
   // 페이지 이동
   async navigate(path: string, pushState: boolean = true): Promise<void> {
+    console.trace("navigate 호출됨:", path);
     // 먼저 정적 라우트 확인
     const staticHandler = this.routes.get(path);
     if (staticHandler) {

@@ -81,14 +81,13 @@ export class DashboardComponent extends Component {
   }
 
   async render(): Promise<void> {
-    console.log("대시보드 페이지 생성 시작");
     this.clearContainer();
 
     this.container.innerHTML = this.getTemplate();
     this.rankTable = this.container.querySelector("#user-table-body") as HTMLElement;
-    console.log(`fetch 내용: ${this.container.innerHTML}`);
     this.fetchUsers();
     this.initializeAnimations();
+    document.body.addEventListener("click", this.clickHandler);
   }
 
   async fetchUsers(page = 0) {
@@ -133,6 +132,16 @@ export class DashboardComponent extends Component {
       .slice(0, 2);
   }
 
+  private clickHandler(e: MouserEvent) {
+    e.preventDefault();
+    const target = (e.target as HTMLElement).closest("[data-route]" as HTMLElement);
+    if (!target) return;
+    const route = target.getAttribute("data-route");
+    if (route && window.router) {
+      window.router.navigate(route);
+    }
+  }
+
   renderUsers(users) {
     const tbody = this.rankTable;
     tbody.innerHTML = "";
@@ -165,12 +174,14 @@ export class DashboardComponent extends Component {
             </td>
             <td class="table-cell">
               <div class="profile-container">
-                <div class="profile-avatar">
-                  ${user.profile_image ? `<img src="${user.profile_image}" alt="" class="w-full h-full rounded-full object-cover">` : this.getInitials(user.nickname)}
+                <div class="profile-avatar cursor-pointer" data-route="/info/${user.id}">
+									${this.getProfileImage(user)}
                 </div>
                 <div class="profile-info">
-                  <h4 class="profile-name">${user.nickname}</h4>
-                  <p class="profile-username">@${user.username}</p>
+									<h4 class="profile-name">
+										<span class="username cursor-pointer" data-route="/info/${user.id}">${user.nickname}</span>
+									</h4>
+                  <span class="profile-username cursor-pointer" data-route="/info/${user.id}">@${user.username}</span>
                 </div>
               </div>
             </td>
@@ -191,6 +202,14 @@ export class DashboardComponent extends Component {
           `;
       tbody.appendChild(tr);
     });
+  }
+
+  getProfileImage(user) {
+    let profile_image;
+    if (user.profile_image) {
+      profile_image = `<img src="${user.profile_image}" alt="" class="w-full h-full rounded-full object-cover">`;
+    } else profile_image = this.getInitials(user.nickname);
+    return profile_image;
   }
 
   updateStats(users) {
@@ -219,5 +238,7 @@ export class DashboardComponent extends Component {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
+    // 클릭 이벤트 정리
+    document.body.removeEventListener("click", this.clickHandler);
   }
 }

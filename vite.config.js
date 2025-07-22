@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import legacy from "@vitejs/plugin-legacy";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 export default defineConfig({
   // 프로젝트 루트 (HTML 파일들이 있는 위치)
@@ -18,19 +19,14 @@ export default defineConfig({
 
   // 개발 서버 설정
   server: {
+    https: true,
     port: 8080,
     host: true,
-    proxy: {
-      "/v1": {
-        target: "http://back:3333",
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-    },
   },
 
   // 플러그인
   plugins: [
+    basicSsl(),
     legacy({
       targets: ["defaults", "not IE 11"],
     }),
