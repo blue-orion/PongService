@@ -8,9 +8,18 @@
         <div class="relative z-10">
             <div class="text-center mb-5">
                 {{#if profileImage}}
-                    <img src="{{profileImage}}" alt="{{username}}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" class="w-30 h-30 rounded-full border-4 border-white border-opacity-30 shadow-xl object-cover transition-transform duration-300 hover:scale-105 mx-auto">
+                    <img src="{{profileImage}}" alt="{{username}}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-30 h-30 rounded-full border-4 border-white border-opacity-30 shadow-xl object-cover transition-transform duration-300 hover:scale-105 mx-auto">
+                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl" style="display: none;">
+                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
                 {{else}}
-                    <div class="w-30 h-30 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-5xl mx-auto border-4 border-white border-opacity-30 shadow-xl">👤</div>
+                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl">
+                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
                 {{/if}}
             </div>
             <div class="text-center mb-6">

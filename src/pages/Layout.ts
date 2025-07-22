@@ -19,6 +19,10 @@ export class Layout extends Component {
     this.mainComponent = component;
   }
 
+  getMainComponent(): any {
+    return this.mainComponent;
+  }
+
   private getTemplate(): string {
     return `
 					<div id="layout" class="layout-container">

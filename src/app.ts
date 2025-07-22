@@ -4,6 +4,7 @@ import { SignupComponent } from "./components/login/SignupComponent";
 import { SocialCallbackComponent } from "./components/login/SocialCallback";
 import { GameComponent } from "./components/game/GameComponent";
 import { AuthManager } from "./utils/auth";
+import { UserManager } from "./utils/user";
 import "./styles/input.css";
 import "./styles/friend.css";
 import { FriendComponent } from "./components/friend/FriendComponent";
@@ -122,12 +123,6 @@ class App {
       await this.loadLayoutWithComponent(DashboardComponent);
     });
 
-    // 프로필 페이지
-    this.router.addRoute("/profile", async () => {
-      // 프로필 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
-      await this.loadLayoutWithComponent(LobbyListComponent);
-    });
-
     // 로비 상세 페이지 - 동적 라우트
     this.router.addDynamicRoute("/lobby/:id", async (params: any) => {
       await this.loadLayoutWithComponent(LobbyDetailComponent, params.id);
@@ -150,12 +145,18 @@ class App {
 
     // 프로필 편집 페이지 (프로필 변경 + 비밀번호 변경 통합)
     this.router.addRoute("/profile/edit", async () => {
+      // 인증된 사용자만 접근 가능
+      const isAuthenticated = await AuthManager.checkAuth();
+      if (!isAuthenticated) {
+        this.router.navigate("/login");
+        return;
+      }
       await this.loadComponent(EditProfileComponent);
     });
 
     // 비밀번호 변경 페이지 (프로필 편집으로 리다이렉트)
     this.router.addRoute("/profile/password", async () => {
-      await this.loadComponent(EditProfileComponent);
+      this.router.navigate("/profile/edit");
     });
 
     // 게임 페이지 - 동적 라우트
@@ -185,6 +186,16 @@ class App {
     // 메인 콘텐츠 영역에 특정 컴포넌트 렌더링
     const mainContentContainer = document.getElementById("main-content");
     if (mainContentContainer) {
+      // 기존 메인 컴포넌트 정리 (Layout에 저장된 것)
+      const existingMainComponent = this.currentComponent.getMainComponent?.();
+      if (existingMainComponent && existingMainComponent.destroy) {
+        existingMainComponent.destroy();
+      }
+      
+      // 메인 콘텐츠 컨테이너 초기화
+      mainContentContainer.innerHTML = '';
+      
+      // 새 메인 컴포넌트 생성 및 렌더링
       const mainComponent = new ComponentClass(mainContentContainer, ...args);
       await mainComponent.render();
 
@@ -192,6 +203,8 @@ class App {
       if (this.currentComponent && this.currentComponent.setMainComponent) {
         this.currentComponent.setMainComponent(mainComponent);
       }
+      
+      console.log(`[App] 메인 컴포넌트 교체 완료: ${ComponentClass.name}`, args);
     }
   }
 

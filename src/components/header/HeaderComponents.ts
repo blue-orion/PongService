@@ -19,7 +19,7 @@ export class HeaderComponents extends Component {
             <li><a href="/" data-route="/">홈</a></li>
             <li><a href="/lobby" data-route="/lobby">로비 리스트</a></li>
             <li><a href="/dashboard" data-route="/dashboard">대시보드</a></li>
-            <li><a href="/profile" data-route="/profile">내 프로필</a></li>
+            <li><a href="#" class="my-profile-btn">내 프로필</a></li>
         </ul>
     </nav>
     <div class="user-menu">
@@ -49,14 +49,15 @@ export class HeaderComponents extends Component {
   }
 
   private setupEventListeners(): void {
-    // 네비게이션 링크 클릭 이벤트 (내 프로필 제외)
-    const navLinks = this.container.querySelectorAll("[data-route]:not(.my-profile-btn)");
+    // 일반 네비게이션 링크 클릭 이벤트 (내 프로필 제외)
+    const navLinks = this.container.querySelectorAll("[data-route]");
     navLinks.forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const target = e.target as HTMLElement;
         const route = target.getAttribute("data-route");
         if (route && window.router) {
+          console.log(`[HeaderComponent] 네비게이션: ${route}`);
           window.router.navigate(route);
         }
       });
@@ -67,16 +68,17 @@ export class HeaderComponents extends Component {
     if (myProfileBtn) {
       myProfileBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        // localStorage에서 내 userId 가져오기
+        // UserManager에서 내 userId 가져오기
         const myUserId = UserManager.getUserId();
-        console.log("[HeaderComponent] 내 프로필 클릭, userId:", myUserId); // 디버깅용
+        console.log("[HeaderComponent] 내 프로필 클릭, userId:", myUserId);
         if (!myUserId) {
           alert("내 사용자 ID 정보가 없습니다. 다시 로그인해주세요.");
           return;
         }
         if (window.router) {
-          console.log(`[HeaderComponent] /user/${myUserId}로 이동`); // 디버깅용
-          window.router.navigate(`/user/${myUserId}`);
+          const profileRoute = `/user/${myUserId}`;
+          console.log(`[HeaderComponent] ${profileRoute}로 이동`);
+          window.router.navigate(profileRoute);
         }
       });
     }

@@ -547,6 +547,46 @@ export class UserInfoComponent extends Component {
     }
 
     destroy(): void {
-        this.clearContainer();
+        // 이벤트 리스너 정리
+        const backBtn = this.container.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.removeEventListener('click', () => {});
+        }
+
+        const toggle2faBtn = this.container.querySelector('.toggle-2fa-btn');
+        if (toggle2faBtn) {
+            toggle2faBtn.removeEventListener('click', () => {});
+        }
+
+        const editProfileBtn = this.container.querySelector('.edit-profile-btn');
+        if (editProfileBtn) {
+            editProfileBtn.removeEventListener('click', () => {});
+        }
+
+        const viewMyStatsBtn = this.container.querySelector('.view-my-stats-btn');
+        if (viewMyStatsBtn) {
+            viewMyStatsBtn.removeEventListener('click', () => {});
+        }
+
+        const deactivateAccountBtn = this.container.querySelector('.deactivate-account-btn');
+        if (deactivateAccountBtn) {
+            deactivateAccountBtn.removeEventListener('click', () => {});
+        }
+
+        const viewStatsBtn = this.container.querySelector('.view-stats-btn');
+        if (viewStatsBtn) {
+            viewStatsBtn.removeEventListener('click', () => {});
+        }
+
+        const addFriendBtn = this.container.querySelector('.add-friend-btn');
+        if (addFriendBtn) {
+            addFriendBtn.removeEventListener('click', () => {});
+        }
+
+        // 2FA 모달이 열려있다면 닫기
+        this.close2FAModal();
+
+        // 컨테이너는 Layout에서 관리하므로 여기서는 비우지 않음
+        // this.clearContainer(); // 이 줄이 문제였음
     }
 }
