@@ -101,6 +101,11 @@ class WebSocketManager {
     return false;
   }
 
+  sendToNamespaceUsers(namespace, userId1, userId2, event, message) {
+    this.sendToNamespaceUser(namespace, userId1, event, message);
+    this.sendToNamespaceUser(namespace, userId2, event, message);
+  }
+
   // 특정 사용자의 특정 네임스페이스에 메시지 전송
   sendToUserInNamespace(userId, namespaceType, event, message) {
     const userSocketInfo = this.userSockets.get(userId);

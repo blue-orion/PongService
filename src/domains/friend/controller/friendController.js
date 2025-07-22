@@ -67,11 +67,11 @@ const friendController = {
     return ApiResponse.ok(reply, { message: "Friend request rejected successfully" });
   },
 
-  // DELETE /v1/friends/cancel-request/:receiverId
+  // DELETE /v1/friends/cancel-request
   async cancelFriendRequestHandler(request, reply) {
-    const receiverId = request.params.receiverId;
+    const { receiverId } = request.body;
     const senderId = request.user.id;
-    await friendService.cancelFriendRequest(senderId, receiverId);
+    await friendService.cancelFriendRequest(senderId, parseInt(receiverId));
     return ApiResponse.ok(reply, { message: "Friend request cancelled successfully" });
   },
 };
