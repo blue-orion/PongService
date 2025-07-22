@@ -2,6 +2,7 @@ import PongException from "#shared/exception/pongException.js";
 import { GameRepository } from "#domains/game/repo/gameRepo.js";
 import { LobbyRepository } from "#domains/lobby/repo/lobbyRepo.js";
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
+import prisma from "#shared/database/prisma.js";
 
 export const TOURNAMENT_STATUS = {
   PENDING: "PENDING",
@@ -80,6 +81,22 @@ export class Helpers {
     return lobby;
   }
 
+  async _getUserById(user_id) {
+    const user = await prisma.user.findUnique({
+      where: { id: user_id },
+      select: {
+        id: true,
+        nickname: true,
+        username: true,
+        profile_image: true,
+      },
+    });
+    if (!user) {
+      throw PongException.USER_NOT_FOUND;
+    }
+    return user;
+  }
+
   // === 상태 검증 메서드 ===
   _validateTournamentStatus(tournament, expectedStatus) {
     if (tournament.tournament_status !== expectedStatus) {
@@ -123,6 +140,7 @@ export class Helpers {
 
   async _findActiveLobbyByUserId(userId) {
     const existingLobby = await this.lobbyRepository.findActiveLobbyByUserId(userId);
+    console.log(existingLobby);
     if (existingLobby) {
       throw PongException.ALREADY_IN_LOBBY;
     }
@@ -269,5 +287,16 @@ export class Helpers {
     }
 
     return matches;
+  }
+
+  // === 토너먼트 관련 유틸리티 메서드 ===
+  _calculateTotalRounds(tournamentType) {
+    const roundCounts = {
+      LAST_16: 4, // 16강 -> 8강 -> 4강 -> 결승
+      QUARTERFINAL: 3, // 8강 -> 4강 -> 결승
+      SEMIFINAL: 2, // 4강 -> 결승
+      FINAL: 1, // 결승
+    };
+    return roundCounts[tournamentType] || 4;
   }
 }

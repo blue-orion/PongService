@@ -31,7 +31,7 @@ const authController = {
 
   // POST /v1/auth/logout
   async logoutHandler(request, reply) {
-    const formData = { userId: request.user?.id };
+    const formData = { userId: request.body.id };
     authHelpers.validateLogoutForm(formData);
 
     await authService.signOutUser(formData.userId);

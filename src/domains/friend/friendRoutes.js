@@ -17,6 +17,6 @@ export default async function friendRoutes(fastify) {
   fastify.put("/accept-request", friendController.acceptFriendRequestHandler);
   // PUT /v1/friends/reject-request
   fastify.delete("/reject-request", friendController.rejectFriendRequestHandler);
-  // DELETE /v1/friends/cancel-request/:receiverId
-  fastify.delete("/cancel-request/:receiverId", friendController.cancelFriendRequestHandler);
+  // DELETE /v1/friends/cancel-request
+  fastify.delete("/cancel-request", friendController.cancelFriendRequestHandler);
 }

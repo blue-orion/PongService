@@ -42,14 +42,51 @@ const websocketHandlers = {
 
       console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
 
-      if (lobbyId) {
+      // 사용자 소켓 등록
+      websocketManager.addUserSocket(userId, "lobby", socket);
+
+      if (lobbyId && lobbyId !== "undefined") {
         socket.join(`lobby-${lobbyId}`);
         console.log(`User ${userId} joined room lobby-${lobbyId}`);
+
+        // 로비에 새 사용자 입장 알림
+        socket.to(`lobby-${lobbyId}`).emit("user:connected", {
+          user_id: userId,
+          lobby_id: lobbyId,
+          message: `사용자 ${userId}가 로비에 접속했습니다.`,
+        });
       }
+
+      // 로비 변경 이벤트 처리
+      socket.on("join-lobby", (data) => {
+        const { lobby_id } = data;
+        if (lobby_id) {
+          socket.join(`lobby-${lobby_id}`);
+          console.log(`User ${userId} joined room lobby-${lobby_id}`);
+        }
+      });
+
+      // 로비 나가기 이벤트 처리
+      socket.on("leave-lobby", (data) => {
+        const { lobby_id } = data;
+        if (lobby_id) {
+          socket.leave(`lobby-${lobby_id}`);
+          console.log(`User ${userId} left room lobby-${lobby_id}`);
+        }
+      });
 
       socket.on("disconnect", () => {
         websocketManager.removeUserSocket(userId, "lobby");
         console.log(`Lobby WebSocket disconnected: ${userId}`);
+
+        // 로비에서 사용자 퇴장 알림
+        if (lobbyId && lobbyId !== "undefined") {
+          socket.to(`lobby-${lobbyId}`).emit("user:disconnected", {
+            user_id: userId,
+            lobby_id: lobbyId,
+            message: `사용자 ${userId}가 로비에서 나갔습니다.`,
+          });
+        }
       });
     });
   },

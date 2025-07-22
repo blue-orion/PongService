@@ -154,75 +154,75 @@ async function addFriendshipsForReceiver(receiverId, users) {
 }
 
 async function main() {
-  // console.log("Seeding start...");
+  console.log("Seeding start...");
 
-  // // 참조 관계를 가진 테이블의 데이터를 먼저 삭제
-  // await prisma.game.deleteMany();
-  // await prisma.lobbyPlayer.deleteMany();
-  // await prisma.lobby.deleteMany();
-  // await prisma.tournament.deleteMany();
-  // await prisma.friendship.deleteMany();
+  // 참조 관계를 가진 테이블의 데이터를 먼저 삭제
+  await prisma.game.deleteMany();
+  await prisma.lobbyPlayer.deleteMany();
+  await prisma.lobby.deleteMany();
+  await prisma.tournament.deleteMany();
+  await prisma.friendship.deleteMany();
 
-  // // 마지막으로 user 데이터를 삭제
-  // await prisma.user.deleteMany();
+  // 마지막으로 user 데이터를 삭제
+  await prisma.user.deleteMany();
 
-  // // 1. 유저 생성
-  // const userData = [...generateUsers(20)];
-  // await prisma.user.createMany({ data: userData });
-  // const users = await prisma.user.findMany();
-  // console.log(`Created ${users.length} users`);
-
-  // // 2. 토너먼트 생성
-  // const tournamentData = [...generateTournaments()];
-  // await prisma.tournament.createMany({ data: tournamentData });
-  // const tournaments = await prisma.tournament.findMany();
-  // console.log(`Created ${tournaments.length} tournaments`);
-
-  // if (users.length === 0) {
-  //   throw new Error("No users found. Ensure users are created before creating related data.");
-  // }
-
-  // if (tournaments.length === 0) {
-  //   throw new Error("No tournaments found. Ensure tournaments are created before creating related data.");
-  // }
-
-  // // 3. 친구 관계 생성
-  // const friendshipData = [...generateFriendships(users)];
-  // await prisma.friendship.createMany({ data: friendshipData });
-  // const friendships = await prisma.friendship.findMany();
-  // console.log(`Created ${friendships.length} friendships`);
-
-  // // 4. 로비 생성
-  // const lobbyData = [...generateLobbies(tournaments, users)];
-  // await prisma.lobby.createMany({ data: lobbyData });
-  // const lobbies = await prisma.lobby.findMany();
-  // console.log(`Created ${lobbies.length} lobbies`);
-
-  // // 5. 로비 플레이어 생성
-  // const lobbyPlayers = [...generateLobbyPlayers(lobbies, users)];
-  // await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
-  // console.log(`Added ${lobbyPlayers.length} players to lobbies`);
-
-  // // 6. 게임 생성
-  // const gameData = [...generateGames(tournaments, users)];
-  // await prisma.game.createMany({ data: gameData });
-  // console.log(`Created ${gameData.length} games`);
-
-  // // 추가: 각 유저에 대해 친구 관계 추가
-  // for (const user of users) {
-  //   await addFriendshipsForUser(user.id, users);
-  // }
-
-  console.log("Adding PENDING friendships for receiver 74...");
-
-  // 유저 데이터 가져오기
+  // 1. 유저 생성
+  const userData = [...generateUsers(20)];
+  await prisma.user.createMany({ data: userData });
   const users = await prisma.user.findMany();
-  const targetReceiverId = 74;
+  console.log(`Created ${users.length} users`);
 
-  // 친구 관계 추가
-  await addFriendshipsForReceiver(targetReceiverId, users);
+  // 2. 토너먼트 생성
+  const tournamentData = [...generateTournaments()];
+  await prisma.tournament.createMany({ data: tournamentData });
+  const tournaments = await prisma.tournament.findMany();
+  console.log(`Created ${tournaments.length} tournaments`);
 
-  console.log("Friendships added successfully.");
+  if (users.length === 0) {
+    throw new Error("No users found. Ensure users are created before creating related data.");
+  }
+
+  if (tournaments.length === 0) {
+    throw new Error("No tournaments found. Ensure tournaments are created before creating related data.");
+  }
+
+  // 3. 친구 관계 생성
+  const friendshipData = [...generateFriendships(users)];
+  await prisma.friendship.createMany({ data: friendshipData });
+  const friendships = await prisma.friendship.findMany();
+  console.log(`Created ${friendships.length} friendships`);
+
+  // 4. 로비 생성
+  const lobbyData = [...generateLobbies(tournaments, users)];
+  await prisma.lobby.createMany({ data: lobbyData });
+  const lobbies = await prisma.lobby.findMany();
+  console.log(`Created ${lobbies.length} lobbies`);
+
+  // 5. 로비 플레이어 생성
+  const lobbyPlayers = [...generateLobbyPlayers(lobbies, users)];
+  await prisma.lobbyPlayer.createMany({ data: lobbyPlayers });
+  console.log(`Added ${lobbyPlayers.length} players to lobbies`);
+
+  // 6. 게임 생성
+  const gameData = [...generateGames(tournaments, users)];
+  await prisma.game.createMany({ data: gameData });
+  console.log(`Created ${gameData.length} games`);
+
+  // 추가: 각 유저에 대해 친구 관계 추가
+  for (const user of users) {
+    await addFriendshipsForUser(user.id, users);
+  }
+
+  // console.log("Adding PENDING friendships for receiver 74...");
+
+  // // 유저 데이터 가져오기
+  // const users = await prisma.user.findMany();
+  // const targetReceiverId = 74;
+
+  // // 친구 관계 추가
+  // await addFriendshipsForReceiver(targetReceiverId, users);
+
+  // console.log("Friendships added successfully.");
 }
 
 main()

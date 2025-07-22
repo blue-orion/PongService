@@ -24,6 +24,19 @@ class WebSocketManager {
     console.log(`Registered ${type} namespace`);
   }
 
+  // 네임스페이스 접근 메서드들
+  getGameNamespace() {
+    return this.gameNamespace;
+  }
+
+  getLobbyNamespace() {
+    return this.lobbyNamespace;
+  }
+
+  getFriendNamespace() {
+    return this.friendNamespace;
+  }
+
   // 사용자 소켓 등록
   addUserSocket(userId, type, socket) {
     if (!this.userSockets.has(userId)) {
@@ -94,11 +107,17 @@ class WebSocketManager {
         const socket = userSocketInfo[namespace];
         if (socket) {
           socket.emit(event, message);
+          console.log(`Sent message to user ${userId} in ${namespace} namespace:`, message);
           return true;
         }
       }
     }
     return false;
+  }
+
+  sendToNamespaceUsers(namespace, userId1, userId2, event, message) {
+    this.sendToNamespaceUser(namespace, userId1, event, message);
+    this.sendToNamespaceUser(namespace, userId2, event, message);
   }
 
   // 특정 사용자의 특정 네임스페이스에 메시지 전송

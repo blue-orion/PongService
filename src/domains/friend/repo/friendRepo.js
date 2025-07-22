@@ -78,7 +78,7 @@ class FriendRepo {
         status: FriendStatus.PENDING,
       },
       include: {
-        sender: {
+        receiver: {
           select: {
             id: true,
             username: true,

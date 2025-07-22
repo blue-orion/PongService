@@ -51,7 +51,7 @@ class AuthService {
   async signOutUser(userId) {
     await this.userService.updateUserStatus(Number(userId), "OFFLINE");
 
-    await this.authRepo.removeUserRefreshToken(userId);
+    await this.authRepo.removeUserRefreshToken(Number(userId));
   }
 
   async registerUser(registerDto, encryptUtils) {
