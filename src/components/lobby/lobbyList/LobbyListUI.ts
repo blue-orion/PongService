@@ -108,7 +108,12 @@ export class LobbyListUI {
                 return `<button class="join-btn" data-lobby-id="${lobby.id}">입장하기</button>`;
             }
         } else {
-            return `<button class="spectate-btn" data-lobby-id="${lobby.id}">관전하기</button>`;
+            // playing 상태일 때
+            if (lobby.isCurrentUserInLobby) {
+                return `<button class="enter-btn" data-lobby-id="${lobby.id}">게임 참여</button>`;
+            } else {
+                return `<button class="spectate-btn" data-lobby-id="${lobby.id}">관전하기</button>`;
+            }
         }
     }
 

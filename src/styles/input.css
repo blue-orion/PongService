@@ -1055,4 +1055,290 @@
   .avatar-img {
     @apply w-full h-full rounded-full object-cover;
   }
+
+  /* 새 로비 생성 모달 스타일 */
+  .create-lobby-modal {
+    @apply fixed inset-0 flex items-center justify-center z-[60];
+  }
+
+  .create-lobby-modal .modal-overlay {
+    @apply fixed inset-0 bg-black/50 z-[60];
+  }
+
+  .create-lobby-modal .modal-content {
+    @apply relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 z-[61];
+  }
+
+  .create-lobby-modal .modal-header {
+    @apply flex items-center justify-between p-4 border-b border-gray-200;
+  }
+
+  .create-lobby-modal .modal-header h3 {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  .create-lobby-modal .close-btn {
+    @apply text-gray-400 hover:text-gray-600 text-xl font-bold w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 transition-colors cursor-pointer;
+  }
+
+  .create-lobby-modal .loading-overlay {
+    @apply absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-[62];
+  }
+
+  .create-lobby-modal .spinner {
+    @apply w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-2;
+  }
+
+  /* 로비 리스트 페이지 기본 스타일 */
+  .lobby-list-page {
+    @apply p-4 max-w-6xl mx-auto;
+  }
+
+  .page-header {
+    @apply flex justify-between items-center mb-6;
+  }
+
+  .page-header h1 {
+    @apply text-2xl font-bold text-gray-800;
+  }
+
+  .create-lobby-btn {
+    @apply px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors;
+  }
+
+  .lobby-filters {
+    @apply flex gap-4 mb-6 p-4 bg-white/80 rounded-lg border border-gray-200;
+  }
+
+  .status-filter,
+  .search-input {
+    @apply p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+  }
+
+  .search-input {
+    @apply flex-1;
+  }
+
+  /* 로비 그리드 */
+  .lobby-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  /* 로비 카드 */
+  .lobby-card {
+    @apply bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all;
+  }
+
+  .lobby-header {
+    @apply flex justify-between items-start mb-4;
+  }
+
+  .lobby-card h3 {
+    @apply text-lg font-bold text-gray-800;
+  }
+
+  .lobby-card .status {
+    @apply px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .lobby-card .status.waiting {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .lobby-card .status.playing {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  .lobby-info {
+    @apply space-y-2 mb-4 text-sm text-gray-600;
+  }
+
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    .lobby-list-page {
+      @apply p-3;
+    }
+
+    .page-header {
+      @apply flex-col gap-4 items-stretch;
+    }
+
+    .page-header h1 {
+      @apply text-xl;
+    }
+
+    .lobby-filters {
+      @apply flex-col gap-3;
+    }
+
+    .lobby-grid {
+      @apply grid-cols-1;
+    }
+
+    .lobby-card {
+      @apply p-4;
+    }
+
+    .lobby-header {
+      @apply flex-col gap-2 items-start;
+    }
+  }
+
+  /* 로비 디테일 페이지 기본 스타일 */
+  .lobby-detail-page {
+    @apply p-4 max-w-6xl mx-auto;
+  }
+
+  .lobby-header {
+    @apply flex justify-between items-center mb-6;
+  }
+
+  .lobby-title {
+    @apply text-2xl font-bold text-gray-800;
+  }
+
+  .back-btn {
+    @apply px-4 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors;
+  }
+
+  .lobby-content {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+  }
+
+  .main-content {
+    @apply lg:col-span-2 space-y-6;
+  }
+
+  .sidebar {
+    @apply lg:col-span-1 space-y-6;
+  }
+
+  /* 로비 정보 카드 */
+  .lobby-info-card,
+  .players-section,
+  .action-buttons {
+    @apply bg-white rounded-xl p-6 border border-gray-200 shadow-sm;
+  }
+
+  .lobby-info-card h3,
+  .players-section h3,
+  .action-buttons h3 {
+    @apply text-lg font-bold text-gray-800 mb-4;
+  }
+
+  .info-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+
+  .players-list {
+    @apply space-y-3;
+  }
+
+  .buttons-grid {
+    @apply space-y-3;
+  }
+
+  .action-btn {
+    @apply w-full px-4 py-3 rounded-lg font-semibold text-center transition-all;
+  }
+
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    .lobby-detail-page {
+      @apply p-3;
+    }
+
+    .lobby-header {
+      @apply flex-col gap-4 items-stretch;
+    }
+
+    .lobby-title {
+      @apply text-xl;
+    }
+
+    .lobby-content {
+      @apply grid-cols-1;
+    }
+
+    .lobby-info-card,
+    .players-section,
+    .action-buttons {
+      @apply p-4;
+    }
+
+    .info-grid {
+      @apply grid-cols-1;
+    }
+  }
+
+  /* 매칭 정보 섹션 반응형 개선 */
+  .match-info-section {
+    @apply bg-white rounded-xl p-6 border border-gray-200 shadow-sm;
+  }
+
+  .tournament-bracket {
+    @apply overflow-x-auto;
+  }
+
+  .bracket-container {
+    @apply min-w-[800px] pb-4;
+  }
+
+  /* 모바일에서 토너먼트 브라켓 개선 */
+  @media (max-width: 768px) {
+    .match-info-section {
+      @apply p-4;
+    }
+
+    .bracket-container {
+      @apply min-w-[600px];
+    }
+
+    .tournament-info-grid {
+      @apply grid-cols-1 gap-2;
+    }
+
+    .bracket-match {
+      @apply min-w-[200px];
+    }
+
+    .bracket-round {
+      @apply min-w-[220px];
+    }
+  }
+
+  /* 레이아웃 컨테이너 기본 스타일 */
+  .layout-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-section {
+    flex-shrink: 0;
+  }
+
+  .main-section {
+    flex: 1;
+    position: relative;
+    transition: padding-right 0.3s ease;
+    padding-top: 80px;
+  }
+
+  /* 레이아웃 반응형 - 기존 #app 스타일과 호환 */
+  @media (max-width: 768px) {
+    .main-section {
+      padding-left: 12px;
+      padding-right: 12px;
+      padding-top: 60px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .main-section {
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 50px;
+    }
+  }
 }

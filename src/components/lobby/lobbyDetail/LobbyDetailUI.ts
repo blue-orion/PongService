@@ -200,19 +200,32 @@ export class LobbyDetailUI {
                 `;
             }
         } else if (lobbyData.status === 'playing') {
-            return `
-                ${!isCurrentPlayerPlaying ? `
+            if (currentPlayer) {
+                // 로비에 참여한 유저인 경우
+                return `
+                    ${!isCurrentPlayerPlaying ? `
+                        <button class="spectate-btn">관전하기</button>
+                    ` : `
+                        <button class="play-game-btn">게임 참여</button>
+                    `}
+                    <button class="leave-lobby-btn">로비 나가기</button>
+                    ${hasMatchData ? `
+                        <button class="view-match-btn" id="view-match-btn">
+                            매칭 정보 확인
+                        </button>
+                    ` : ''}
+                `;
+            } else {
+                // 로비에 참여하지 않은 유저인 경우
+                return `
                     <button class="spectate-btn">관전하기</button>
-                ` : `
-                    <button class="play-game-btn">게임 참여</button>
-                `}
-                ${currentPlayer ? '<button class="leave-lobby-btn">로비 나가기</button>' : ''}
-                ${hasMatchData ? `
-                    <button class="view-match-btn" id="view-match-btn">
-                        매칭 정보 확인
-                    </button>
-                ` : ''}
-            `;
+                    ${hasMatchData ? `
+                        <button class="view-match-btn" id="view-match-btn">
+                            매칭 정보 확인
+                        </button>
+                    ` : ''}
+                `;
+            }
         }
         return '';
     }
@@ -485,7 +498,7 @@ export class LobbyDetailUI {
                         </div>
                         <div class="info-item">
                             <label>상태:</label>
-                            <span class="tournament-status ${matchData.tournament_status?.toLowerCase() || 'unknown'}">${this.getStatusText(matchData.tournament_status)}</span>
+                            <span class="tournament-status ${(matchData.tournament_status || '').toLowerCase()}">${this.getStatusText(matchData.tournament_status)}</span>
                         </div>
                     </div>
                 </div>
@@ -571,8 +584,8 @@ export class LobbyDetailUI {
                                 `<div class="player-avatar-placeholder">👤</div>`
                             }
                             <div class="player-details">
-                                <span class="player-name">${match.left_player.nickname}</span>
-                                <span class="player-username">@${match.left_player.username}</span>
+                                <span class="player-name">${match.left_player?.nickname || 'Unknown'}</span>
+                                <span class="player-username">@${match.left_player?.username || 'unknown'}</span>
                             </div>
                         </div>
                         <div class="player-score">
@@ -591,8 +604,8 @@ export class LobbyDetailUI {
                                 `<div class="player-avatar-placeholder">👤</div>`
                             }
                             <div class="player-details">
-                                <span class="player-name">${match.right_player.nickname}</span>
-                                <span class="player-username">@${match.right_player.username}</span>
+                                <span class="player-name">${match.right_player?.nickname || 'Unknown'}</span>
+                                <span class="player-username">@${match.right_player?.username || 'unknown'}</span>
                             </div>
                         </div>
                         <div class="player-score">
@@ -635,7 +648,7 @@ export class LobbyDetailUI {
             case 'PENDING': return '대기';
             case 'IN_PROGRESS': return '진행중';
             case 'COMPLETED': return '완료';
-            default: return status;
+            default: return status || '알 수 없음';
         }
     }
 
@@ -727,9 +740,9 @@ export class LobbyDetailUI {
             <div class="tournament-info-inline">
                 <div class="tournament-header-info">
                     <div class="tournament-stats">
-                        <span class="stat-item">토너먼트 ID: <strong>${matchData.tournament_id}</strong></span>
-                        <span class="stat-item">현재 라운드: <strong>${matchData.current_round}/${matchData.total_rounds}</strong></span>
-                        <span class="stat-item">상태: <strong class="status ${matchData.tournament_status?.toLowerCase() || 'unknown'}">${this.getStatusText(matchData.tournament_status)}</strong></span>
+                        <span class="stat-item">토너먼트 ID: <strong>${matchData.tournament_id || 'N/A'}</strong></span>
+                        <span class="stat-item">현재 라운드: <strong>${matchData.current_round || 0}/${matchData.total_rounds || 0}</strong></span>
+                        <span class="stat-item">상태: <strong class="status ${(matchData.tournament_status || '').toLowerCase()}">${this.getStatusText(matchData.tournament_status)}</strong></span>
                     </div>
                 </div>
                 
@@ -743,26 +756,26 @@ export class LobbyDetailUI {
                             </div>
                             <div class="match-players-summary">
                                 <div class="player-summary">
-                                    ${match.left_player.profile_image ? 
+                                    ${match.left_player?.profile_image ? 
                                         `<img src="${match.left_player.profile_image}" alt="프로필" class="player-avatar-tiny">` : 
                                         `<div class="player-avatar-placeholder-tiny">👤</div>`
                                     }
-                                    <span class="player-name">${match.left_player.nickname}</span>
-                                    ${match.game_status === 'COMPLETED' ? `<span class="score">${match.left_player.score}</span>` : ''}
+                                    <span class="player-name">${match.left_player?.nickname || 'Unknown'}</span>
+                                    ${match.game_status === 'COMPLETED' ? `<span class="score">${match.left_player?.score || 0}</span>` : ''}
                                 </div>
                                 <span class="vs-text">vs</span>
                                 <div class="player-summary">
-                                    ${match.right_player.profile_image ? 
+                                    ${match.right_player?.profile_image ? 
                                         `<img src="${match.right_player.profile_image}" alt="프로필" class="player-avatar-tiny">` : 
                                         `<div class="player-avatar-placeholder-tiny">👤</div>`
                                     }
-                                    <span class="player-name">${match.right_player.nickname}</span>
-                                    ${match.game_status === 'COMPLETED' ? `<span class="score">${match.right_player.score}</span>` : ''}
+                                    <span class="player-name">${match.right_player?.nickname || 'Unknown'}</span>
+                                    ${match.game_status === 'COMPLETED' ? `<span class="score">${match.right_player?.score || 0}</span>` : ''}
                                 </div>
                             </div>
                             ${match.winner ? `
                                 <div class="match-winner">
-                                    ✅ ${match.winner.nickname} 승리
+                                    ✅ ${match.winner?.nickname || 'Unknown'} 승리
                                     ${match.play_time ? `<span class="play-time-small">(${match.play_time})</span>` : ''}
                                 </div>
                             ` : ''}
