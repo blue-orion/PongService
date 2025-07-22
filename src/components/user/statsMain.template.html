@@ -1,0 +1,65 @@
+<div class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-cyan-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 헤더 -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center gap-4">
+                    <button class="back-btn bg-indigo-100 text-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors font-medium">
+                        ← 뒤로가기
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">{{username}}님의 전적</h1>
+                        <p class="text-gray-600 text-sm">닉네임: {{nickname}}</p>
+                    </div>
+                </div>
+                {{#if profileImage}}
+                    <div class="w-16 h-16 rounded-full overflow-hidden border-3 border-indigo-200">
+                        <img src="{{profileImage}}" alt="{{username}}" class="w-full h-full object-cover">
+                    </div>
+                {{else}}
+                    <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">👤</div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- 전체 전적 카드 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 승패 통계 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    📊 전체 전적
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span class="text-green-700 font-medium">승리</span>
+                        <span class="text-2xl font-bold text-green-600">{{totalWins}}승</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                        <span class="text-red-700 font-medium">패배</span>
+                        <span class="text-2xl font-bold text-red-600">{{totalLosses}}패</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
+                        <span class="text-indigo-700 font-medium">승률</span>
+                        <span class="text-2xl font-bold text-indigo-600">{{winRateFixed}}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 최근 게임 전적 -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    🎮 최근 활동
+                </h2>
+                <div class="space-y-4">
+                    <div class="text-center py-8">
+                        <div class="text-4xl mb-2">🏆</div>
+                        <p class="text-gray-600 mb-4">더 자세한 게임 기록을 확인해보세요!</p>
+                        <button class="recent-games-btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                            최근 게임 전적 보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

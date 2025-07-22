@@ -1,0 +1,18 @@
+<div class="twofa-input-container space-y-4 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div class="text-center">
+        <p class="text-sm font-medium text-blue-700 mb-2">2FA 인증 코드 입력</p>
+        <p class="text-xs text-blue-600 mb-4">Google Authenticator 앱에서 6자리 코드를 확인하세요</p>
+    </div>
+    <div>
+        <label for="token" class="block text-sm font-medium text-primary-700 mb-2">인증 코드 (6자리)</label>
+        <input
+            type="text"
+            id="token"
+            name="token"
+            maxlength="6"
+            class="login-input text-center text-xl tracking-wider"
+            placeholder="000000"
+            autocomplete="off"
+        />
+    </div>
+</div>
