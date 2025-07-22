@@ -1,7 +1,6 @@
 import { Component } from "../components/Component";
 import { FriendComponent } from "../components/friend/FriendComponent";
 import { HeaderComponents } from "../components/header/HeaderComponents";
-import { loadTemplate, TEMPLATE_PATHS } from "../utils/template-loader";
 
 export class Layout extends Component {
     private headerComponent: HeaderComponents | null = null;
@@ -19,6 +18,22 @@ export class Layout extends Component {
         this.mainComponent = component;
     }
 
+    private getTemplate(): string {
+        return `
+<div id="layout" class="layout-container">
+    <header id="header" class="header-section">
+        <!-- 헤더 템플릿 -->
+    </header>
+    <main id="main-content" class="main-section">
+        <!-- 메인 콘텐츠 영역 -->
+    </main>
+    <div id="friend-area">
+        <!-- 친구 목록 템플릿 -->
+    </div>
+</div>
+        `;
+    }
+
     async render(): Promise<void> {
         this.clearContainer();
 
@@ -32,8 +47,7 @@ export class Layout extends Component {
     private async createDefaultLayout(): Promise<void> {
         console.log('기본 레이아웃 생성 중...');
         
-        const layoutTemplate = await loadTemplate(TEMPLATE_PATHS.LAYOUT);
-        this.container.innerHTML = layoutTemplate;
+        this.container.innerHTML = this.getTemplate();
     }
 
     private async initializeComponents(): Promise<void> {

@@ -1,11 +1,31 @@
 import { Component } from "../Component";
-import { io, Socket } from "socket.io-client";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class HeaderComponents extends Component {
     constructor(container: HTMLElement) {
         super(container);
+    }
+
+    private getTemplate(): string {
+        return `
+<header class="header">
+    <div class="logo">
+        <a href="/" data-route="/" class="logo-link">🎮 TSEN GAME</a>
+    </div>
+    <nav class="navigation">
+        <ul>
+            <li><a href="/" data-route="/">홈</a></li>
+            <li><a href="/lobby" data-route="/lobby">로비 리스트</a></li>
+            <li><a href="/dashboard" data-route="/dashboard">대시보드</a></li>
+            <li><a href="/profile" data-route="/profile">내 프로필</a></li>
+        </ul>
+    </nav>
+    <div class="user-menu">
+        <span class="username">👤 사용자님</span>
+        <button class="logout-btn">로그아웃</button>
+    </div>
+</header>
+        `;
     }
 
     async render(): Promise<void> {
@@ -13,8 +33,7 @@ export class HeaderComponents extends Component {
         
         console.log('헤더 컴포넌트 렌더링 시작...');
         
-        const template = await loadTemplate(TEMPLATE_PATHS.HEADER);
-        this.container.innerHTML = template;
+        this.container.innerHTML = this.getTemplate();
         
         this.setupEventListeners();
         console.log('헤더 컴포넌트 렌더링 완료');

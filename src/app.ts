@@ -12,6 +12,7 @@ import { Layout } from "./pages/Layout";
 import { LobbyListComponent } from "./components/lobby/lobbyList/LobbyListComponent";
 import { LobbyDetailComponent } from "./components/lobby/lobbyDetail/LobbyDetailComponent";
 import { UserInfoComponent } from "./components/user/UserInfoComponent";
+import { DashboardComponent } from "./components/dashboard/DashboardComponent";
 
 class App {
   private router: Router;
@@ -123,7 +124,7 @@ class App {
     this.router.addRoute("/dashboard", async () => {
       console.log("대시보드 페이지 라우트 실행");
       // 대시보드 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
-      await this.loadLayoutWithComponent(LobbyListComponent);
+      await this.loadLayoutWithComponent(DashboardComponent);
     });
 
     // 프로필 페이지
@@ -160,6 +161,20 @@ class App {
     this.currentComponent = new ComponentClass(this.appContainer);
     console.log("컴포넌트 생성 완료, 렌더링 시작...");
     await this.currentComponent.render();
+
+    // // 인증 상태 확인하여 친구창 관리
+    const isAuthenticated = await AuthManager.checkAuth();
+    const currentPath = window.location.pathname;
+
+    if (isAuthenticated && currentPath !== "/login" && !this.friendComponent) {
+      this.initializeFriendComponent();
+    } else if (!isAuthenticated && this.friendComponent) {
+      // 인증되지 않은 상태에서는 친구창 숨기기
+      this.hideFriendComponent();
+    } else if (currentPath === "/login") {
+      // 로그인 페이지에서는 친구창 숨기기
+      this.hideFriendComponent();
+    }
   }
 
   public async loadLayoutWithComponent(ComponentClass: any, ...args: any[]): Promise<void> {
@@ -196,7 +211,7 @@ class App {
     if (!this.friendComponent) {
       let friendContainer = existingFriendContainer;
 
-      // 컨테이너가 없으면 새로 생성
+      //     // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
         friendContainer = document.createElement("div");
         friendContainer.id = "friend-container";

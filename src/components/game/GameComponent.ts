@@ -20,12 +20,12 @@ interface GameState {
   winner?: "left" | "right" | null;
 }
 import { KeyboardControls, ConnectionStatus } from "../../types/game";
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class GameComponent extends Component {
   private myRole: "left" | "right" = "left";
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
+  private scoresElement!: HTMLElement;
   private socket: Socket | null = null;
   private gameState: GameState | null = null;
   private keyboardControls: KeyboardControls = { up: false, down: false };
@@ -68,15 +68,58 @@ export class GameComponent extends Component {
     this.playerId = "test-player";
   }
 
+  private getTemplate(): string {
+    return `
+<div class="game-container relative overflow-hidden">
+  <!-- 배경 플로팅 요소들 (로그인과 동일) -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-20 left-20 w-20 h-20 bg-primary-300/30 rounded-full floating"></div>
+    <div
+      class="absolute top-40 right-40 w-16 h-16 bg-secondary-300/30 rounded-full floating"
+      style="animation-delay: -2s"
+    ></div>
+    <div
+      class="absolute bottom-32 left-32 w-12 h-12 bg-neutral-300/30 rounded-full floating"
+      style="animation-delay: -4s"
+    ></div>
+    <div
+      class="absolute bottom-20 right-20 w-24 h-24 bg-primary-200/20 rounded-full floating"
+      style="animation-delay: -1s"
+    ></div>
+    <div
+      class="absolute top-1/2 left-1/4 w-8 h-8 bg-secondary-200/25 rounded-full floating"
+      style="animation-delay: -3s"
+    ></div>
+    <div
+      class="absolute top-1/3 right-1/3 w-14 h-14 bg-accent-300/20 rounded-full floating"
+      style="animation-delay: -5s"
+    ></div>
+  </div>
+
+  <div class="status-bar relative z-10 w-[800px] px-4 py-2 mb-8">
+    <div id="gameStatus" class="game-status absolute left-0 top-1/2 -translate-y-1/2">
+      <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+    </div>
+    <div id="scores" class="scores flex justify-center text-2xl">LEFT: 0 | RIGHT: 0</div>
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 text-center text-sm text-primary-600 glass-card p-1.5">
+      <p class="font-medium">게임 조작법</p>
+      <p class="mt-1">W/A/S/D 또는 방향키로 패들을 조작하세요</p>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas" class="game-canvas relative z-0" width="800" height="600"></canvas>
+</div>
+    `;
+  }
+
   async render(): Promise<void> {
     this.clearContainer();
 
-    const template = await loadTemplate(TEMPLATE_PATHS.GAME);
-    this.container.innerHTML = template;
+    this.container.innerHTML = this.getTemplate();
 
     this.canvas = this.container.querySelector("#gameCanvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
-    this.scoresElement = this.container.querySelector("#scores");
+    this.scoresElement = this.container.querySelector("#scores") as HTMLCanvasElement;
     this.connectionStatusElement = this.container.querySelector("#connectionStatus")!;
 
     // 게임 초기화 (인증은 이미 앱 레벨에서 확인됨)
