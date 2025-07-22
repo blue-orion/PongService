@@ -1,4 +1,3 @@
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 import { friendService } from "../../utils/friendService";
 import { friendWebSocketManager } from "../../utils/friendWebSocket";
 import { AuthManager } from "../../utils/auth";
@@ -31,9 +30,70 @@ export class FriendComponent {
     this.initializeWebSocket();
   }
 
+  private getTemplate(): string {
+    return `
+<div class="friend-sidebar">
+  <!-- 친구창 헤더 -->
+  <div class="friend-header">
+    <h3>친구 목록</h3>
+  </div>
+
+  <!-- 사용자 프로필 -->
+  <div class="user-profile">
+    <div class="user-avatar" id="userAvatar"></div>
+    <div class="user-info">
+      <div class="user-nickname" id="userNickname">사용자</div>
+      <div class="user-username" id="userUsername">@username</div>
+      <div class="user-status">온라인</div>
+    </div>
+    <!-- 친구 요청 보관함 -->
+    <div class="friend-requests-box" id="friendRequestsBox">
+      <button class="requests-toggle" id="requestsToggle">
+        <span class="requests-icon">📮</span>
+        <span class="requests-count" id="requestsCount">0</span>
+      </button>
+      <div class="requests-dropdown" id="requestsDropdown">
+        <div class="requests-header">받은 친구 요청</div>
+        <div class="requests-list" id="requestsList">
+          <!-- 친구 요청들이 여기에 동적으로 추가됩니다 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 친구창 내용 -->
+  <div class="friend-content" id="friendContent">
+    <!-- 친구 추가 -->
+    <div class="friend-add-section">
+      <div class="add-friend-form">
+        <input type="text" placeholder="사용자명으로 친구 추가" class="add-friend-input" id="addFriendInput" />
+        <button class="add-friend-btn" id="addFriendBtn">+</button>
+      </div>
+    </div>
+
+    <!-- 온라인 친구들 -->
+    <div class="friend-section"></div>
+
+    <!-- 오프라인 친구들 -->
+    <div class="friend-section">
+      <div class="section-title">오프라인 - 1</div>
+      <div class="friend-list">
+        <div class="friend-item offline">
+          <div class="friend-avatar"></div>
+          <div class="friend-info">
+            <div class="friend-name">gitkim</div>
+            <div class="friend-status">오프라인</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    `;
+  }
+
   public async render(): Promise<void> {
-    const template = await loadTemplate(TEMPLATE_PATHS.FRIEND);
-    this.container.innerHTML = template;
+    this.container.innerHTML = this.getTemplate();
 
     this.loadStyles();
 

@@ -1,5 +1,4 @@
 import { Component } from "../../Component";
-import { loadTemplate, TEMPLATE_PATHS } from "../../../utils/template-loader";
 
 export class ChattingRoomComponent extends Component {
     constructor(container: HTMLElement) {
