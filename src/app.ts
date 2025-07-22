@@ -146,6 +146,12 @@ class App {
       await this.loadLayoutWithComponent(UserInfoComponent, params.id);
     });
 
+    // 사용자 정보 페이지 - 동적 라우트
+    this.router.addDynamicRoute("/game/:gameId/:tournamenttId", async (params: any) => {
+      console.log("사용자 정보 페이지 라우트 실행, ID:", params.gameId, params.tournamentId);
+      await this.loadLayoutWithComponent(GameComponent, params);
+    });
+
     console.log("라우트 설정 완료");
   }
 
