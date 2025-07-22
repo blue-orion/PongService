@@ -46,7 +46,7 @@ export class FriendComponent {
   }
 
   private setupWebSocket(): void {
-    friendWebSocketManager.connect();
+    // WebSocket 연결은 app.ts에서 관리하므로 여기서는 이벤트 리스너만 등록
     friendWebSocketManager.onFriendNotificationReceived(this.handleWebSocketMessage.bind(this));
   }
 

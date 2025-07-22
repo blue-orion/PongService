@@ -252,10 +252,14 @@ class App {
       // 친구 컴포넌트 초기화
       this.friendComponent = new FriendComponent(friendContainer);
       await this.friendComponent.render();
-    } else {
-      // 기존 친구 컴포넌트가 있으면 웹소켓만 재연결
+      
+      // 웹소켓 연결 (친구 컴포넌트 초기화 후에 한 번만)
       friendWebSocketManager.connect();
-      console.log("기존 친구창 재사용 및 웹소켓 재연결");
+    } else {
+      // 기존 친구 컴포넌트가 있으면 웹소켓 상태만 확인
+      if (!friendWebSocketManager.isConnected) {
+        friendWebSocketManager.connect();
+      }
     }
 
     // 친구창 보이기
