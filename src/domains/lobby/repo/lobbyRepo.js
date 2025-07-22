@@ -6,7 +6,7 @@ export class LobbyRepository {
   }
 
   async findAll(skip, take) {
-    return await prisma.lobby.findMany({
+    const lobbies = await prisma.lobby.findMany({
       skip,
       take,
       orderBy: {
@@ -17,20 +17,40 @@ export class LobbyRepository {
         tournament: true,
       },
     });
+
+    // 각 로비의 생성자 정보를 별도로 조회
+    for (const lobby of lobbies) {
+      lobby.creator = await prisma.user.findUnique({
+        where: { id: lobby.creator_id },
+        select: { id: true, nickname: true, username: true },
+      });
+    }
+
+    return lobbies;
   }
 
   async findById(id) {
-    return await prisma.lobby.findUnique({
+    const lobby = await prisma.lobby.findUnique({
       where: { id },
       include: {
         lobby_players: { include: { user: true } },
         tournament: true,
       },
     });
+
+    if (lobby) {
+      // 생성자 정보를 별도로 조회
+      lobby.creator = await prisma.user.findUnique({
+        where: { id: lobby.creator_id },
+        select: { id: true, nickname: true, username: true },
+      });
+    }
+
+    return lobby;
   }
 
   async create(tournament_id, max_player, creator_id) {
-    return await prisma.lobby.create({
+    const lobby = await prisma.lobby.create({
       data: {
         tournament_id,
         max_player,
@@ -44,6 +64,14 @@ export class LobbyRepository {
         tournament: true,
       },
     });
+
+    // 생성자 정보를 별도로 조회
+    lobby.creator = await prisma.user.findUnique({
+      where: { id: creator_id },
+      select: { id: true, nickname: true, username: true },
+    });
+
+    return lobby;
   }
 
   async countPlayers(lobby_id) {

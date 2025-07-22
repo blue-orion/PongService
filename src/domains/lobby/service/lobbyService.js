@@ -7,13 +7,18 @@ import PongException from "#shared/exception/pongException.js";
 import {
   CreateLobbyDto,
   CreateMatchDto,
+  DetailedGameMatchDto,
+  GameMatchDto,
   GetLobbiesDto,
   GetLobbyDto,
+  GetMatchesDto,
   JoinLobbyDto,
   LeaveLobbyDto,
   LobbyPlayerResponseDto,
   LobbyResponseDto,
+  MatchesResponseDto,
   MatchResponseDto,
+  StartGameDto,
   ToggleReadyStateDto,
   TransferLeadershipDto,
 } from "#domains/lobby/model/Lobby.dto.js";
@@ -71,6 +76,42 @@ export class LobbyService {
     }
 
     return new LobbyResponseDto(lobby);
+  }
+
+  /**
+   * 로비 매칭 조회
+   * @method GET v1/lobbies/:id/matches
+   *
+   * @param {Object} requestData - { lobby_id }
+   * @returns {MatchesResponseDto}
+   */
+  async getMatches(requestData) {
+    const dto = new GetMatchesDto(requestData);
+
+    // 로비 유효성 확인
+    const lobby = await this.helpers._getLobbyWithValidation(dto.lobby_id);
+
+    // 토너먼트 정보 조회
+    const tournament = await this.tournamentRepository.findById(lobby.tournament_id);
+    if (!tournament) {
+      throw PongException.TOURNAMENT_NOT_FOUND;
+    }
+
+    // 해당 토너먼트의 모든 게임 조회 (플레이어 정보 포함)
+    const matches = await this.gameRepository.getGamesByTournamentId(tournament.id);
+
+    // 라운드 정보 계산
+    const currentRound = tournament.round;
+    const totalRounds = this.helpers._calculateTotalRounds(tournament.tournament_type);
+
+    return new MatchesResponseDto({
+      lobby_id: dto.lobby_id,
+      tournament_id: tournament.id,
+      tournament_status: tournament.tournament_status,
+      current_round: currentRound,
+      total_rounds: totalRounds,
+      matches: matches,
+    });
   }
 
   // === 로비 관리 메서드 ===
@@ -283,6 +324,64 @@ export class LobbyService {
       round: this.helpers._getRoundType(nextRound),
       total_matches: matches.length,
       matches,
+    };
+  }
+
+  // ===== 게임 시작 메서드 =====
+  /**
+   * 게임 시작
+   * @method POST v1/:id/start_game
+   *
+   * @param {Object} requestData - { lobby_id, user_id, game_id }
+   * @returns {Object} 게임 시작 결과
+   */
+  async startGame(requestData) {
+    const dto = new StartGameDto(requestData);
+
+    // 로비 유효성 검증
+    const lobby = await this.helpers._getLobbyWithValidation(dto.lobby_id);
+
+    // 방장 권한 검증 (게임 시작은 방장만 가능)
+    this.helpers._validateLeadership(lobby, dto.user_id);
+
+    // 게임 유효성 검증
+    const game = await this.gameRepository.getGameById(dto.game_id);
+    if (!game) {
+      throw PongException.GAME_NOT_FOUND;
+    }
+
+    // 게임이 이미 시작되었는지 확인
+    if (game.game_status !== "PENDING") {
+      throw PongException.GAME_ALREADY_STARTED;
+    }
+
+    // 게임이 해당 로비의 토너먼트에 속하는지 확인
+    if (game.tournament_id !== lobby.tournament_id) {
+      throw PongException.INVALID_GAME_TOURNAMENT;
+    }
+
+    // 게임 상태를 IN_PROGRESS로 변경
+    await this.gameRepository.updateGameStatus(dto.game_id, "IN_PROGRESS");
+
+    // 플레이어 정보 조회
+    const players = [
+      await this.helpers._getUserById(game.player_one_id),
+      await this.helpers._getUserById(game.player_two_id),
+    ];
+
+    return {
+      game_id: game.id,
+      tournament_id: game.tournament_id,
+      lobby_id: dto.lobby_id,
+      round: game.round,
+      match: game.match,
+      players: players.map((player) => ({
+        id: player.id,
+        nickname: player.nickname,
+        username: player.username,
+      })),
+      game_status: "IN_PROGRESS",
+      message: "게임이 시작되었습니다.",
     };
   }
 }

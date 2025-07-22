@@ -24,6 +24,19 @@ class WebSocketManager {
     console.log(`Registered ${type} namespace`);
   }
 
+  // 네임스페이스 접근 메서드들
+  getGameNamespace() {
+    return this.gameNamespace;
+  }
+
+  getLobbyNamespace() {
+    return this.lobbyNamespace;
+  }
+
+  getFriendNamespace() {
+    return this.friendNamespace;
+  }
+
   // 사용자 소켓 등록
   addUserSocket(userId, type, socket) {
     if (!this.userSockets.has(userId)) {

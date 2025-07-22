@@ -99,7 +99,32 @@ export class GameRepository {
 
   // 초기 매칭들을 bulk insert
   async createInitialMatches(matchesData) {
-    const createdGames = await Promise.all(matchesData.map((match) => prisma.game.create({ data: match })));
+    const createdGames = await Promise.all(
+      matchesData.map((match) =>
+        prisma.game.create({
+          data: match,
+          include: {
+            player_one: {
+              select: {
+                id: true,
+                nickname: true,
+                username: true,
+                profile_image: true,
+              },
+            },
+            player_two: {
+              select: {
+                id: true,
+                nickname: true,
+                username: true,
+                profile_image: true,
+              },
+            },
+            tournament: true,
+          },
+        })
+      )
+    );
     return createdGames;
   }
 
@@ -132,6 +157,50 @@ export class GameRepository {
     });
 
     return count > 0;
+  }
+
+  // 토너먼트별 모든 게임 조회 (플레이어 정보 포함)
+  async getGamesByTournamentId(tournamentId) {
+    return await prisma.game.findMany({
+      where: {
+        tournament_id: tournamentId,
+        enabled: true,
+      },
+      include: {
+        player_one: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            profile_image: true,
+          },
+        },
+        player_two: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            profile_image: true,
+          },
+        },
+        winner: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        loser: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        tournament: true,
+      },
+      orderBy: [{ round: "asc" }, { match: "asc" }],
+    });
   }
 
   // 라운드 완료 여부 확인
