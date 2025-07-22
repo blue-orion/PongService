@@ -328,6 +328,13 @@ export class GameHistoryComponent extends Component {
     }
 
     destroy(): void {
-        this.clearContainer();
+        // 이벤트 리스너 정리
+        const backBtn = this.container.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.removeEventListener('click', () => {});
+        }
+
+        // 컨테이너는 Layout에서 관리하므로 여기서는 비우지 않음
+        // this.clearContainer();
     }
 }

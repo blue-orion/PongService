@@ -152,10 +152,19 @@ export class StatsComponent extends Component {
                             </div>
                             ${stats.profileImage ? `
                                 <div class="w-16 h-16 rounded-full overflow-hidden border-3 border-indigo-200">
-                                    <img src="${stats.profileImage}" alt="${stats.username}" class="w-full h-full object-cover">
+                                    <img src="${stats.profileImage}" alt="${stats.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center" style="display: none;">
+                                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
                                 </div>
                             ` : `
-                                <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">👤</div>
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
                             `}
                         </div>
                     </div>
@@ -232,6 +241,18 @@ export class StatsComponent extends Component {
     }
 
     destroy(): void {
-        this.clearContainer();
+        // 이벤트 리스너 정리
+        const backBtn = this.container.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.removeEventListener('click', () => {});
+        }
+
+        const recentGamesBtn = this.container.querySelector('.recent-games-btn');
+        if (recentGamesBtn) {
+            recentGamesBtn.removeEventListener('click', () => {});
+        }
+
+        // 컨테이너는 Layout에서 관리하므로 여기서는 비우지 않음
+        // this.clearContainer();
     }
 }
