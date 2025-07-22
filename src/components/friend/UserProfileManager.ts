@@ -108,11 +108,10 @@ export class UserProfileManager {
     const avatarElement = this.container.querySelector("#userAvatar") as HTMLElement;
 
     if (nicknameElement) nicknameElement.textContent = nickname;
-    if (usernameElement) usernameElement.style.display = "none";
+    if (usernameElement) usernameElement.classList.add("friend-hidden");
     if (avatarElement) {
       avatarElement.style.backgroundImage = "";
-      avatarElement.className =
-        "w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 border-2 border-white/30";
+      avatarElement.className = "friend-user-avatar-default";
     }
 
     this.updateStatusIndicator("online");
@@ -131,22 +130,21 @@ export class UserProfileManager {
     if (usernameElement) {
       if (userProfile.username && userProfile.nickname) {
         usernameElement.textContent = `@${userProfile.username}`;
-        usernameElement.style.display = "block";
+        usernameElement.classList.remove("friend-hidden");
+        usernameElement.classList.add("friend-visible");
       } else {
-        usernameElement.style.display = "none";
+        usernameElement.classList.remove("friend-visible");
+        usernameElement.classList.add("friend-hidden");
       }
     }
 
     if (avatarElement) {
       if (userProfile.profileImage) {
         avatarElement.style.backgroundImage = `url('${userProfile.profileImage}')`;
-        avatarElement.style.backgroundSize = "cover";
-        avatarElement.style.backgroundPosition = "center";
-        avatarElement.className = "w-10 h-10 rounded-full border-2 border-white/30";
+        avatarElement.className = "friend-user-avatar-with-image";
       } else {
         avatarElement.style.backgroundImage = "";
-        avatarElement.className =
-          "w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 border-2 border-white/30";
+        avatarElement.className = "friend-user-avatar-default";
       }
     }
 
