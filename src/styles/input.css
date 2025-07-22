@@ -214,4 +214,845 @@
   .scores {
     @apply absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl text-indigo-900 font-semibold;
   }
+
+  /* 플레이어 아이템 관련 */
+  .player-item {
+    @apply flex items-center gap-3 p-3 rounded-lg transition-colors duration-200;
+    @apply bg-white/60 border border-white/30;
+  }
+
+  .player-item.ready {
+    @apply bg-green-100/80 border-green-300/50;
+  }
+
+  .player-item.not-ready {
+    @apply bg-yellow-100/80 border-yellow-300/50;
+  }
+
+  .player-badges {
+    @apply flex gap-2 ml-auto;
+  }
+
+  .host-badge {
+    @apply px-2 py-1 text-xs font-semibold bg-purple-500 text-white rounded-full;
+  }
+
+  .leader-badge {
+    @apply px-2 py-1 text-xs font-semibold bg-blue-500 text-white rounded-full;
+  }
+
+  /* 방장 위임 버튼 */
+  .transfer-leadership-btn {
+    @apply px-3 py-1 text-xs font-medium bg-orange-500 text-white rounded-md;
+    @apply hover:bg-orange-600 transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50;
+  }
+
+  /* 연결 상태 표시 */
+  .connection-status {
+    @apply mb-3 text-sm;
+  }
+
+  .status-indicator.connected {
+    @apply text-green-600;
+  }
+
+  .status-indicator.disconnected {
+    @apply text-red-600;
+  }
+
+  /* 로비 카드 버튼 스타일 */
+  .join-btn {
+    @apply px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200;
+  }
+
+  .enter-btn {
+    @apply px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200;
+    @apply font-semibold;
+  }
+
+  .spectate-btn {
+    @apply px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200;
+  }
+
+  /* 매칭 결과 모달 스타일 */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/30 flex items-center justify-center z-50;
+  }
+
+  .match-result-modal {
+    @apply w-full max-w-4xl max-h-[90vh] mx-4;
+  }
+
+  .match-result-content {
+    @apply bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden;
+  }
+
+  .match-result-header {
+    @apply flex items-center justify-between p-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white;
+  }
+
+  .match-result-header h2 {
+    @apply text-2xl font-bold;
+  }
+
+  .close-modal-btn {
+    @apply text-white hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors;
+  }
+
+  .match-result-body {
+    @apply p-6 max-h-96 overflow-y-auto;
+  }
+
+  .tournament-completed {
+    @apply text-center py-8;
+  }
+
+  .completion-icon {
+    @apply text-6xl mb-4;
+  }
+
+  .winner-info h4 {
+    @apply text-lg font-semibold mb-3 text-gray-700;
+  }
+
+  .winner-card {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-lg;
+  }
+
+  .winner-name {
+    @apply text-xl font-bold;
+  }
+
+  .match-info .tournament-info {
+    @apply mb-6;
+  }
+
+  .match-info h3 {
+    @apply text-xl font-bold mb-4 text-gray-800;
+  }
+
+  .info-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+  }
+
+  .info-item {
+    @apply bg-gray-50 p-3 rounded-lg;
+  }
+
+  .info-item label {
+    @apply block text-sm font-semibold text-gray-600 mb-1;
+  }
+
+  .info-item span {
+    @apply text-lg text-gray-800;
+  }
+
+  .matches-container {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+
+  .match-card {
+    @apply bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 shadow-sm;
+  }
+
+  .match-header {
+    @apply flex justify-between items-center mb-3;
+  }
+
+  .match-number {
+    @apply font-bold text-blue-600;
+  }
+
+  .match-status {
+    @apply text-xs px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full;
+  }
+
+  .match-players {
+    @apply flex items-center justify-between;
+  }
+
+  .match-players .player {
+    @apply flex-1 text-center;
+  }
+
+  .player-name {
+    @apply font-semibold text-gray-800;
+  }
+
+  .vs {
+    @apply mx-4 text-gray-500 font-bold;
+  }
+
+  .match-result-footer {
+    @apply flex justify-end gap-3 p-6 bg-gray-50;
+  }
+
+  .start-match-btn {
+    @apply px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg;
+  }
+
+  .close-modal-btn.secondary {
+    @apply px-6 py-3 bg-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-400 transition-colors duration-200;
+  }
+
+  /* 매칭 생성 버튼 스타일 */
+  .create-match-btn {
+    @apply px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-md font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-md;
+  }
+
+  .create-match-btn:disabled {
+    @apply bg-gray-400 cursor-not-allowed opacity-50;
+  }
+
+  /* 매칭 정보 확인 버튼 */
+  .view-match-btn {
+    @apply px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md;
+  }
+
+  /* 로비 내 매칭 정보 섹션 */
+  .match-info-section {
+    @apply mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200;
+  }
+
+  .match-info-section h3 {
+    @apply text-lg font-bold text-blue-800 mb-3;
+  }
+
+  .tournament-completed-inline {
+    @apply text-center py-4;
+  }
+
+  .completion-header {
+    @apply flex items-center justify-center gap-2 mb-3;
+  }
+
+  .completion-icon {
+    @apply text-2xl;
+  }
+
+  .completion-header h4 {
+    @apply text-lg font-bold text-green-700;
+  }
+
+  .winner-info-inline {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg shadow-md;
+  }
+
+  .winner-label {
+    @apply font-medium;
+  }
+
+  .winner-name {
+    @apply font-bold text-lg;
+  }
+
+  .match-info-inline .match-header-info {
+    @apply mb-4;
+  }
+
+  .match-stats {
+    @apply flex gap-4 flex-wrap;
+  }
+
+  .stat-item {
+    @apply bg-white px-3 py-1 rounded-lg text-sm border border-blue-200;
+  }
+
+  .matches-summary {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-3;
+  }
+
+  .match-summary-card {
+    @apply bg-white p-3 rounded-lg border border-blue-200 shadow-sm;
+  }
+
+  .match-number {
+    @apply text-xs font-bold text-blue-600 mb-2 block;
+  }
+
+  .match-players-summary {
+    @apply flex items-center justify-between text-sm;
+  }
+
+  .vs-text {
+    @apply text-gray-500 font-bold mx-2;
+  }
+
+  .player-name {
+    @apply font-medium text-gray-800;
+  }
+
+  .more-matches {
+    @apply col-span-full text-center text-sm text-gray-600 bg-gray-100 py-2 rounded-lg;
+  }
+
+  .no-matches {
+    @apply col-span-full text-center text-gray-600 py-4;
+  }
+
+  /* 로비 생성 모달 스타일 */
+  .modal-content {
+    @apply bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 w-full max-w-md mx-4 overflow-hidden;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between p-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white;
+  }
+
+  .modal-header h3 {
+    @apply text-xl font-bold;
+  }
+
+  .close-btn {
+    @apply text-white hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors cursor-pointer;
+  }
+
+  .create-lobby-form {
+    @apply p-6;
+  }
+
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-group label {
+    @apply block text-sm font-semibold text-gray-700 mb-2;
+  }
+
+  .form-group select {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+  }
+
+  .player-info-display {
+    @apply bg-blue-50 p-3 rounded-lg border border-blue-200;
+  }
+
+  .info-label {
+    @apply text-sm font-medium text-blue-700;
+  }
+
+  .player-count {
+    @apply text-lg font-bold text-blue-800;
+  }
+
+  .form-actions {
+    @apply flex justify-end gap-3 mt-6;
+  }
+
+  .cancel-btn {
+    @apply px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors;
+  }
+
+  .create-btn {
+    @apply px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all shadow-md;
+  }
+
+  .loading-overlay {
+    @apply absolute inset-0 bg-white/90 flex flex-col items-center justify-center;
+  }
+
+  .spinner {
+    @apply w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3;
+  }
+
+  /* 매칭 정보 섹션 스타일 */
+  .match-info-section {
+    @apply mb-6;
+  }
+
+  .match-info-section h3 {
+    @apply text-lg font-bold mb-4 text-gray-800;
+  }
+
+  .tournament-completed-inline {
+    @apply bg-gradient-to-r from-yellow-100 to-orange-100 border border-yellow-300 rounded-lg p-4;
+  }
+
+  .completion-header {
+    @apply flex items-center gap-3 mb-3;
+  }
+
+  .completion-icon {
+    @apply text-2xl;
+  }
+
+  .completion-header h4 {
+    @apply text-lg font-bold text-gray-800;
+  }
+
+  .winner-info-inline {
+    @apply text-center;
+  }
+
+  .winner-label {
+    @apply text-sm font-medium text-gray-600 mr-2;
+  }
+
+  .winner-name {
+    @apply text-lg font-bold text-orange-600;
+  }
+
+  .match-info-inline {
+    @apply bg-blue-50 border border-blue-200 rounded-lg p-4;
+  }
+
+  .match-header-info {
+    @apply mb-4;
+  }
+
+  .match-stats {
+    @apply flex gap-4 justify-center;
+  }
+
+  .stat-item {
+    @apply text-sm text-gray-700;
+  }
+
+  .matches-summary {
+    @apply space-y-2;
+  }
+
+  .match-summary-card {
+    @apply bg-white border border-blue-200 rounded-md p-3 flex items-center justify-between;
+  }
+
+  .match-number {
+    @apply text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded;
+  }
+
+  .match-players-summary {
+    @apply flex items-center gap-2;
+  }
+
+  .match-winner {
+    @apply text-xs text-green-600 font-bold mt-1;
+  }
+
+  .match-status-text {
+    @apply text-xs text-gray-500 mt-1;
+  }
+
+  .match-result {
+    @apply mt-2 p-2 bg-green-50 border border-green-200 rounded text-center;
+  }
+
+  .match-result .winner {
+    @apply text-sm font-bold text-green-700;
+  }
+
+  .vs-text {
+    @apply text-xs text-gray-500 font-bold;
+  }
+
+  .player-name {
+    @apply text-sm font-medium text-gray-800;
+  }
+
+  .more-matches {
+    @apply text-center text-sm text-gray-500 py-2 border-t border-blue-200;
+  }
+
+  .no-matches {
+    @apply text-center text-gray-500 py-4;
+  }
+
+  /* 매칭 정보 확인 버튼 스타일 */
+  .view-match-btn {
+    @apply px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md;
+  }
+
+  /* 토너먼트 브라켓 스타일 */
+  .tournament-bracket {
+    @apply bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 shadow-lg;
+  }
+
+  .tournament-header {
+    @apply mb-6 text-center;
+  }
+
+  .tournament-header h3 {
+    @apply text-2xl font-bold text-slate-800 mb-4;
+  }
+
+  .tournament-info-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-lg p-4 shadow-sm;
+  }
+
+  .tournament-info-grid .info-item {
+    @apply text-center;
+  }
+
+  .tournament-info-grid .info-item label {
+    @apply block text-xs text-slate-600 mb-1;
+  }
+
+  .tournament-info-grid .info-item span {
+    @apply font-semibold text-slate-800;
+  }
+
+  .tournament-status.in_progress {
+    @apply text-blue-600;
+  }
+
+  .tournament-status.completed {
+    @apply text-green-600;
+  }
+
+  .tournament-status.pending {
+    @apply text-amber-600;
+  }
+
+  /* 브라켓 컨테이너 */
+  .bracket-container {
+    @apply flex justify-center items-start gap-8 overflow-x-auto pb-4;
+    min-height: 400px;
+  }
+
+  .bracket-round {
+    @apply flex flex-col items-center min-w-[280px];
+  }
+
+  .round-header {
+    @apply text-center mb-4;
+  }
+
+  .round-header h4 {
+    @apply text-lg font-bold text-slate-800;
+  }
+
+  .round-number {
+    @apply text-sm text-slate-600;
+  }
+
+  .round-matches {
+    @apply space-y-6;
+  }
+
+  /* 브라켓 연결선 */
+  .bracket-connector {
+    @apply flex-shrink-0 w-8 relative;
+  }
+
+  .bracket-connector::before {
+    content: '';
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    @apply w-full h-0.5 bg-slate-300;
+  }
+
+  /* 브라켓 매치 카드 */
+  .bracket-match {
+    @apply bg-white rounded-lg shadow-md border-2 border-slate-200 overflow-hidden min-w-[250px];
+    transition: all 0.3s ease;
+  }
+
+  .bracket-match:hover {
+    @apply shadow-lg border-blue-300;
+  }
+
+  .bracket-match.completed {
+    @apply border-green-300 bg-green-50;
+  }
+
+  .bracket-match.in_progress {
+    @apply border-blue-300 bg-blue-50;
+  }
+
+  .bracket-match.pending {
+    @apply border-amber-300 bg-amber-50;
+  }
+
+  .bracket-match .match-header {
+    @apply flex justify-between items-center p-3 bg-slate-100 border-b border-slate-200;
+  }
+
+  .bracket-match .match-id {
+    @apply text-sm font-semibold text-slate-700;
+  }
+
+  .bracket-match .match-status {
+    @apply text-xs px-2 py-1 rounded-full font-medium;
+  }
+
+  .bracket-match .match-status.pending {
+    @apply bg-amber-100 text-amber-700;
+  }
+
+  .bracket-match .match-status.in_progress {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .bracket-match .match-status.completed {
+    @apply bg-green-100 text-green-700;
+  }
+
+  /* 플레이어 슬롯 */
+  .player-slot {
+    @apply flex items-center justify-between p-3 border-b border-slate-100 last:border-b-0;
+    transition: all 0.3s ease;
+  }
+
+  .player-slot.winner {
+    @apply bg-green-100 border-l-4 border-green-500;
+  }
+
+  .player-slot.loser {
+    @apply bg-red-50 opacity-75;
+  }
+
+  .player-info {
+    @apply flex items-center gap-3 flex-1;
+  }
+
+  .player-avatar {
+    @apply w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm;
+  }
+
+  .player-details {
+    @apply flex flex-col;
+  }
+
+  .player-details .player-name {
+    @apply text-sm font-semibold text-slate-800;
+  }
+
+  .player-details .player-username {
+    @apply text-xs text-slate-500;
+  }
+
+  .player-score {
+    @apply text-lg font-bold text-slate-800 min-w-[2rem] text-center;
+  }
+
+  .player-slot.winner .player-score {
+    @apply text-green-600;
+  }
+
+  .vs-divider {
+    @apply flex items-center justify-center py-2;
+  }
+
+  .vs-divider .vs-text {
+    @apply text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full;
+  }
+
+  /* 매치 결과 */
+  .match-result {
+    @apply p-3 bg-green-100 border-t border-green-200;
+  }
+
+  .winner-info {
+    @apply flex items-center justify-center gap-2 mb-2;
+  }
+
+  .winner-label {
+    @apply text-sm text-green-700;
+  }
+
+  .winner-name {
+    @apply text-sm font-bold text-green-800;
+  }
+
+  .play-time {
+    @apply flex items-center justify-center gap-2 text-xs text-green-600;
+  }
+
+  .time-label {
+    @apply text-green-600;
+  }
+
+  .time-value {
+    @apply font-mono font-semibold;
+  }
+
+  /* 진행 중인 매치 애니메이션 */
+  .match-progress {
+    @apply p-3 bg-blue-100 border-t border-blue-200;
+  }
+
+  .progress-indicator {
+    @apply flex items-center justify-center gap-3;
+  }
+
+  .progress-text {
+    @apply text-sm font-medium text-blue-700;
+  }
+
+  .loading-dots {
+    @apply flex gap-1;
+  }
+
+  .loading-dots span {
+    @apply w-1.5 h-1.5 bg-blue-500 rounded-full;
+    animation: loading-dot 1.4s ease-in-out infinite both;
+  }
+
+  .loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes loading-dot {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
+    }
+  }
+
+  /* 인라인 토너먼트 정보 스타일 */
+  .tournament-info-inline {
+    @apply space-y-4;
+  }
+
+  .tournament-header-info {
+    @apply bg-slate-100 rounded-lg p-3;
+  }
+
+  .tournament-stats {
+    @apply flex flex-wrap gap-2 justify-center;
+  }
+
+  .tournament-stats .stat-item {
+    @apply text-xs bg-white px-2 py-1 rounded;
+  }
+
+  .tournament-stats .status.in_progress {
+    @apply text-blue-600;
+  }
+
+  .tournament-stats .status.completed {
+    @apply text-green-600;
+  }
+
+  .tournament-stats .status.pending {
+    @apply text-amber-600;
+  }
+
+  .current-matches {
+    @apply space-y-2;
+  }
+
+  .current-matches h5 {
+    @apply text-sm font-semibold text-slate-700 mb-2;
+  }
+
+  .match-info-header {
+    @apply flex justify-between items-center mb-2;
+  }
+
+  .player-summary {
+    @apply flex items-center gap-2;
+  }
+
+  .player-avatar-tiny {
+    @apply w-6 h-6 rounded-full object-cover;
+  }
+
+  .player-avatar-small {
+    @apply w-8 h-8 rounded-full object-cover;
+  }
+
+  .score {
+    @apply text-xs font-bold text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded;
+  }
+
+  .play-time-small {
+    @apply text-xs text-slate-500 ml-1;
+  }
+
+  /* 완료된 토너먼트 스타일 */
+  .tournament-completed {
+    @apply text-center py-8;
+  }
+
+  .tournament-completed .completion-icon {
+    @apply text-6xl mb-4;
+  }
+
+  .tournament-completed h3 {
+    @apply text-2xl font-bold text-slate-800 mb-6;
+  }
+
+  .winner-card {
+    @apply bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-300 rounded-lg p-4 inline-flex items-center gap-3;
+  }
+
+  .winner-avatar {
+    @apply w-12 h-12 rounded-full object-cover border-2 border-yellow-400;
+  }
+
+  .winner-card .winner-name {
+    @apply text-lg font-bold text-amber-800;
+  }
+
+  .tournament-completed-inline {
+    @apply text-center;
+  }
+
+  .completion-header {
+    @apply flex items-center justify-center gap-2 mb-3;
+  }
+
+  .completion-header .completion-icon {
+    @apply text-2xl;
+  }
+
+  .completion-header h4 {
+    @apply text-lg font-bold text-slate-800;
+  }
+
+  .winner-info-inline {
+    @apply bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 rounded-lg p-3 inline-flex items-center gap-2;
+  }
+
+  .winner-details {
+    @apply flex flex-col;
+  }
+
+  .winner-details .winner-label {
+    @apply text-xs text-amber-700;
+  }
+
+  .winner-details .winner-name {
+    @apply text-sm font-bold text-amber-800;
+  }
+
+  /* 프로필 이미지 placeholder 스타일 */
+  .avatar-placeholder,
+  .player-avatar-placeholder,
+  .winner-avatar-placeholder,
+  .winner-avatar-placeholder-small,
+  .player-avatar-placeholder-tiny {
+    @apply flex items-center justify-center bg-slate-200 rounded-full text-slate-500;
+  }
+
+  .avatar-placeholder {
+    @apply w-10 h-10 text-lg;
+  }
+
+  .player-avatar-placeholder {
+    @apply w-10 h-10 text-lg;
+  }
+
+  .winner-avatar-placeholder {
+    @apply w-12 h-12 text-xl;
+  }
+
+  .winner-avatar-placeholder-small {
+    @apply w-8 h-8 text-base;
+  }
+
+  .player-avatar-placeholder-tiny {
+    @apply w-6 h-6 text-sm;
+  }
+
+  /* 실제 이미지 스타일 */
+  .avatar-img {
+    @apply w-full h-full rounded-full object-cover;
+  }
 }

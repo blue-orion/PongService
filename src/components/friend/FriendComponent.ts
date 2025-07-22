@@ -388,7 +388,12 @@ export class FriendComponent {
           .map(
             (friend) => `
           <div class="friend-item online" data-friend-id="${friend.id}" data-relation-id="${friend.relationId}">
-            <div class="friend-avatar"></div>
+            <div class="friend-avatar">
+              ${friend.avatar ? 
+                `<img src="${friend.avatar}" alt="프로필" class="avatar-img">` : 
+                `<div class="avatar-placeholder">👤</div>`
+              }
+            </div>
             <div class="friend-info">
               <div class="friend-name">${friend.name}</div>
               <div class="friend-username">${friend.username || friend.name}</div>
@@ -422,7 +427,12 @@ export class FriendComponent {
           .map(
             (friend) => `
           <div class="friend-item offline" data-friend-id="${friend.id}" data-relation-id="${friend.relationId}">
-            <div class="friend-avatar"></div>
+            <div class="friend-avatar">
+              ${friend.avatar ? 
+                `<img src="${friend.avatar}" alt="프로필" class="avatar-img">` : 
+                `<div class="avatar-placeholder">👤</div>`
+              }
+            </div>
             <div class="friend-info">
               <div class="friend-name">${friend.name}</div>
               <div class="friend-username">${friend.username || friend.name}</div>
@@ -488,7 +498,12 @@ export class FriendComponent {
           .map(
             (request) => `
           <div class="request-item" data-relation-id="${request.relationId}">
-            <div class="request-avatar"></div>
+            <div class="request-avatar">
+              ${request.avatar ? 
+                `<img src="${request.avatar}" alt="프로필" class="avatar-img">` : 
+                `<div class="avatar-placeholder">👤</div>`
+              }
+            </div>
             <div class="request-info">
               <div class="request-name">${request.name}</div>
               <div class="request-username">${request.username}</div>

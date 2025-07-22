@@ -33,8 +33,11 @@ export class CreateLobbyModal extends Component {
         // 모달 외부 클릭 시 닫기
         const overlay = this.container.querySelector('.modal-overlay');
         if (overlay) {
-            overlay.addEventListener('click', () => {
-                this.hide();
+            overlay.addEventListener('click', (e) => {
+                // 모달 컨텐츠 클릭 시에는 닫지 않음
+                if (e.target === overlay) {
+                    this.hide();
+                }
             });
         }
 
@@ -142,10 +145,32 @@ export class CreateLobbyModal extends Component {
             console.log('로비 생성 성공:', lobbyData);
 
             // 성공 시 생성된 로비로 이동
-            if (lobbyData.lobby_id) {
+            const lobbyId = lobbyData.lobby?.id || lobbyData.id;
+            console.log('추출된 로비 ID:', lobbyId);
+            
+            if (lobbyId) {
+                // 콜백 먼저 호출
+                if (this.onLobbyCreated) {
+                    console.log('콜백 함수 호출');
+                    this.onLobbyCreated(lobbyData);
+                }
+                
                 this.hide();
-                window.history.pushState({}, '', `/lobby/${lobbyData.lobby_id}`);
-                window.dispatchEvent(new PopStateEvent('popstate'));
+                console.log('로비 페이지로 이동:', `/lobby/${lobbyId}`);
+                if (window.router) {
+                    window.router.navigate(`/lobby/${lobbyId}`);
+                } else {
+                    // 라우터가 없는 경우 fallback
+                    window.history.pushState({}, '', `/lobby/${lobbyId}`);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+            } else {
+                console.error('로비 ID를 찾을 수 없습니다:', lobbyData);
+                // 로비 ID가 없어도 모달은 닫고 콜백 호출
+                this.hide();
+                if (this.onLobbyCreated) {
+                    this.onLobbyCreated(lobbyData);
+                }
             }
         } catch (error) {
             console.error('로비 생성 오류:', error);
