@@ -222,6 +222,10 @@
     .rank-badge {
       @apply w-6 h-6 text-xs;
     }
+
+    .data-route {
+      @apply cursor-pointer;
+    }
   }
 
   /* Animation Enhancements */
