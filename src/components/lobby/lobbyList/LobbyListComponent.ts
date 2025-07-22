@@ -1,4 +1,3 @@
-import { loadTemplate, TEMPLATE_PATHS } from "../../../utils/template-loader";
 import { Component } from "../../Component";
 import { CreateLobbyModal } from "../createLobby/CreateLobbyModal";
 
@@ -13,13 +12,36 @@ export class LobbyListComponent extends Component {
         super(container);
     }
 
+    private getTemplate(): string {
+        return `
+<div class="lobby-list-page">
+    <div class="page-header">
+        <h2>🎮 게임 로비 목록</h2>
+        <button class="create-lobby-btn">새 로비 만들기</button>
+    </div>
+    
+    <div class="lobby-filters">
+        <select class="status-filter">
+            <option value="all">모든 상태</option>
+            <option value="waiting">대기 중</option>
+            <option value="playing">게임 중</option>
+        </select>
+        <input type="text" class="search-input" placeholder="로비 이름 검색...">
+    </div>
+
+    <div class="lobby-grid" id="lobby-grid">
+        <!-- 로비 카드들이 동적으로 생성됩니다 -->
+    </div>
+</div>
+        `;
+    }
+
     async render(): Promise<void> {
         this.clearContainer();
         
         console.log('로비리스트 컴포넌트 렌더링 시작...');
         
-        const template = await loadTemplate(TEMPLATE_PATHS.LOBBY_LIST);
-        this.container.innerHTML = template;
+        this.container.innerHTML = this.getTemplate();
 
         // 로비 데이터 로드 및 렌더링
         await this.loadLobbyData();

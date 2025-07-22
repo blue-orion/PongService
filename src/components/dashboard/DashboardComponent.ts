@@ -1,6 +1,5 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 import "../../styles/dashboard.css";
 
@@ -14,13 +13,79 @@ export class DashboardComponent extends Component {
     super(container);
   }
 
+  private getTemplate(): string {
+    return `
+<header class="dashboard-header slide-up">
+  <h1 class="dashboard-title leading-tight">🏆 User Ranking Dashboard</h1>
+  <p class="dashboard-subtitle">실시간 사용자 랭킹 및 통계</p>
+</header>
+
+<!-- Stats Overview -->
+<section class="stats-grid slide-up">
+  <div class="stat-card hover-lift hover-glow">
+    <div id="total-users" class="stat-number">0</div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="stat-card hover-lift hover-glow">
+    <div id="active-players" class="stat-number">0</div>
+    <div class="stat-label">Active Players</div>
+  </div>
+  <div class="stat-card hover-lift hover-glow">
+    <div id="avg-win-rate" class="stat-number">0.0%</div>
+    <div class="stat-label">Average Win Rate</div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<main class="rankings-container slide-up">
+  <div class="rankings-header">
+    <div>
+      <h2 class="rankings-title">User Rankings</h2>
+      <p class="rankings-subtitle">승률 기준 사용자 순위</p>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="rankings-table">
+      <thead>
+        <tr>
+          <th class="table-header">Rank</th>
+          <th class="table-header">User</th>
+          <th class="table-header">Games Played</th>
+          <th class="table-header">Wins</th>
+          <th class="table-header">Losses</th>
+          <th class="table-header">Win Rate</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body">
+        <!-- Loading state -->
+        <tr>
+          <td colspan="6" class="loading-container">
+            <div class="loading-spinner"></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <button id="prev-btn" disabled class="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+      Previous
+    </button>
+    <span id="page-info" class="pagination-info">Page 1</span>
+    <button id="next-btn" class="btn-primary">Next</button>
+  </div>
+</main>
+    `;
+  }
+
   async render(): Promise<void> {
     console.log("대시보드 페이지 생성 시작");
     this.clearContainer();
 
-    const template = await loadTemplate(TEMPLATE_PATHS.DASHBOARD);
-    this.container.innerHTML = template;
-    this.rankTable = this.container.querySelector("#user-table-body");
+    this.container.innerHTML = this.getTemplate();
+    this.rankTable = this.container.querySelector("#user-table-body") as HTMLElement;
     console.log(`fetch 내용: ${this.container.innerHTML}`);
     this.fetchUsers();
     this.initializeAnimations();
