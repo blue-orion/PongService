@@ -46,7 +46,6 @@ export class FriendEventHandler {
       case "status_changed":
         this.handleFriendStatusChanged(payload);
         break;
-      case "user_status":
       case "status_update":
         this.handleUserStatusUpdate(payload);
         console.log("User status update received:", payload);

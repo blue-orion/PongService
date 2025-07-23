@@ -84,7 +84,7 @@ export class FriendWebSocketManager {
     this.updateConnectionStatus("disconnected");
   }
 
-  private getUserIdFromToken(token: string): string | null {
+  private getUserIdFromToken(token: string): number | null {
     // UserManager에서 저장된 사용자 ID 사용
     return UserManager.getUserId();
   }
@@ -99,7 +99,7 @@ export class FriendWebSocketManager {
 
     this.socket.on("disconnect", (reason) => {
       this.updateConnectionStatus("disconnected");
-      
+
       // 서버에서 강제로 연결을 끊은 경우에만 재연결 시도
       // 클라이언트에서 의도적으로 disconnect()를 호출한 경우는 재연결하지 않음
       if (reason === "io server disconnect" || reason === "transport close") {
@@ -113,13 +113,13 @@ export class FriendWebSocketManager {
     this.socket.on("connect_error", (error) => {
       console.error("친구 웹소켓 연결 오류:", error.message);
       this.onError?.(`친구 연결 오류: ${error.message}`);
-      
+
       // 인증 오류인 경우 재연결 시도하지 않음
       if (error.message?.includes("authentication") || error.message?.includes("401")) {
         console.warn("인증 오류로 인한 연결 실패. 재연결을 시도하지 않습니다.");
         return;
       }
-      
+
       // 다른 오류의 경우에만 재연결 시도
       setTimeout(() => {
         this.attemptReconnect();
@@ -133,25 +133,7 @@ export class FriendWebSocketManager {
     });
 
     // 사용자 상태 업데이트 이벤트 리스너 추가
-    this.socket.on("user_status", (statusData: any) => {
-      // FriendComponent로 전달하기 위해 notification 형태로 변환
-      const notification: FriendNotification = {
-        type: "user_status",
-        payload: statusData.payload || statusData,
-      };
-
-      // 콜백으로 알림 전달
-      this.onFriendNotification?.(notification);
-    });
-
-    // 상태 업데이트 이벤트도 함께 수신 (백엔드에서 다른 이벤트명으로 전송할 수 있음)
-    this.socket.on("status_update", (statusData: any) => {
-      // FriendComponent로 전달하기 위해 notification 형태로 변환
-      const notification: FriendNotification = {
-        type: "status_update",
-        payload: statusData.payload || statusData,
-      };
-
+    this.socket.on("user_status", (notification: FriendNotification) => {
       // 콜백으로 알림 전달
       this.onFriendNotification?.(notification);
     });
@@ -208,7 +190,7 @@ export class FriendWebSocketManager {
     return this.connectionStatus;
   }
 
-  get userId(): string | null {
+  get userId(): number | null {
     const tokens = AuthManager.getTokens();
     if (!tokens?.accessToken) return null;
     return this.getUserIdFromToken(tokens.accessToken);
