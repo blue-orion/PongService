@@ -2,10 +2,10 @@ import { ApiResponse } from "#shared/api/response.js";
 import PageRequest from "#shared/page/PageRequest.js";
 import PageResponse from "#shared/page/PageResponse.js";
 
-import FriendCancelDto from "#domain/friend/model/friendCancelDto.js";
-import FriendDeleteDto from "#domain/friend/model/friendDeleteDto.js";
+import FriendCancelDto from "#domains/friend/model/friendCancelDto.js";
+import FriendDeleteDto from "#domains/friend/model/friendDeleteDto.js";
 import FriendHelpers from "#domains/friend/util/friendHelpers.js";
-import FriendAcceptionDto from "#domain/friend/model/friendRequestDto.js";
+import FriendAcceptionDto from "#domains/friend/model/friendAcceptionDto.js";
 import FriendService from "#domains/friend/service/friendService.js";
 
 const friendHelpers = new FriendHelpers();
