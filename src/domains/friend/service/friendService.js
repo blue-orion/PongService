@@ -80,6 +80,7 @@ class FriendService {
         receiverId: friendDeleteDto.friendId,
       },
     });
+    await this.friendRepo.deleteFriend(relation.id);
   }
 
   // 친구 목록 조회

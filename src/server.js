@@ -22,8 +22,8 @@ app.register(oauthPlugin);
 // 플러그인 등록 순서 중요!
 app.register(fastifyIO, {
   cors: {
-    origin: "http://localhost:3000", // 프론트엔드 서버 주소
-    methods: ["GET", "POST"],
+    origin: `${process.env.FRONTEND_URL}`, // 프론트엔드 서버 주소
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
 });
