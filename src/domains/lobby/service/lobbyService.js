@@ -262,7 +262,7 @@ export class LobbyService {
 
     const currentRound = tournament.round;
 
-    const hasGames = await this.gameRepository.hasGamesInRound(tournament.id, 1);
+    const hasGames = await this.gameRepository.hasGamesInRound(tournament.id, currentRound);
     const result =
       currentRound === 1 && !hasGames
         ? await this._startInitialTournament(lobby, tournament)
@@ -298,34 +298,60 @@ export class LobbyService {
 
   // ===== 다음 라운드 진행 =====
   async _startNextRound(lobby, tournament) {
-    const currentRound = tournament.round;
-    await this.helpers._validateRoundComplete(tournament.id, currentRound);
+    // 최신 토너먼트 정보 재조회 (라운드가 이미 증가되었을 수 있음)
+    const latestTournament = await this.tournamentRepository.findById(tournament.id);
+    const currentRound = latestTournament.round;
+    
+    console.log(`[LobbyService] Starting next round. Current round: ${currentRound} (was ${tournament.round})`);
+    
+    // 현재 라운드가 이미 게임을 가지고 있는지 확인
+    const hasCurrentRoundGames = await this.gameRepository.hasGamesInRound(tournament.id, currentRound);
+    if (hasCurrentRoundGames) {
+      console.log(`[LobbyService] Round ${currentRound} already has games, no new games to create`);
+      const existingGames = await this.gameRepository.getGamesByTournamentIdAndRound(tournament.id, currentRound);
+      return {
+        tournament_id: tournament.id,
+        lobby_id: lobby.id,
+        round: this.helpers._getRoundType(currentRound),
+        total_matches: existingGames.length,
+        matches: existingGames,
+        message: "이미 현재 라운드의 게임이 생성되어 있습니다."
+      };
+    }
+    
+    // 현재 로비에 있는 활성 플레이어들 조회 (이전 라운드 승자들)
+    const activePlayers = await this.lobbyRepository.findActivePlayersByLobbyId(lobby.id);
+    console.log(`[LobbyService] Found ${activePlayers.length} active players in lobby:`, activePlayers);
+    
+    // 모든 플레이어가 준비되었는지 확인
+    await this.helpers._validateAllPlayersReady(lobby.id);
 
-    const winners = await this.gameRepository.getRoundWinners(tournament.id, currentRound);
-    await this.helpers._validateWinnersReady(lobby.id, winners);
-
-    if (winners.length === 1) {
+    // 플레이어가 1명이면 토너먼트 완료
+    if (activePlayers.length === 1) {
       await this.tournamentRepository.updateStatus(tournament.id, TOURNAMENT_STATUS.COMPLETED);
       return {
         tournament_id: tournament.id,
         lobby_id: lobby.id,
         message: "토너먼트가 완료되었습니다.",
-        winner: winners[0],
+        winner: activePlayers[0],
       };
     }
 
-    const shuffled = this.helpers._shuffleArray(winners);
-    const nextRound = currentRound + 1;
-    const matches = this.helpers._generateMatches(shuffled, tournament, nextRound);
+    const shuffled = this.helpers._shuffleArray(activePlayers);
+    console.log(`[LobbyService] Creating matches for current round: ${currentRound}`);
+    
+    const matches = this.helpers._generateMatches(shuffled, latestTournament, currentRound);
+    console.log(`[LobbyService] Generated ${matches.length} matches:`, matches);
 
-    await this.gameRepository.createInitialMatches(matches);
+    const createdGames = await this.gameRepository.createInitialMatches(matches);
+    console.log(`[LobbyService] Created ${createdGames.length} games:`, createdGames);
 
     return {
       tournament_id: tournament.id,
       lobby_id: lobby.id,
-      round: this.helpers._getRoundType(nextRound),
+      round: this.helpers._getRoundType(currentRound),
       total_matches: matches.length,
-      matches,
+      matches: createdGames,
     };
   }
 
