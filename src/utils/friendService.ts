@@ -31,20 +31,10 @@ export class FriendService {
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const tokens = AuthManager.getTokens();
-
-      if (!tokens?.accessToken || !AuthManager.isTokenValid()) {
-        return {
-          success: false,
-          message: "인증이 필요합니다. 다시 로그인해주세요.",
-        };
-      }
-
-      const response = await fetch(`${FriendService.API_BASE_URL}${this.baseUrl}${endpoint}`, {
+      const response = await AuthManager.authenticatedFetch(`${FriendService.API_BASE_URL}${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${tokens.accessToken}`,
           ...options.headers,
         },
       });

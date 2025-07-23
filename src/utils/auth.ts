@@ -27,23 +27,23 @@ export class AuthManager {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
     localStorage.setItem(this.EXPIRES_AT_KEY, tokens.expiresAt.toString());
-    
+
     // JWT에서 사용자 정보 추출하여 UserManager로 저장
     try {
       const payload = this.decodeJWT(tokens.accessToken);
-      
+
       // 다양한 필드명 시도
       const userId = payload?.id || payload?.user_id || payload?.userId || payload?.sub;
       const username = payload?.username || payload?.user_name || payload?.name || payload?.userName;
-      
+
       if (userId && username) {
         UserManager.saveUserInfo({
           id: String(userId), // 숫자일 수 있으므로 문자열로 변환
-          username: String(username)
+          username: String(username),
         });
       }
     } catch (e) {
-      console.error('JWT에서 사용자 정보 추출 실패:', e);
+      console.error("JWT에서 사용자 정보 추출 실패:", e);
     }
   }
 
@@ -83,12 +83,6 @@ export class AuthManager {
       console.error("JWT 토큰 디코딩 실패:", error);
       return null;
     }
-  }
-
-  // 현재 로그인한 사용자 ID 가져오기
-  static getCurrentUserId(): string | null {
-    // UserManager에서 저장된 사용자 ID 사용
-    return UserManager.getUserId();
   }
 
   // 토큰 삭제 (로그아웃)
@@ -159,7 +153,7 @@ export class AuthManager {
       const response = await fetch(`${this.API_BASE_URL}/auth/refresh`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${tokens.refreshToken}`,
+          Authorization: `Bearer ${tokens.refreshToken}`,
         },
       });
 
@@ -187,7 +181,7 @@ export class AuthManager {
         newAccessToken = responseData.accessToken;
         newRefreshToken = responseData.refreshToken || tokens.refreshToken;
       } else {
-        console.error('[AuthManager] 예상하지 못한 응답 구조:', responseData);
+        console.error("[AuthManager] 예상하지 못한 응답 구조:", responseData);
         return false;
       }
 
@@ -214,7 +208,6 @@ export class AuthManager {
   // 인증이 필요한 API 요청
   static async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     let tokens = this.getTokens();
-
     // 토큰이 없으면 로그인 페이지로 리다이렉트
     if (!tokens) {
       this.redirectToLogin();
@@ -294,7 +287,7 @@ export class AuthManager {
     // 백엔드 로그아웃 API 호출
     if (tokens?.accessToken) {
       try {
-        const userId = this.getCurrentUserId();
+        const userId = UserManager.getUserId();
         const response = await fetch(`${this.API_BASE_URL}/auth/logout`, {
           method: "POST",
           headers: {

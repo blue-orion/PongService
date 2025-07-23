@@ -43,7 +43,6 @@ export class FriendEventHandler {
       case "status_changed":
         this.handleFriendStatusChanged(payload);
         break;
-      case "user_status":
       case "status_update":
         this.handleUserStatusUpdate(payload);
         break;
@@ -183,13 +182,13 @@ export class FriendEventHandler {
 
     if (deletedFriendId) {
       this.dataManager.removeFriend(Number(deletedFriendId));
-      
+
       // 모든 데이터 새로고침
       this.dataManager
         .loadAllData()
         .then(() => {
           this.onDataUpdate();
-          
+
           // 자신이 삭제한 경우에만 팝업 표시
           if (requestData.senderId?.toString() === currentUserId?.toString()) {
             this.onShowNotification("친구를 삭제했습니다.");
