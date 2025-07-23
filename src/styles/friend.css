@@ -440,4 +440,37 @@
   .friend-info-modal-button {
     @apply px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium text-sm;
   }
+
+  /* 토스트 알림 */
+  .friend-toast-alert {
+    @apply fixed top-4 right-4 z-[10000] max-w-sm transform translate-x-full opacity-0 transition-all duration-300 ease-out;
+  }
+
+  .friend-toast-alert.show {
+    @apply translate-x-0 opacity-100;
+  }
+
+  .friend-toast-alert.fade-out {
+    @apply translate-x-full opacity-0;
+  }
+
+  .friend-toast-content {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-lg shadow-xl border border-white/20 backdrop-blur-sm flex items-center gap-3;
+  }
+
+  .friend-toast-icon {
+    @apply text-lg flex-shrink-0;
+  }
+
+  .friend-toast-message {
+    @apply flex-grow text-sm font-medium leading-relaxed;
+  }
+
+  .friend-toast-close {
+    @apply text-white/80 hover:text-white hover:bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-all duration-200 flex-shrink-0;
+  }
+
+  .friend-toast-close:hover {
+    @apply scale-110;
+  }
 }

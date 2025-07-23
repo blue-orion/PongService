@@ -68,7 +68,8 @@ export class FriendComponent {
       this.dataManager,
       this.userProfileManager,
       () => this.renderFriendItems(),
-      (message: string) => this.showNotification(message)
+      (message: string) => this.showNotification(message), // 자신의 액션: 팝업
+      (message: string) => this.showAlert(message) // 다른 사람의 알림: 알람
     );
   }
 
@@ -97,6 +98,71 @@ export class FriendComponent {
   private showNotification(message: string): void {
     // 알림 권한 없이도 사용자가 볼 수 있도록 팝업으로 표시
     this.showInfoModal("알림", message);
+  }
+
+  private showAlert(message: string): void {
+    // 브라우저 알림 권한 확인 및 요청
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        // 브라우저 알림 표시
+        new Notification("친구 알림", {
+          body: message,
+          icon: "/favicon.ico", // 아이콘 경로 (선택사항)
+          tag: "friend-notification", // 중복 알림 방지
+        });
+      } else if (Notification.permission !== "denied") {
+        // 권한 요청
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            new Notification("친구 알림", {
+              body: message,
+              icon: "/favicon.ico",
+              tag: "friend-notification",
+            });
+          } else {
+            // 권한이 거부된 경우 토스트 알림으로 대체
+            this.showToastAlert(message);
+          }
+        });
+      } else {
+        // 권한이 이미 거부된 경우 토스트 알림으로 대체
+        this.showToastAlert(message);
+      }
+    } else {
+      // 브라우저가 알림을 지원하지 않는 경우 토스트 알림으로 대체
+      this.showToastAlert(message);
+    }
+  }
+
+  private showToastAlert(message: string): void {
+    // 기존 토스트가 있다면 제거
+    const existingToast = document.querySelector(".friend-toast-alert");
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // 토스트 알림 HTML 생성
+    const toastHTML = `
+      <div class="friend-toast-alert show">
+        <div class="friend-toast-content">
+          <div class="friend-toast-icon">🔔</div>
+          <div class="friend-toast-message">${message}</div>
+          <button class="friend-toast-close" onclick="this.closest('.friend-toast-alert').remove()">✕</button>
+        </div>
+      </div>
+    `;
+
+    // body에 토스트 추가
+    document.body.insertAdjacentHTML("beforeend", toastHTML);
+
+    // 5초 후 자동으로 토스트 제거
+    setTimeout(() => {
+      const toast = document.querySelector(".friend-toast-alert");
+      if (toast) {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 300); // 페이드 아웃 애니메이션 후 제거
+      }
+    }, 5000);
   }
 
   private showInfoModal(title: string, message: string): void {

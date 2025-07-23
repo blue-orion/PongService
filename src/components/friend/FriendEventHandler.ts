@@ -7,18 +7,21 @@ export class FriendEventHandler {
   private dataManager: FriendDataManager;
   private userProfileManager: UserProfileManager;
   private onDataUpdate: () => void;
-  private onShowNotification: (message: string) => void;
+  private onShowNotification: (message: string) => void; // 자신의 액션: 팝업
+  private onShowAlert: (message: string) => void; // 다른 사람의 알림: 알람
 
   constructor(
     dataManager: FriendDataManager,
     userProfileManager: UserProfileManager,
     onDataUpdate: () => void,
-    onShowNotification: (message: string) => void
+    onShowNotification: (message: string) => void,
+    onShowAlert: (message: string) => void
   ) {
     this.dataManager = dataManager;
     this.userProfileManager = userProfileManager;
     this.onDataUpdate = onDataUpdate;
     this.onShowNotification = onShowNotification;
+    this.onShowAlert = onShowAlert;
   }
 
   public handleFriendNotification(notification: any): void {
@@ -43,8 +46,10 @@ export class FriendEventHandler {
       case "status_changed":
         this.handleFriendStatusChanged(payload);
         break;
+      case "user_status":
       case "status_update":
         this.handleUserStatusUpdate(payload);
+        console.log("User status update received:", payload);
         break;
       default:
         console.warn("알 수 없는 친구 알림 타입:", type);
@@ -61,7 +66,7 @@ export class FriendEventHandler {
       .then(() => {
         this.onDataUpdate();
 
-        // 자신이 보낸 요청인 경우에만 팝업 표시
+        // 자신이 보낸 요청인 경우 팝업 표시
         if (requestData.senderId?.toString() === currentUserId?.toString()) {
           const receiverName =
             requestData.receiverUsername ||
@@ -70,8 +75,16 @@ export class FriendEventHandler {
             requestData.receiver?.nickname ||
             `사용자${requestData.receiverId}`;
           this.onShowNotification(`${receiverName}님에게 친구 요청을 보냈습니다.`);
+        } else {
+          // 다른 사람이 보낸 요청인 경우 알람 표시
+          const senderName =
+            requestData.senderUsername ||
+            requestData.senderName ||
+            requestData.sender?.username ||
+            requestData.sender?.nickname ||
+            `사용자${requestData.senderId}`;
+          this.onShowAlert(`${senderName}님이 친구 요청을 보냈습니다.`);
         }
-        // 다른 사람이 보낸 요청은 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 새로고침 실패:", error);
@@ -95,11 +108,10 @@ export class FriendEventHandler {
       .loadAllData()
       .then(() => {
         this.onDataUpdate();
-        // 자신이 요청을 수락한 경우에만 팝업 표시
+        // 자신이 요청을 수락한 경우 팝업 표시
         if (requestData.receiverId?.toString() === currentUserId?.toString()) {
           this.onShowNotification("친구 요청을 수락했습니다.");
         }
-        // 상대방이 수락한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 재로드 실패:", error);
@@ -130,12 +142,11 @@ export class FriendEventHandler {
       .then(() => {
         this.onDataUpdate();
 
-        // 자신이 요청을 거절한 경우에만 팝업 표시
+        // 자신이 요청을 거절한 경우 팝업 표시
         if (requestData.receiverId?.toString() === currentUserId?.toString()) {
           const userName = requestData.senderName || requestData.senderUsername || "상대방";
           this.onShowNotification(`${userName}님의 친구 요청을 거절했습니다.`);
         }
-        // 상대방이 거절한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 새로고침 실패:", error);
@@ -148,7 +159,7 @@ export class FriendEventHandler {
     const currentUserId = UserManager.getUserId();
 
     if (requestData.senderId?.toString() === currentUserId?.toString()) {
-      // 자신이 취소한 경우
+      // 자신이 취소한 경우 - 팝업 표시
       const sentRequests = this.dataManager.getSentRequests();
       const removedRequest = sentRequests.find((request) => request.relationId === requestData.relationId);
       this.dataManager.removeSentRequest(requestData.relationId);
@@ -156,10 +167,9 @@ export class FriendEventHandler {
       const userName = removedRequest?.name || requestData.receiverName || requestData.receiverUsername || "상대방";
       this.onShowNotification(`${userName}님에게 보낸 친구 요청을 취소했습니다.`);
     } else {
-      // 상대방이 취소한 경우 - 팝업 표시하지 않음
+      // 상대방이 취소한 경우 - 알람 표시
       const friendRequests = this.dataManager.getFriendRequests();
       this.dataManager.removeFriendRequest(requestData.relationId);
-      // 팝업 표시하지 않음 (데이터만 업데이트)
     }
 
     // 모든 데이터 새로고침
@@ -189,11 +199,10 @@ export class FriendEventHandler {
         .then(() => {
           this.onDataUpdate();
 
-          // 자신이 삭제한 경우에만 팝업 표시
+          // 자신이 삭제한 경우 팝업 표시
           if (requestData.senderId?.toString() === currentUserId?.toString()) {
             this.onShowNotification("친구를 삭제했습니다.");
           }
-          // 상대방이 삭제한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
         })
         .catch((error) => {
           console.error("데이터 새로고침 실패:", error);
@@ -226,7 +235,7 @@ export class FriendEventHandler {
           this.onDataUpdate();
 
           if (newStatus === "online" && oldStatus === "offline") {
-            this.onShowNotification(`${friend.name}님이 온라인 상태입니다.`);
+            this.onShowAlert(`${friend.name}님이 온라인 상태입니다.`);
           }
         }
       }
@@ -247,19 +256,19 @@ export class FriendEventHandler {
     // 친구의 상태가 변경된 경우
     if (userId) {
       const friends = this.dataManager.getFriends();
-      const friend = friends.find((f) => f.id === userId?.toString());
+      const friend = friends.find((f) => f.id === userId);
 
       if (friend) {
         const oldStatus = friend.status;
-        const updated = this.dataManager.updateFriendStatus(userId?.toString(), newStatus);
+        const updated = this.dataManager.updateFriendStatus(userId, newStatus);
 
         if (updated && oldStatus !== newStatus) {
           this.onDataUpdate();
 
           if (newStatus === "online" && oldStatus === "offline") {
-            this.onShowNotification(`${friend.name}님이 온라인 상태가 되었습니다.`);
+            this.onShowAlert(`${friend.name}님이 온라인 상태가 되었습니다.`);
           } else if (newStatus === "in-game" && oldStatus !== "in-game") {
-            this.onShowNotification(`${friend.name}님이 게임을 시작했습니다.`);
+            this.onShowAlert(`${friend.name}님이 게임을 시작했습니다.`);
           }
         }
       }
