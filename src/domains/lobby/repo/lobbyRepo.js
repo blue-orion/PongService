@@ -1,17 +1,34 @@
 import prisma from "#shared/database/prisma.js";
+import { LobbyStatus } from "@prisma/client";
 
 export class LobbyRepository {
   getCount() {
-    return prisma.lobby.count();
+    return prisma.lobby.count({
+      where: {
+        lobby_status: {
+          not: LobbyStatus.COMPLETED
+        }
+      }
+    });
   }
 
   async findAll(skip, take) {
     const lobbies = await prisma.lobby.findMany({
       skip,
       take,
-      orderBy: {
-        created_at: "desc", // 최신순 정렬 등 필요시
+      where: {
+        lobby_status: {
+          not: LobbyStatus.COMPLETED
+        }
       },
+      orderBy: [
+        {
+          lobby_status: "asc", // PENDING이 STARTED보다 먼저 오도록
+        },
+        {
+          created_at: "desc", // 같은 상태 내에서는 최신순
+        }
+      ],
       include: {
         lobby_players: { include: { user: true } },
         tournament: true,
@@ -31,7 +48,7 @@ export class LobbyRepository {
 
   async findById(id) {
     const lobby = await prisma.lobby.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
       include: {
         lobby_players: { include: { user: true } },
         tournament: true,

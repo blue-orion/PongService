@@ -1,5 +1,5 @@
 // src/domains/game/controller/gameController.js
-import GameService from "#domains/game/service/gameService.js";
+import { GameService } from "#domains/game/service/gameService.js";
 import { ApiResponse } from "#shared/api/response.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
 
@@ -12,7 +12,7 @@ class GameController {
    * @constructor
    */
   constructor() {
-    this.gameService = new GameService();
+    this.gameService = GameService.getInstance();
     this.gameService.setBroadcastCallback(this.broadcastMessage);
   }
 

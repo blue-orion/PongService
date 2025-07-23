@@ -3,14 +3,20 @@ import GameDto from "#domains/game/model/GameDto.js";
 import GameRepository from "#domains/game/repo/gameRepo.js";
 import { GameStatus } from "@prisma/client";
 
-class GameService {
+export class GameService {
   /**
    * GameService 클래스
    * 게임의 생성, 진행, 상태 관리 등을 담당
+   * 싱글톤 패턴으로 구현
    *
    * @constructor
    */
   constructor(gameRepository = new GameRepository()) {
+    // 싱글톤 패턴 구현
+    if (GameService.instance) {
+      return GameService.instance;
+    }
+
     /**
      * 활성화된 게임 목록
      * @type { Map<number, Game> } - key: gameId, value: Game instance
@@ -19,15 +25,31 @@ class GameService {
     this.gameIntervalId = new Map();
     this.playTimes = new Map();
     /**
+     * 게임별 토너먼트 ID 저장
+     * @type { Map<number, number> } - key: gameId, value: tournamentId
+     */
+    this.gameTournaments = new Map();
+    /**
      * gameController가 등록하는 callback 함수
      * @type { (gameId, event, msg) => void }
      */
     this.broadcastCallback = null;
+    /**
+     * lobbyController가 등록하는 callback 함수
+     * @type { (tournamentId, gameId) => void }
+     */
+    this.lobbyNotificationCallback = null;
     this.gameRepo = gameRepository;
+
+    GameService.instance = this;
   }
 
   setBroadcastCallback(callback) {
     this.broadcastCallback = callback;
+  }
+
+  setLobbyNotificationCallback(callback) {
+    this.lobbyNotificationCallback = callback;
   }
 
   /**
@@ -47,6 +69,8 @@ class GameService {
         game = this.activeGames.get(gameId);
       } else {
         game = this._makeGameInstance(gameId);
+        // 게임 생성 시 토너먼트 ID 저장
+        this.gameTournaments.set(gameId, tournamentId);
       }
 
       if (this.isConnectedPlayer(gameId, playerId) === true) {
@@ -147,7 +171,8 @@ class GameService {
         if (game.isGameOver() === false) {
           this._sendGameState(gameId);
         } else {
-          await this._processEndGame(gameId, intervalId);
+          const tournamentId = this.gameTournaments.get(gameId);
+          await this._processEndGame(gameId, intervalId, tournamentId);
         }
       } catch (err) {
         clearInterval(intervalId);
@@ -185,10 +210,11 @@ class GameService {
    *
    * @param {number} gameId - 완료된 게임의 고유 gameId
    * @param {number} intervalId - 게임에 대해 등록된 intervalId
+   * @param {number} tournamentId - 토너먼트 ID
    * @returns {Promise<void>} - 비동기 작업으로 반환값 없음
    * @throws {Error} - 게임 정보를 찾을 수 없거나 DB 업데이트에 실패할 경우
    */
-  async _processEndGame(gameId, intervalId) {
+  async _processEndGame(gameId, intervalId, tournamentId) {
     clearInterval(intervalId);
 
     const time = this.playTimes.get(gameId);
@@ -200,7 +226,10 @@ class GameService {
 
     const game = this.activeGames.get(gameId);
     const { score, winnerId, loserId } = game.getResult();
-    await this.gameRepo.updateGameResult(gameId, score, winnerId, loserId, playTime);
+    const winner = await this.gameRepo.updateGameResult(gameId, score, winnerId, loserId, playTime);
+
+    // 토너먼트 ID 맵에서 제거
+    this.gameTournaments.delete(gameId);
 
     if (!this.activeGames.delete(gameId)) {
       throw new Error(`[GameService] Unexpected Error`);
@@ -208,10 +237,18 @@ class GameService {
 
     const payload = {
       playTime,
+      winner: winner.username,
       score: game.getScore(),
     };
 
     this.broadcastCallback(game.getPlayers(), "gameOver", payload);
+
+    // 로비 네임스페이스에 게임 종료 알림 (승자, 패자 정보 포함)
+    if (this.lobbyNotificationCallback && typeof this.lobbyNotificationCallback === 'function') {
+      this.lobbyNotificationCallback(tournamentId, gameId, { winnerId, loserId });
+    } else {
+      console.warn('[GameService] lobbyNotificationCallback is not set or not a function');
+    }
   }
 
   handleKeyDownEvent(gameId, role, keycode) {
@@ -266,6 +303,18 @@ class GameService {
     const game = await this.gameRepo.getGameById(id);
     return new GameDto(game);
   }
+
+  /**
+   * 싱글톤 인스턴스를 반환하는 정적 메서드
+   * @returns {GameService} GameService 인스턴스
+   */
+  static getInstance() {
+    if (!GameService.instance) {
+      GameService.instance = new GameService();
+    }
+    return GameService.instance;
+  }
 }
 
-export default GameService;
+// 싱글톤 인스턴스를 저장할 정적 속성
+GameService.instance = null;

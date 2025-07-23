@@ -1,6 +1,6 @@
 import GameState from "./GameState.js";
 
-const END_SCORE = 10;
+const END_SCORE = 2;
 
 export default class Game {
   /**

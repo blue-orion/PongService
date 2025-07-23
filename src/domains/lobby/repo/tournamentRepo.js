@@ -22,7 +22,22 @@ export class TournamentRepository {
             },
           },
         },
-        games: true,
+        games: {
+          include: {
+            player_one: {
+              select: { id: true, nickname: true, username: true }
+            },
+            player_two: {
+              select: { id: true, nickname: true, username: true }
+            },
+            winner: {
+              select: { id: true, nickname: true, username: true }
+            },
+            loser: {
+              select: { id: true, nickname: true, username: true }
+            }
+          }
+        },
       },
     });
   }
@@ -61,6 +76,17 @@ export class TournamentRepository {
           },
         },
         games: true,
+      },
+    });
+  }
+
+  async incrementRound(id) {
+    return await prisma.tournament.update({
+      where: { id },
+      data: { 
+        round: {
+          increment: 1
+        }
       },
     });
   }

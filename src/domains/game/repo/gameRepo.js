@@ -95,6 +95,8 @@ export class GameRepository {
         win_rate: winRate,
       },
     });
+
+    return winner;
   }
 
   // 초기 매칭들을 bulk insert

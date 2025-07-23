@@ -27,5 +27,5 @@ export default async function lobbyRoutes(fastify, _opts) {
   fastify.post("/:id/create_match", controller.create_match); // 매칭 생성
   fastify.post("/:id/start_game", controller.start_game); // 게임 시작
 
-  // fastify.post("/:id/finish", controller.lobby_finish);     // 로비 종료 (우승자 나왔을 때)
+  fastify.get("/:id/finish", controller.lobby_finish);     // 토너먼트 완료 결과 조회
 }

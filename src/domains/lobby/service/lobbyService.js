@@ -4,6 +4,8 @@ import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
 import { Helpers } from "#domains/lobby/utils/helpers.js";
 import { TOURNAMENT_STATUS, LOBBY_STATUS } from "#domains/lobby/utils/helpers.js";
 import PongException from "#shared/exception/pongException.js";
+import prisma from "#shared/database/prisma.js";
+import { LobbyStatus } from "@prisma/client";
 import {
   CreateLobbyDto,
   CreateMatchDto,
@@ -383,5 +385,164 @@ export class LobbyService {
       game_status: "IN_PROGRESS",
       message: "게임이 시작되었습니다.",
     };
+  }
+
+  /**
+   * 게임 완료 후 패자를 로비에서 제거
+   * @param {number} tournamentId - 토너먼트 ID
+   * @param {number} loserId - 패자 ID
+   */
+  async removeLoserFromLobby(tournamentId, loserId) {
+    try {
+      // 토너먼트에 해당하는 로비 찾기
+      const tournament = await this.tournamentRepository.findById(tournamentId);
+      if (!tournament || !tournament.lobbies || tournament.lobbies.length === 0) {
+        console.log(`[LobbyService] No lobby found for tournament ${tournamentId}`);
+        return null;
+      }
+
+      const lobby = tournament.lobbies[0];
+      
+      // 패자가 로비에 있는지 확인
+      const loserInLobby = lobby.lobby_players.find(player => player.user_id === loserId);
+      if (!loserInLobby) {
+        console.log(`[LobbyService] Loser ${loserId} not found in lobby ${lobby.id}`);
+        return null;
+      }
+
+      // 패자를 로비에서 제거 (기존 removePlayer 메서드 사용)
+      await this.lobbyRepository.removePlayer(lobby.id, loserId);
+      
+      console.log(`[LobbyService] Removed loser ${loserId} from lobby ${lobby.id}`);
+      
+      // 업데이트된 로비 정보 반환
+      return await this.lobbyRepository.findById(lobby.id);
+    } catch (error) {
+      console.error(`[LobbyService] Error removing loser from lobby: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 로비 상태 업데이트
+   * @param {number} lobbyId - 로비 ID
+   * @param {LobbyStatus} status - 새로운 상태 (PENDING, STARTED, COMPLETED)
+   */
+  async updateLobbyStatus(lobbyId, status) {
+    try {
+      return await this.lobbyRepository.updateLobbyStatus(lobbyId, status);
+    } catch (error) {
+      console.error(`[LobbyService] Error updating lobby status: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 토너먼트 완료 결과 조회
+   * @param {Object} requestData - { lobby_id }
+   * @returns {Object} 토너먼트 결과 정보
+   */
+  async getTournamentResult(requestData) {
+    const { lobby_id } = requestData;
+
+    try {
+      // 1. 로비 정보 조회
+      const lobby = await this.lobbyRepository.findById(lobby_id);
+      if (!lobby) {
+        throw new Error("해당 로비를 찾을 수 없습니다.");
+      }
+
+      // 2. 토너먼트 정보 조회
+      const tournament = await this.tournamentRepository.findById(lobby.tournament_id);
+      if (!tournament) {
+        throw new Error("해당 토너먼트를 찾을 수 없습니다.");
+      }
+
+      // 3. 토너먼트가 완료되었는지 확인
+      if (tournament.tournament_status !== "COMPLETED") {
+        throw new Error("아직 진행 중인 토너먼트입니다.");
+      }
+
+      // 4. 모든 게임 결과 조회 (라운드별로 정렬)
+      const allGames = tournament.games.sort((a, b) => {
+        if (a.round !== b.round) return a.round - b.round;
+        return a.match - b.match;
+      });
+
+      // 5. 최종 승자 찾기 (마지막 라운드의 승리자)
+      const finalRound = Math.max(...allGames.map(game => game.round));
+      const finalGame = allGames.find(game => game.round === finalRound && game.winner_id);
+      
+      let winner = null;
+      if (finalGame && finalGame.winner_id) {
+        const winnerData = await this.lobbyRepository.checkUserExists(finalGame.winner_id);
+        if (!winnerData) {
+          winner = await prisma.user.findUnique({
+            where: { id: finalGame.winner_id },
+            select: { id: true, nickname: true, username: true }
+          });
+        }
+      }
+
+      // 6. 라운드별 게임 결과 구성
+      const roundResults = {};
+      for (const game of allGames) {
+        if (!roundResults[game.round]) {
+          roundResults[game.round] = [];
+        }
+
+        const gameResult = {
+          game_id: game.id,
+          match: game.match,
+          player_one: game.player_one ? {
+            id: game.player_one.id,
+            nickname: game.player_one.nickname,
+            username: game.player_one.username,
+          } : null,
+          player_two: game.player_two ? {
+            id: game.player_two.id,
+            nickname: game.player_two.nickname,
+            username: game.player_two.username,
+          } : null,
+          winner_id: game.winner_id,
+          winner: game.winner ? {
+            id: game.winner.id,
+            nickname: game.winner.nickname,
+            username: game.winner.username,
+          } : null,
+          score: game.player_one_score !== null && game.player_two_score !== null 
+            ? `${game.player_one_score}-${game.player_two_score}` 
+            : null,
+          play_time: game.play_time,
+          game_status: game.game_status,
+        };
+
+        roundResults[game.round].push(gameResult);
+      }
+
+      return {
+        tournament: {
+          id: tournament.id,
+          tournament_type: tournament.tournament_type,
+          tournament_status: tournament.tournament_status,
+          round: tournament.round,
+          created_at: tournament.created_at,
+          updated_at: tournament.updated_at,
+        },
+        lobby: {
+          id: lobby.id,
+          max_player: lobby.max_player,
+          lobby_status: lobby.lobby_status,
+          creator_id: lobby.creator_id,
+        },
+        winner: winner,
+        total_rounds: finalRound,
+        round_results: roundResults,
+        message: "토너먼트가 완료되었습니다.",
+      };
+    } catch (error) {
+      console.error(`[LobbyService] Error getting tournament result: ${error.message}`);
+      throw error;
+    }
   }
 }
