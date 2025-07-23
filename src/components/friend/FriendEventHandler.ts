@@ -1,4 +1,5 @@
 import { Friend, FriendRequest, SentRequest } from "../../types/friend.types";
+import { UserManager } from "../../utils/user";
 import { FriendDataManager } from "./FriendDataManager";
 import { UserProfileManager } from "./UserProfileManager";
 
@@ -53,7 +54,7 @@ export class FriendEventHandler {
 
   private handleFriendRequestReceived(payload: any): void {
     const requestData = payload.requestData || payload;
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     // 전체 데이터 새로고침으로 통합
     this.dataManager
@@ -81,7 +82,7 @@ export class FriendEventHandler {
 
   private handleFriendRequestAccepted(payload: any): void {
     const requestData = payload.requestData || payload;
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     // 수락된 요청을 보관함에서 제거
     this.dataManager.removeFriendRequest(requestData.relationId);
@@ -118,7 +119,7 @@ export class FriendEventHandler {
 
   private handleFriendRequestRejected(payload: any): void {
     const requestData = payload.requestData || payload;
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     const sentRequests = this.dataManager.getSentRequests();
     const removedRequest = sentRequests.find((request) => request.relationId === requestData.relationId);
@@ -145,7 +146,7 @@ export class FriendEventHandler {
 
   private handleFriendRequestCancelled(payload: any): void {
     const requestData = payload.requestData || payload;
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     if (requestData.senderId?.toString() === currentUserId?.toString()) {
       // 자신이 취소한 경우
@@ -176,26 +177,36 @@ export class FriendEventHandler {
 
   private handleFriendDeleted(payload: any): void {
     const requestData = payload.requestData || payload;
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     const deletedFriendId = requestData.senderId === currentUserId ? requestData.receiverId : requestData.senderId;
 
     if (deletedFriendId) {
-      this.dataManager.removeFriend(deletedFriendId.toString());
-      this.onDataUpdate();
-
-      // 자신이 삭제한 경우에만 팝업 표시
-      if (requestData.senderId?.toString() === currentUserId?.toString()) {
-        this.onShowNotification("친구를 삭제했습니다.");
-      }
-      // 상대방이 삭제한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
+      this.dataManager.removeFriend(Number(deletedFriendId));
+      
+      // 모든 데이터 새로고침
+      this.dataManager
+        .loadAllData()
+        .then(() => {
+          this.onDataUpdate();
+          
+          // 자신이 삭제한 경우에만 팝업 표시
+          if (requestData.senderId?.toString() === currentUserId?.toString()) {
+            this.onShowNotification("친구를 삭제했습니다.");
+          }
+          // 상대방이 삭제한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
+        })
+        .catch((error) => {
+          console.error("데이터 새로고침 실패:", error);
+          this.onDataUpdate(); // 실패해도 UI는 업데이트
+        });
     }
   }
 
   private handleFriendStatusChanged(payload: any): void {
     const friendId = payload.friendId || payload.userId || payload.id;
     const newStatus = this.userProfileManager.convertStatus(payload.status || "OFFLINE");
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     // 자신의 상태가 변경된 경우
     if (friendId?.toString() === currentUserId?.toString()) {
@@ -226,7 +237,7 @@ export class FriendEventHandler {
   private handleUserStatusUpdate(payload: any): void {
     const userId = payload.userId;
     const newStatus = this.userProfileManager.convertStatus(payload.status || "OFFLINE");
-    const currentUserId = this.userProfileManager.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
 
     // 자신의 상태가 변경된 경우
     if (userId?.toString() === currentUserId?.toString()) {

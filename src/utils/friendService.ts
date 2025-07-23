@@ -119,21 +119,21 @@ export class FriendService {
   }
 
   // 친구 삭제 (새로운 API 형식 - body만 사용)
-  async deleteFriend(deleteFriendId: string): Promise<ApiResponse<any>> {
+  async deleteFriend(deleteFriendId: number): Promise<ApiResponse<any>> {
     return this.makeRequest(`/delete`, {
       method: "DELETE",
       body: JSON.stringify({
-        deleteFriendId: parseInt(deleteFriendId),
+        deleteFriendId: deleteFriendId,
       }),
     });
   }
 
   // 친구 요청 취소
-  async cancelFriendRequest(receiverId: string, receiverName?: string): Promise<ApiResponse<any>> {
+  async cancelFriendRequest(receiverId: number, receiverName?: string): Promise<ApiResponse<any>> {
     return this.makeRequest(`/cancel-request`, {
       method: "DELETE",
       body: JSON.stringify({
-        receiverId: parseInt(receiverId),
+        receiverId: receiverId,
         receiverName: receiverName,
       }),
     });

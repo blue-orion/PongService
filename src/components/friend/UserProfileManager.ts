@@ -11,7 +11,7 @@ export class UserProfileManager {
   }
 
   public async setupUserProfile(): Promise<void> {
-    const currentUserId = this.getCurrentUserId();
+    const currentUserId = UserManager.getUserId();
     if (!currentUserId) {
       this.setDefaultProfile();
       return;
@@ -33,12 +33,7 @@ export class UserProfileManager {
     }
   }
 
-  public getCurrentUserId(): string | null {
-    // UserManager에서 저장된 사용자 ID 사용
-    return UserManager.getUserId();
-  }
-
-  public async fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  public async fetchUserProfile(userId: number): Promise<UserProfile | null> {
     try {
       const tokens = AuthManager.getTokens();
       if (!tokens?.accessToken) return null;

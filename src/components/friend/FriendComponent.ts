@@ -501,7 +501,7 @@ export class FriendComponent {
 
     let finalFriendName = friendName;
     if (!finalFriendName && friendId) {
-      const friend = this.dataManager.getFriend(friendId);
+      const friend = this.dataManager.getFriend(Number(friendId));
       finalFriendName = friend?.name || friend?.username || `사용자${friendId}`;
     }
 
@@ -586,7 +586,7 @@ export class FriendComponent {
     }
   }
 
-  private async cancelFriendRequest(receiverId: string, receiverName: string): Promise<void> {
+  private async cancelFriendRequest(receiverId: number, receiverName: string): Promise<void> {
     if (!confirm(`정말로 ${receiverName}님에게 보낸 친구 요청을 취소하시겠습니까?`)) return;
 
     try {

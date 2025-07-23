@@ -1,6 +1,7 @@
 import { friendService } from "../../utils/friendService";
 import { Friend, FriendRequest, SentRequest } from "../../types/friend.types";
 import { UserProfileManager } from "./UserProfileManager";
+import { UserManager } from "../../utils/user";
 
 export class FriendDataManager {
   private friends: Friend[] = [];
@@ -139,23 +140,23 @@ export class FriendDataManager {
               const profileImageUrl = friendProfile.profileImage || friend.profile_image || friend.profileImage;
 
               return {
-                id: friend.id.toString(),
+                id: Number(friend.id),
                 name: friendProfile.nickname || friendProfile.username || friend.username || `사용자${friend.id}`,
                 username: friendProfile.username || friend.username || `user${friend.id}`,
                 status: this.userProfileManager.convertStatus(friendProfile.status || "OFFLINE"),
                 avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-                relationId: friend.relationId?.toString() || friend.id.toString(),
+                relationId: Number(friend.relationId) || Number(friend.id),
               };
             } else {
               const profileImageUrl = friend.profile_image || friend.profileImage;
 
               return {
-                id: friend.id.toString(),
+                id: Number(friend.id),
                 name: friend.nickname || friend.username || `사용자${friend.id}`,
                 username: friend.username || `user${friend.id}`,
                 status: this.userProfileManager.convertStatus(friend.status || "OFFLINE"),
                 avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-                relationId: friend.relationId?.toString() || friend.id.toString(),
+                relationId: Number(friend.relationId) || Number(friend.id),
               };
             }
           } catch (error) {
@@ -163,12 +164,12 @@ export class FriendDataManager {
             const profileImageUrl = friend?.profile_image || friend?.profileImage;
 
             return {
-              id: friend?.id?.toString() || Math.random().toString(),
+              id: Number(friend?.id) || Math.floor(Math.random() * 1000000),
               name: friend?.nickname || friend?.username || `사용자${friend?.id || "unknown"}`,
               username: friend?.username || `user${friend?.id || "unknown"}`,
               status: this.userProfileManager.convertStatus(friend?.status || "OFFLINE"),
               avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-              relationId: friend?.relationId?.toString() || friend?.id?.toString() || Math.random().toString(),
+              relationId: Number(friend?.relationId) || Number(friend?.id) || Math.floor(Math.random() * 1000000),
             };
           }
         })
@@ -238,11 +239,11 @@ export class FriendDataManager {
                   senderProfile.profileImage || request.sender?.profile_image || request.sender?.profileImage;
 
                 return {
-                  id: request.id?.toString() || Math.random().toString(),
+                  id: Number(request.id) || Math.floor(Math.random() * 1000000),
                   name: senderProfile.nickname || senderProfile.username || `사용자 ${senderId}`,
                   username: senderProfile.username || `user${senderId}`,
                   avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-                  relationId: request.id?.toString() || Math.random().toString(),
+                  relationId: Number(request.id) || Math.floor(Math.random() * 1000000),
                 };
               }
             }
@@ -250,23 +251,23 @@ export class FriendDataManager {
             const profileImageUrl = request.sender?.profile_image || request.sender?.profileImage;
 
             return {
-              id: request.id?.toString() || Math.random().toString(),
+              id: Number(request.id) || Math.floor(Math.random() * 1000000),
               name: request.sender?.nickname || request.sender?.username || `사용자 ${request.sender_id || "unknown"}`,
               username: request.sender?.username || `user${request.sender_id || "unknown"}`,
               avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-              relationId: request.id?.toString() || Math.random().toString(),
+              relationId: Number(request.id) || Math.floor(Math.random() * 1000000),
             };
           } catch (error) {
             console.error(`친구 요청 ${request?.id || "unknown"}의 보낸이 프로필 정보 가져오기 실패:`, error);
             const profileImageUrl = request?.sender?.profile_image || request?.sender?.profileImage;
 
             return {
-              id: request?.id?.toString() || Math.random().toString(),
+              id: Number(request?.id) || Math.floor(Math.random() * 1000000),
               name:
                 request?.sender?.nickname || request?.sender?.username || `사용자 ${request?.sender_id || "unknown"}`,
               username: request?.sender?.username || `user${request?.sender_id || "unknown"}`,
               avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-              relationId: request?.id?.toString() || Math.random().toString(),
+              relationId: Number(request?.id) || Math.floor(Math.random() * 1000000),
             };
           }
         })
@@ -337,11 +338,11 @@ export class FriendDataManager {
                   receiverProfile.profileImage || request.receiver?.profile_image || request.receiver?.profileImage;
 
                 return {
-                  id: receiverId.toString(),
+                  id: Number(receiverId),
                   name: receiverProfile.nickname || receiverProfile.username || `사용자 ${receiverId}`,
                   username: receiverProfile.username || `user${receiverId}`,
                   avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-                  relationId: request.id?.toString() || Math.random().toString(),
+                  relationId: Number(request.id) || Math.floor(Math.random() * 1000000),
                 };
               }
             }
@@ -349,28 +350,28 @@ export class FriendDataManager {
             const profileImageUrl = request.receiver?.profile_image || request.receiver?.profileImage;
 
             return {
-              id: request.receiver_id?.toString() || request.receiver?.id?.toString() || Math.random().toString(),
+              id: Number(request.receiver_id) || Number(request.receiver?.id) || Math.floor(Math.random() * 1000000),
               name:
                 request.receiver?.nickname ||
                 request.receiver?.username ||
                 `사용자 ${request.receiver_id || "unknown"}`,
               username: request.receiver?.username || `user${request.receiver_id || "unknown"}`,
               avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-              relationId: request.id?.toString() || Math.random().toString(),
+              relationId: Number(request.id) || Math.floor(Math.random() * 1000000),
             };
           } catch (error) {
             console.error(`보낸 요청 ${request?.id || "unknown"}의 받는이 프로필 정보 가져오기 실패:`, error);
             const profileImageUrl = request?.receiver?.profile_image || request?.receiver?.profileImage;
 
             return {
-              id: request?.receiver_id?.toString() || request?.receiver?.id?.toString() || Math.random().toString(),
+              id: Number(request?.receiver_id) || Number(request?.receiver?.id) || Math.floor(Math.random() * 1000000),
               name:
                 request?.receiver?.nickname ||
                 request?.receiver?.username ||
                 `사용자 ${request?.receiver_id || "unknown"}`,
               username: request?.receiver?.username || `user${request?.receiver_id || "unknown"}`,
               avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
-              relationId: request?.id?.toString() || Math.random().toString(),
+              relationId: Number(request?.id) || Math.floor(Math.random() * 1000000),
             };
           }
         })
@@ -477,7 +478,7 @@ export class FriendDataManager {
       }
 
       // 자기 자신을 친구로 추가하려는 경우 방지
-      const currentUserId = this.userProfileManager.getCurrentUserId();
+      const currentUserId = UserManager.getUserId();
       if (currentUserId && friend.id === currentUserId) {
         console.warn("자기 자신을 친구로 추가할 수 없습니다.");
         return;
@@ -494,9 +495,9 @@ export class FriendDataManager {
     }
   }
 
-  public removeFriend(friendId: string): void {
+  public removeFriend(friendId: number): void {
     try {
-      if (!friendId || typeof friendId !== "string") {
+      if (!friendId || typeof friendId !== "number") {
         console.error("유효하지 않은 친구 ID:", friendId);
         return;
       }
@@ -512,9 +513,9 @@ export class FriendDataManager {
     }
   }
 
-  public updateFriendStatus(friendId: string, status: Friend["status"]): boolean {
+  public updateFriendStatus(friendId: number, status: Friend["status"]): boolean {
     try {
-      if (!friendId || typeof friendId !== "string") {
+      if (!friendId || typeof friendId !== "number") {
         console.error("유효하지 않은 친구 ID:", friendId);
         return false;
       }
@@ -538,9 +539,9 @@ export class FriendDataManager {
     }
   }
 
-  public removeFriendRequest(relationId: string): void {
+  public removeFriendRequest(relationId: number): void {
     try {
-      if (!relationId || typeof relationId !== "string") {
+      if (!relationId || typeof relationId !== "number") {
         console.error("유효하지 않은 관계 ID:", relationId);
         return;
       }
@@ -556,9 +557,9 @@ export class FriendDataManager {
     }
   }
 
-  public removeSentRequest(relationId: string): void {
+  public removeSentRequest(relationId: number): void {
     try {
-      if (!relationId || typeof relationId !== "string") {
+      if (!relationId || typeof relationId !== "number") {
         console.error("유효하지 않은 관계 ID:", relationId);
         return;
       }
@@ -574,9 +575,9 @@ export class FriendDataManager {
     }
   }
 
-  public getFriend(friendId: string): Friend | undefined {
+  public getFriend(friendId: number): Friend | undefined {
     try {
-      if (!friendId || typeof friendId !== "string") {
+      if (!friendId || typeof friendId !== "number") {
         console.error("유효하지 않은 친구 ID:", friendId);
         return undefined;
       }
@@ -589,9 +590,9 @@ export class FriendDataManager {
   }
 
   // 자기 자신 확인 유틸리티 메서드
-  public isSelfUser(userId: string): boolean {
+  public isSelfUser(userId: number): boolean {
     try {
-      const currentUserId = this.userProfileManager.getCurrentUserId();
+      const currentUserId = UserManager.getUserId();
       return currentUserId === userId;
     } catch (error) {
       console.error("자기 자신 확인 중 오류:", error);

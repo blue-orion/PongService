@@ -1,30 +1,30 @@
 export interface Friend {
-  id: string;
+  id: number;
   name: string;
   status: "online" | "offline" | "in-game";
   avatar?: string;
-  relationId?: string;
+  relationId?: number;
   username?: string;
 }
 
 export interface FriendRequest {
-  id: string;
+  id: number;
   name: string;
   username: string;
   avatar?: string;
-  relationId: string;
+  relationId: number;
 }
 
 export interface SentRequest {
-  id: string;
+  id: number;
   name: string;
   username: string;
   avatar?: string;
-  relationId: string;
+  relationId: number;
 }
 
 export interface UserProfile {
-  id: string;
+  id: number;
   username: string;
   nickname?: string;
   profileImage?: string;
@@ -45,9 +45,9 @@ export interface FriendNotificationPayload {
     | "user_status"
     | "status_update";
   payload: {
-    relationId?: string;
+    relationId?: number;
     message?: string;
-    userId?: string;
+    userId?: number;
     status?: string;
     requestData?: any;
     [key: string]: any;
