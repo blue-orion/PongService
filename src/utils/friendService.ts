@@ -31,20 +31,10 @@ export class FriendService {
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const tokens = AuthManager.getTokens();
-
-      if (!tokens?.accessToken || !AuthManager.isTokenValid()) {
-        return {
-          success: false,
-          message: "인증이 필요합니다. 다시 로그인해주세요.",
-        };
-      }
-
-      const response = await fetch(`${FriendService.API_BASE_URL}${this.baseUrl}${endpoint}`, {
+      const response = await AuthManager.authenticatedFetch(`${FriendService.API_BASE_URL}${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${tokens.accessToken}`,
           ...options.headers,
         },
       });
@@ -54,6 +44,9 @@ export class FriendService {
           AuthManager.clearTokens();
           (window as any).app?.logout();
           throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+        }
+        if (response.status === 404) {
+          throw new Error("사용자를 찾을 수 없습니다.");
         }
         if (response.status >= 500) {
           throw new Error("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
