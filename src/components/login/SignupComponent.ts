@@ -4,10 +4,112 @@ import { AuthManager } from "../../utils/auth";
 export class SignupComponent extends Component {
   private formElement: HTMLFormElement | null = null;
 
+  private getTemplate(): string {
+    return `
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-cyan-100 p-4">
+  <div class="w-full max-w-lg mx-auto p-8 bg-white/95 rounded-3xl shadow-xl border border-white/30">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">회원가입</h2>
+      <p class="text-gray-600 mt-2">새로운 계정을 만들어보세요</p>
+    </div>
+
+    <form id="signupForm" class="space-y-6">
+      <!-- 프로필 이미지 섹션 -->
+      <div>
+        <label class="block text-sm font-medium mb-2">프로필 이미지</label>
+        <div id="profileImageArea" class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+          <span id="profileImageText" class="text-gray-400">이미지를 클릭하여 선택</span>
+          <img id="profileImagePreview" src="" alt="프로필 이미지" class="hidden h-full object-contain rounded-lg" />
+          <input type="file" id="profileImage" name="profileImage" accept="image/*" class="hidden" />
+        </div>
+        <p class="text-xs text-gray-500 mt-1">JPG, PNG 파일 (최대 5MB)</p>
+      </div>
+
+      <!-- 사용자명 입력 -->
+      <div>
+        <label for="username" class="block text-sm font-medium mb-2">사용자명</label>
+        <input 
+          type="text" 
+          id="username" 
+          name="username" 
+          required 
+          class="login-input" 
+          placeholder="사용자명을 입력하세요"
+          minlength="3" 
+          maxlength="20"
+        />
+        <div class="flex justify-end mt-1">
+          <span id="usernameCharCount" class="text-xs text-gray-500">0/20</span>
+        </div>
+      </div>
+
+      <!-- 닉네임 입력 -->
+      <div>
+        <label for="nickname" class="block text-sm font-medium mb-2">닉네임</label>
+        <input 
+          type="text" 
+          id="nickname" 
+          name="nickname" 
+          required 
+          class="login-input" 
+          placeholder="닉네임을 입력하세요"
+          maxlength="20" 
+        />
+        <div class="flex justify-end mt-1">
+          <span id="nicknameCharCount" class="text-xs text-gray-500">0/20</span>
+        </div>
+      </div>
+
+      <!-- 비밀번호 입력 -->
+      <div>
+        <label for="password" class="block text-sm font-medium mb-2">비밀번호</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required 
+          class="login-input" 
+          placeholder="비밀번호를 입력하세요"
+          minlength="8"
+        />
+        <p class="text-xs text-gray-500 mt-1">최소 8자 이상 입력해주세요</p>
+      </div>
+
+      <!-- 비밀번호 확인 -->
+      <div>
+        <label for="confirmPassword" class="block text-sm font-medium mb-2">비밀번호 확인</label>
+        <input 
+          type="password" 
+          id="confirmPassword" 
+          name="confirmPassword" 
+          required 
+          class="login-input" 
+          placeholder="비밀번호를 다시 입력하세요"
+        />
+      </div>
+
+      <!-- 회원가입 버튼 -->
+      <button type="submit" class="btn-primary w-full">계정 만들기</button>
+    </form>
+
+    <!-- 로그인 링크 -->
+    <div class="mt-6 text-center">
+      <span class="text-gray-600">이미 계정이 있으신가요? </span>
+      <a href="#" class="login-link text-indigo-600 hover:text-indigo-800 font-medium">로그인</a>
+    </div>
+
+    <!-- 푸터 -->
+    <div class="mt-8 text-center text-xs text-gray-400">
+      <p>2025 Transcendence Pong</p>
+    </div>
+  </div>
+</div>
+    `;
+  }
+
   async render(): Promise<void> {
     this.clearContainer();
-    const template = await fetch("/src/components/login/signup.template.html").then(res => res.text());
-    this.container.innerHTML = template;
+    this.container.innerHTML = this.getTemplate();
     this.setupEventListeners();
     this.setupProfileImageArea();
   }

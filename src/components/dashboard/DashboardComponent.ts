@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export class DashboardComponent extends Component {
   private rankTable!: HTMLElement;
+  private animationId?: number;
 
   constructor(container: HTMLElement) {
     console.log("대시보드 생성자 호출");
@@ -87,10 +88,15 @@ export class DashboardComponent extends Component {
     this.rankTable = this.container.querySelector("#user-table-body") as HTMLElement;
     this.fetchUsers();
     this.initializeAnimations();
-    document.body.addEventListener("click", this.clickHandler);
+    this.setupEventListeners();
   }
 
-  async fetchUsers(page = 0) {
+  private setupEventListeners(): void {
+    // 컨테이너 내에서만 클릭 이벤트 처리
+    this.container.addEventListener("click", this.clickHandler.bind(this));
+  }
+
+  async fetchUsers(page: number = 0): Promise<void> {
     try {
       const raw = await AuthManager.authenticatedFetch(`${API_BASE_URL}/dashboard/rank`);
       const response = await raw.json();
@@ -101,40 +107,42 @@ export class DashboardComponent extends Component {
         this.updateStats(data.content);
 
         // 페이지네이션 버튼 상태 업데이트
-        this.container.querySelector("#prev-btn").disabled = data.first;
-        this.container.querySelector("#next-btn").disabled = data.last;
+        const prevBtn = this.container.querySelector("#prev-btn") as HTMLButtonElement;
+        const nextBtn = this.container.querySelector("#next-btn") as HTMLButtonElement;
+        if (prevBtn) prevBtn.disabled = data.first;
+        if (nextBtn) nextBtn.disabled = data.last;
       }
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   }
 
-  getRankClass(rank) {
+  getRankClass(rank: number): string {
     if (rank === 1) return "rank-gold";
     if (rank === 2) return "rank-silver";
     if (rank === 3) return "rank-bronze";
     return "rank-default";
   }
 
-  getWinRateClass(winRate) {
+  getWinRateClass(winRate: number): string {
     if (winRate === 0) return "win-rate-none";
     if (winRate >= 60) return "win-rate-high";
     if (winRate >= 40) return "win-rate-medium";
     return "win-rate-low";
   }
 
-  getInitials(nickname) {
+  getInitials(nickname: string): string {
     return nickname
       .split(" ")
-      .map((word) => word[0])
+      .map((word: string) => word[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   }
 
-  private clickHandler(e: MouserEvent) {
+  private clickHandler(e: MouseEvent) {
     e.preventDefault();
-    const target = (e.target as HTMLElement).closest("[data-route]" as HTMLElement);
+    const target = (e.target as HTMLElement).closest("[data-route]") as HTMLElement;
     if (!target) return;
     const route = target.getAttribute("data-route");
     if (route && window.router) {
@@ -142,7 +150,7 @@ export class DashboardComponent extends Component {
     }
   }
 
-  renderUsers(users) {
+  renderUsers(users: any[]): void {
     const tbody = this.rankTable;
     tbody.innerHTML = "";
 
@@ -159,9 +167,9 @@ export class DashboardComponent extends Component {
       return;
     }
     // 승률순으로 정렬
-    const sortedUsers = users.sort((a, b) => b.win_rate - a.win_rate);
+    const sortedUsers = users.sort((a: any, b: any) => b.win_rate - a.win_rate);
 
-    sortedUsers.forEach((user, index) => {
+    sortedUsers.forEach((user: any, index: number) => {
       const rank = index + 1;
       const games = user.total_wins + user.total_losses;
       const tr = document.createElement("tr");
@@ -204,25 +212,31 @@ export class DashboardComponent extends Component {
     });
   }
 
-  getProfileImage(user) {
-    let profile_image;
+  getProfileImage(user: any): string {
+    let profile_image: string;
     if (user.profile_image) {
       profile_image = `<img src="${user.profile_image}" alt="" class="w-full h-full rounded-full object-cover">`;
-    } else profile_image = this.getInitials(user.nickname);
+    } else {
+      profile_image = this.getInitials(user.nickname);
+    }
     return profile_image;
   }
 
-  updateStats(users) {
+  updateStats(users: any[]): void {
     const totalUsers = users.length;
-    const activePlayers = users.filter((user) => user.total_wins + user.total_losses > 0).length;
-    const avgWinRate = users.reduce((sum, user) => sum + user.win_rate, 0) / totalUsers;
+    const activePlayers = users.filter((user: any) => user.total_wins + user.total_losses > 0).length;
+    const avgWinRate = users.reduce((sum: number, user: any) => sum + user.win_rate, 0) / totalUsers;
 
-    this.container.querySelector("#total-users").textContent = totalUsers;
-    this.container.querySelector("#active-players").textContent = activePlayers;
-    this.container.querySelector("#avg-win-rate").textContent = avgWinRate.toFixed(1) + "%";
+    const totalUsersEl = this.container.querySelector("#total-users");
+    const activePlayersEl = this.container.querySelector("#active-players");
+    const avgWinRateEl = this.container.querySelector("#avg-win-rate");
+    
+    if (totalUsersEl) totalUsersEl.textContent = String(totalUsers);
+    if (activePlayersEl) activePlayersEl.textContent = String(activePlayers);
+    if (avgWinRateEl) avgWinRateEl.textContent = avgWinRate.toFixed(1) + "%";
   }
 
-  initializeAnimations() {
+  initializeAnimations(): void {
     // 페이지 로드 애니메이션
     this.animationId = setTimeout(() => {
       document.querySelectorAll(".slide-up").forEach((el, index) => {
@@ -236,9 +250,8 @@ export class DashboardComponent extends Component {
   destroy(): void {
     // 애니메이션 정리
     if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
+      clearTimeout(this.animationId);
     }
-    // 클릭 이벤트 정리
-    document.body.removeEventListener("click", this.clickHandler);
+    // 클릭 이벤트는 컨테이너가 제거될 때 자동으로 정리됨
   }
 }

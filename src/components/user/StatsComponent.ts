@@ -1,6 +1,5 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
-import { loadTemplate, renderTemplate } from "../../utils/template-loader";
 
 interface UserStats {
     id: number;
@@ -106,32 +105,11 @@ export class StatsComponent extends Component {
     }
 
     private async renderStatsPage(stats: UserStats): Promise<void> {
-        try {
-            // 템플릿 로드
-            const template = await loadTemplate('/src/components/user/statsMain.template.html');
-            
-            // 템플릿 데이터 준비
-            const templateData = {
-                profileImage: stats.profileImage,
-                username: stats.username,
-                nickname: stats.nickname,
-                totalWins: stats.totalWins,
-                totalLosses: stats.totalLosses,
-                winRateFixed: Math.round(stats.winRate * 100)
-            };
-            
-            // 템플릿 렌더링
-            const renderedTemplate = renderTemplate(template, templateData);
-            this.container.innerHTML = renderedTemplate;
-            
-        } catch (templateError) {
-            console.error('[StatsComponent] 템플릿 로드 오류:', templateError);
-            // 템플릿 로드 실패 시 기본 화면
-            this.renderStatsPageFallback(stats);
-        }
+        // 직접 HTML 템플릿 렌더링
+        this.renderStatsPageFallback(stats);
     }
     
-    // 템플릿 로드 실패 시 사용할 폴백
+    // 전적 페이지 HTML 템플릿
     private renderStatsPageFallback(stats: UserStats): void {
         const winRatePercent = Math.round(stats.winRate * 100);
 

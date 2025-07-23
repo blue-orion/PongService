@@ -143,6 +143,11 @@ class App {
       await this.loadLayoutWithComponent(GameHistoryComponent, params.id);
     });
 
+    // 사용자 정보 페이지 - 동적 라우트 (/info/:id 경로 추가)
+    this.router.addDynamicRoute("/info/:id", async (params: any) => {
+      await this.loadLayoutWithComponent(UserInfoComponent, params.id);
+    });
+
     // 프로필 편집 페이지 (프로필 변경 + 비밀번호 변경 통합)
     this.router.addRoute("/profile/edit", async () => {
       // 인증된 사용자만 접근 가능
