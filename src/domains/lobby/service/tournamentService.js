@@ -1,10 +1,12 @@
 import { TournamentRepository } from "#domains/lobby/repo/tournamentRepo.js";
+import { LobbyRepository } from "#domains/lobby/repo/lobbyRepo.js";
 import PongException from "#shared/exception/pongException.js";
 import { TournamentStatus } from "@prisma/client";
 
 export class TournamentService {
-  constructor(tournamentRepository = new TournamentRepository()) {
+  constructor(tournamentRepository = new TournamentRepository(), lobbyRepository = new LobbyRepository()) {
     this.tournamentRepository = tournamentRepository;
+    this.lobbyRepository = lobbyRepository;
   }
 
   async getTournamentById(tournament_id) {
@@ -46,6 +48,13 @@ export class TournamentService {
       FINAL: 2,
     };
     return playerCounts[tournament_type] || 16;
+  }
+
+  // 토너먼트 타입과 라운드에 따른 최대 플레이어 수 계산
+  getMaxPlayersByRound(tournament_type, round) {
+    const initialPlayers = this.getMaxPlayersByType(tournament_type);
+    // 각 라운드마다 플레이어 수가 절반으로 줄어듦
+    return Math.max(2, initialPlayers / Math.pow(2, round - 1));
   }
 
   // 토너먼트 타입에 따른 최대 라운드 수 계산
@@ -98,6 +107,21 @@ export class TournamentService {
         // 아직 라운드가 남아있으면 라운드 증가
         console.log(`[TournamentService] Incrementing round to ${currentRound + 1}`);
         const updatedTournament = await this.tournamentRepository.incrementRound(tournament_id);
+        
+        // 새로운 라운드에 맞는 최대 플레이어 수 계산
+        const newMaxPlayers = this.getMaxPlayersByRound(tournament.tournament_type, currentRound + 1);
+        console.log(`[TournamentService] Calculated new max players: ${newMaxPlayers} for round ${currentRound + 1}`);
+        
+        // 해당 토너먼트의 로비 찾기 및 최대 인원 업데이트
+        console.log(`[TournamentService] Tournament lobbies:`, tournament.lobbies);
+        if (tournament.lobbies && tournament.lobbies.length > 0) {
+          const lobby = tournament.lobbies[0]; // 첫 번째 로비 (일반적으로 토너먼트당 하나의 로비)
+          await this.lobbyRepository.updateMaxPlayer(lobby.id, newMaxPlayers);
+          console.log(`[TournamentService] Updated lobby ${lobby.id} max_player to ${newMaxPlayers}`);
+        } else {
+          console.log(`[TournamentService] No lobbies found for tournament ${tournament_id}`);
+        }
+        
         return { tournament: updatedTournament, isCompleted: false };
       }
     }

@@ -172,6 +172,13 @@ export class LobbyRepository {
     });
   }
 
+  async updateMaxPlayer(lobby_id, max_player) {
+    return await prisma.lobby.update({
+      where: { id: lobby_id },
+      data: { max_player },
+    });
+  }
+
   async transferLeadership(lobby_id, current_leader_id, target_user_id) {
     return await prisma.$transaction(async (tx) => {
       // 1. 현재 방장의 is_leader를 false로 변경
@@ -290,6 +297,10 @@ export class LobbyRepository {
     return await prisma.lobbyPlayer.findMany({
       where: {
         lobby_id,
+        enabled: true, // 활성화된 플레이어만 조회
+      },
+      include: {
+        user: true, // 사용자 정보도 포함
       },
     });
   }
