@@ -213,7 +213,11 @@ export class LobbyDetailComponent extends Component {
     }
     const matches = this.lobbyData?.matchData?.matches;
     const userId = UserManager.getUserId();
-    return matches?.find((match) => match.left_player.id === userId || match.right_player.id === userId);
+    return matches?.find(
+      (match) =>
+        match.game_status !== "COMPLETED" &&
+        (match.left_player.id === userId || match.right_player.id === userId)
+    );
   }
 
   private async leaveLobby(): Promise<void> {

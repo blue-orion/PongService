@@ -226,7 +226,7 @@ export class LobbyDetailService {
   // API 관련 메서드들
   async loadLobbyData(): Promise<LobbyData> {
     try {
-      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}`);
+      const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -286,7 +286,7 @@ export class LobbyDetailService {
       lobbyId: this.lobbyId,
     });
 
-    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/ready_state`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/ready_state`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -316,7 +316,7 @@ export class LobbyDetailService {
       throw new Error("로그인이 필요합니다.");
     }
 
-    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -338,7 +338,7 @@ export class LobbyDetailService {
   async removeDefeatedPlayer(defeatedUserId: number): Promise<void> {
     console.log("💀 패배자 로비 제거 API 호출:", defeatedUserId);
 
-    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -371,7 +371,7 @@ export class LobbyDetailService {
       lobbyId: this.lobbyId,
     });
 
-    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/authorize`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/authorize`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -407,7 +407,7 @@ export class LobbyDetailService {
       user_id: currentUserId,
     });
 
-    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/create_match`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/create_match`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -447,7 +447,7 @@ export class LobbyDetailService {
     console.log("🔄 매칭 정보 조회 API 호출");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/matches`);
+      const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/matches`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -480,7 +480,7 @@ export class LobbyDetailService {
     console.log("🏆 토너먼트 완료 상태 확인 API 호출");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/finish`);
+      const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/finish`);
 
       if (!response.ok) {
         if (response.status === 404) {

@@ -19,7 +19,7 @@ export class AuthManager {
   private static readonly ACCESS_TOKEN_KEY = "pong_access_token";
   private static readonly REFRESH_TOKEN_KEY = "pong_refresh_token";
   private static readonly EXPIRES_AT_KEY = "pong_expires_at";
-  // private static readonly API_BASE_URL = "http://localhost:3333/v1"; // 백엔드 서버 URL
+  // private static readonly API_BASE_URL = "${API_BASE_URL}"; // 백엔드 서버 URL
   private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // 토큰 저장

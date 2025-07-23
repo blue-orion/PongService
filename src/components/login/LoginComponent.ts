@@ -2,6 +2,8 @@ import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
 import { OAuthComponent } from "../auth/OAuthComponent";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export class LoginComponent extends Component {
   private formElement: HTMLFormElement | null = null;
 
@@ -193,9 +195,9 @@ export class LoginComponent extends Component {
           await AuthManager.login(username, password);
 
           // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
-          if ((window as any).app) {
-            await (window as any).app.initializeFriendComponent();
-          }
+          // if ((window as any).app) {
+          //   await (window as any).app.initializeFriendComponent();
+          // }
           // 메인 페이지로 이동
           window.router.navigate("/");
           return;

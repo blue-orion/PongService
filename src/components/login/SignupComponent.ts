@@ -1,6 +1,8 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export class SignupComponent extends Component {
   private formElement: HTMLFormElement | null = null;
 
@@ -188,12 +190,12 @@ export class SignupComponent extends Component {
         multipart.append("passwd", passwd);
         multipart.append("confirmPasswd", confirmPasswd);
         multipart.append("profileImage", profileImageFile);
-        response = await fetch("http://localhost:3333/v1/auth/register", {
+        response = await fetch(`${API_BASE_URL}/auth/register`, {
           method: "POST",
           body: multipart,
         });
       } else {
-        response = await fetch("http://localhost:3333/v1/auth/register", {
+        response = await fetch(`${API_BASE_URL}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(signupData),

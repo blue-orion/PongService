@@ -1,6 +1,8 @@
 import { AuthManager } from "../../../utils/auth";
 import { UserManager } from "../../../utils/user";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export interface LobbyItem {
   id: number;
   name: string;
@@ -39,7 +41,7 @@ export class LobbyListService {
   // API 호출 메서드들
   async loadLobbies(params: LoadLobbiesParams): Promise<LoadLobbiesResult> {
     try {
-      let url = `http://localhost:3333/v1/lobbies?page=${params.page}&size=${params.size}`;
+      let url = `${API_BASE_URL}/lobbies?page=${params.page}&size=${params.size}`;
 
       // 필터 파라미터 추가 (향후 백엔드 지원 시)
       if (params.status && params.status !== "all") {
@@ -51,7 +53,7 @@ export class LobbyListService {
 
       console.log("📤 로비 목록 API 호출:", url);
 
-      const response = await fetch(url);
+      const response = await AuthManager.authenticatedFetch(url);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -90,7 +92,7 @@ export class LobbyListService {
 
     console.log("📤 로비 입장 요청:", { lobbyId, userId });
 
-    const response = await fetch(`http://localhost:3333/v1/lobbies/${lobbyId}/join`, {
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${lobbyId}/join`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
