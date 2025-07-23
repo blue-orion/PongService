@@ -36,6 +36,24 @@ class UserService {
     await this.userRepo.putProfileImage(user.id, profileImage);
   }
 
+  async broadcastCurrentUserProfile(userId) {
+    const user = await this.userRepo.getUserById(Number(userId));
+    const updateProfileDto = new ProfileDto(user);
+
+    const friendsData = await this.userRepo.getUserFriendIds(user.id);
+    const friendIds = FriendsUtils.parseIds(friendsData?.friends || "[]");
+    friendIds.forEach((friendId) => {
+      websocketManager.sendToNamespaceUser("friend", friendId, "user_status", {
+        type: "profile_update",
+        payload: {
+          userId: user.id,
+          nickname: updateProfileDto.nickname,
+          profileImage: updateProfileDto.profileImage,
+        },
+      });
+    });
+  }
+
   async updateUserPassword(user, passwordDto, encryptUtils) {
     const targetUser = await this.userRepo.getUserById(user.id);
     this.authHelpers.validateHashedPasswd(passwordDto.currentPassword, targetUser.passwd, encryptUtils);
