@@ -50,6 +50,10 @@ export class FriendEventHandler {
         this.handleUserStatusUpdate(payload);
         console.log("User status update received:", payload);
         break;
+      case "profile_update":
+        this.handleNicknameUpdate(payload);
+        this.handleProfileImageUpdate(payload);
+        break;
       default:
         console.warn("알 수 없는 친구 알림 타입:", type);
     }
@@ -270,6 +274,52 @@ export class FriendEventHandler {
             this.onShowAlert(`${friend.name}님이 게임을 시작했습니다.`);
           }
         }
+      }
+    }
+  }
+
+  private handleNicknameUpdate(payload: any): void {
+    const userId = payload.userId;
+    const newNickname = payload.nickname || payload.name;
+    const currentUserId = UserManager.getUserId();
+    console.log("닉네임 업데이트:", userId, newNickname);
+    // 자신의 닉네임이 변경된 경우
+    if (userId?.toString() === currentUserId?.toString()) {
+      this.userProfileManager.updateNickname(newNickname);
+      return;
+    }
+
+    // 친구의 닉네임이 변경된 경우
+    if (userId) {
+      const friends = this.dataManager.getFriends();
+      const friend = friends.find((f) => f.id === userId);
+
+      if (friend) {
+        this.dataManager.updateFriendNickname(userId, newNickname);
+        this.onDataUpdate();
+      }
+    }
+  }
+
+  private handleProfileImageUpdate(payload: any): void {
+    const userId = payload.userId;
+    const newProfileImage = payload.profileImage || payload.image;
+    const currentUserId = UserManager.getUserId();
+
+    // 자신의 프로필 이미지가 변경된 경우
+    if (userId?.toString() === currentUserId?.toString()) {
+      this.userProfileManager.updateProfileImage(newProfileImage);
+      return;
+    }
+
+    // 친구의 프로필 이미지가 변경된 경우
+    if (userId) {
+      const friends = this.dataManager.getFriends();
+      const friend = friends.find((f) => f.id === userId);
+
+      if (friend) {
+        this.dataManager.updateFriendProfileImage(userId, newProfileImage);
+        this.onDataUpdate();
       }
     }
   }

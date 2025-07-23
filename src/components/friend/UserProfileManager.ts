@@ -165,4 +165,25 @@ export class UserProfileManager {
   public getCurrentUser(): UserProfile | null {
     return this.currentUser;
   }
+
+  public updateNickname(newNickname: string): void {
+    if (this.currentUser) {
+      this.currentUser.nickname = newNickname;
+      const nicknameElement = this.container.querySelector("#userNickname") as HTMLElement;
+      if (nicknameElement) {
+        nicknameElement.textContent = newNickname;
+      }
+    }
+  }
+
+  public updateProfileImage(newImageUrl: string): void {
+    if (this.currentUser) {
+      this.currentUser.profileImage = newImageUrl;
+      const avatarElement = this.container.querySelector("#userAvatar") as HTMLElement;
+      if (avatarElement) {
+        avatarElement.style.backgroundImage = `url('${newImageUrl}')`;
+        avatarElement.className = "friend-user-avatar-with-image";
+      }
+    }
+  }
 }
