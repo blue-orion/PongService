@@ -1,5 +1,5 @@
 import { LobbyData, UIEventHandlers } from "../../../types/lobby";
-import { AuthManager } from "../../../utils/auth";
+import { UserManager } from "../../../utils/user";
 import { PlayerRenderer } from "../renderers/PlayerRenderer";
 import { ActionButtonRenderer } from "../renderers/ActionButtonRenderer";
 import { MatchRenderer } from "../renderers/MatchRenderer";
@@ -34,7 +34,7 @@ export class LobbyDetailUI {
   }
 
   renderLobbyDetail(lobbyData: LobbyData, isConnected: boolean = false, transport: string = "unknown"): void {
-    const currentUserId = Number(AuthManager.getCurrentUserId());
+    const currentUserId = Number(UserManager.getUserId());
     const currentPlayer = PlayerRenderer.findPlayerById(lobbyData.players, currentUserId || 0);
 
     this.container.innerHTML = `

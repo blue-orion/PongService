@@ -1,6 +1,5 @@
 import { Component } from "../../Component";
 import { MatchInfo } from "../../../types/lobby";
-import { AuthManager } from "../../../utils/auth";
 import { UserManager } from "../../../utils/user";
 import { LobbyDetailService } from "./LobbyDetailService";
 import { LobbyDetailUI } from "./LobbyDetailUI";
@@ -313,32 +312,32 @@ export class LobbyDetailComponent extends Component {
 
   private showTournamentResult(tournamentData: any): void {
     console.log("🏆 토너먼트 결과 표시:", tournamentData);
-    
+
     const currentUserId = Number(UserManager.getUserId());
     const isWinner = tournamentData.winner.id === currentUserId;
-    
+
     // 토너먼트 결과 HTML 생성
     const resultHtml = this.generateTournamentResultHtml(tournamentData, isWinner);
-    
+
     // 컨테이너를 결과 페이지로 교체
     this.container.innerHTML = resultHtml;
-    
+
     // 홈으로 돌아가기 버튼 이벤트 리스너 추가
-    const homeButton = this.container.querySelector('.home-button');
-    homeButton?.addEventListener('click', async () => {
+    const homeButton = this.container.querySelector(".home-button");
+    homeButton?.addEventListener("click", async () => {
       try {
         // 로비 퇴장 API 호출
         await this.service.leaveLobby();
         console.log("🏆 토너먼트 완료 후 로비 퇴장 성공");
-        
+
         if (window.router) {
-          window.router.navigate('/');
+          window.router.navigate("/");
         }
       } catch (error) {
         console.error("❌ 토너먼트 완료 후 로비 퇴장 실패:", error);
         // 에러가 발생해도 홈으로 이동
         if (window.router) {
-          window.router.navigate('/');
+          window.router.navigate("/");
         }
       }
     });
@@ -346,32 +345,32 @@ export class LobbyDetailComponent extends Component {
 
   private generateTournamentResultHtml(tournamentData: any, isWinner: boolean): string {
     const { tournament, winner, total_rounds, round_results } = tournamentData;
-    
+
     // 라운드별 결과 HTML 생성
     const roundResultsHtml = Object.entries(round_results)
       .map(([round, matches]: [string, any]) => {
         const matchesHtml = matches
           .map((match: any) => {
             // 플레이어 정보 안전하게 추출
-            const playerOneName = match.player_one?.nickname || match.player_one?.username || '알 수 없음';
-            const playerTwoName = match.player_two?.nickname || match.player_two?.username || '알 수 없음';
+            const playerOneName = match.player_one?.nickname || match.player_one?.username || "알 수 없음";
+            const playerTwoName = match.player_two?.nickname || match.player_two?.username || "알 수 없음";
             const winnerName = match.winner_id === match.player_one?.id ? playerOneName : playerTwoName;
-            
+
             return `
               <div class="match-result glass-card p-3 mb-2">
                 <div class="flex justify-between items-center">
                   <span class="font-medium">${playerOneName} vs ${playerTwoName}</span>
-                  <span class="text-sm">${match.score || '점수 없음'}</span>
+                  <span class="text-sm">${match.score || "점수 없음"}</span>
                 </div>
                 <div class="text-sm text-gray-600 mt-1">
                   승자: ${winnerName}
-                  | 플레이 시간: ${match.play_time || '시간 정보 없음'}
+                  | 플레이 시간: ${match.play_time || "시간 정보 없음"}
                 </div>
               </div>
             `;
           })
-          .join('');
-        
+          .join("");
+
         return `
           <div class="round-section mb-6">
             <h4 class="text-lg font-semibold text-primary-700 mb-3">라운드 ${round}</h4>
@@ -379,7 +378,7 @@ export class LobbyDetailComponent extends Component {
           </div>
         `;
       })
-      .join('');
+      .join("");
 
     return `
       <div class="tournament-result-container min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 p-6">
@@ -399,21 +398,25 @@ export class LobbyDetailComponent extends Component {
                 🏆 토너먼트 완료!
               </h1>
               
-              ${isWinner ? `
+              ${
+                isWinner
+                  ? `
                 <div class="winner-announcement mb-4">
                   <h2 class="text-3xl font-bold text-yellow-600 mb-2">축하합니다! 🎉</h2>
                   <p class="text-xl text-primary-600">당신이 토너먼트 우승자입니다!</p>
                 </div>
-              ` : `
+              `
+                  : `
                 <div class="participant-result mb-4">
                   <h2 class="text-2xl font-bold text-primary-600 mb-2">토너먼트 참가 완료</h2>
                   <p class="text-lg text-primary-600">수고하셨습니다!</p>
                 </div>
-              `}
+              `
+              }
 
               <div class="tournament-info grid md:grid-cols-3 gap-4 mt-6">
                 <div class="stat-item text-center">
-                  <div class="text-2xl font-bold text-primary-700">${winner?.nickname || winner?.username || '알 수 없음'}</div>
+                  <div class="text-2xl font-bold text-primary-700">${winner?.nickname || winner?.username || "알 수 없음"}</div>
                   <div class="text-sm text-gray-600">우승자</div>
                 </div>
                 <div class="stat-item text-center">
@@ -421,7 +424,7 @@ export class LobbyDetailComponent extends Component {
                   <div class="text-sm text-gray-600">총 라운드</div>
                 </div>
                 <div class="stat-item text-center">
-                  <div class="text-2xl font-bold text-primary-700">${tournament?.tournament_type || '일반'}</div>
+                  <div class="text-2xl font-bold text-primary-700">${tournament?.tournament_type || "일반"}</div>
                   <div class="text-sm text-gray-600">토너먼트 형식</div>
                 </div>
               </div>
