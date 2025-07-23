@@ -15,4 +15,44 @@ export class ApiResponse {
       error: error?.message ?? error,
     });
   }
+
+  static notFound(res, message = "Resource not found") {
+    res.code(404).send({
+      success: false,
+      data: null,
+      error: message,
+    });
+  }
+
+  static unauthorized(res, message = "Unauthorized") {
+    res.code(401).send({
+      success: false,
+      data: null,
+      error: message,
+    });
+  }
+
+  static badRequest(res, message = "Bad Request") {
+    res.code(400).send({
+      success: false,
+      data: null,
+      error: message,
+    });
+  }
+
+  static forbidden(res, message = "Forbidden") {
+    res.code(403).send({
+      success: false,
+      data: null,
+      error: message,
+    });
+  }
+
+  static internalServerError(res, message = "Internal Server Error") {
+    res.code(500).send({
+      success: false,
+      data: null,
+      error: message,
+    });
+  }
 }

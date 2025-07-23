@@ -18,7 +18,7 @@ const websocketHandlers = {
       console.log(`Game WebSocket connected: ${userId}`);
 
       // 사용자 소켓 등록
-      websocketManager.addUserSocket(userId, "game", socket);
+      websocketManager.addUserSocket(Number(userId), "game", socket);
 
       socket.on("move", (raw) => {
         gameController.handleMoveEvent(socket, raw);
@@ -43,7 +43,7 @@ const websocketHandlers = {
       console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
 
       // 사용자 소켓 등록
-      websocketManager.addUserSocket(userId, "lobby", socket);
+      websocketManager.addUserSocket(Number(userId), "lobby", socket);
 
       if (lobbyId && lobbyId !== "undefined") {
         socket.join(`lobby-${lobbyId}`);
@@ -99,10 +99,10 @@ const websocketHandlers = {
       const userId = socket.handshake.auth["userId"];
       console.log(`Friend WebSocket connected: ${userId}`);
 
-      websocketManager.addUserSocket(userId, "friend", socket);
+      websocketManager.addUserSocket(Number(userId), "friend", socket);
 
       socket.on("disconnect", () => {
-        websocketManager.removeUserSocket(userId, "friend");
+        websocketManager.removeUserSocket(Number(userId), "friend");
         console.log(`Friend WebSocket disconnected: ${userId}`);
       });
     });
