@@ -30,9 +30,8 @@ const friendController = {
   // DELETE /v1/friends/delete
   async deleteFriendHandler(request, reply) {
     const { deleteFriendId } = request.body;
-    const userId = request.user.id;
-    console.log(`[Friend Controller] User ${userId} deleted friend ${deleteFriendId}`);
-    await friendService.deleteFriend(userId, deleteFriendId);
+    const userId = Number(request.user.id);
+    await friendService.deleteFriend(userId, parseInt(deleteFriendId));
     return ApiResponse.ok(reply, { message: "Friend deleted successfully" });
   },
 

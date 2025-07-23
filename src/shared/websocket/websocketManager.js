@@ -100,7 +100,10 @@ class WebSocketManager {
   sendToNamespaceUser(namespace, userId, event, message) {
     if (namespace) {
       // Socket.IO에서는 소켓 ID로 찾아야 함
+      console.log(`Sending message to user ${userId} in ${namespace} namespace`);
       const userSocketInfo = this.userSockets.get(userId);
+      console.log(userSocketInfo);
+      console.log(this.userSockets);
       // console.log(userSocketInfo);
       if (userSocketInfo) {
         // 해당 네임스페이스의 소켓 찾기
@@ -112,6 +115,7 @@ class WebSocketManager {
         }
       }
     }
+    console.log("false");
     return false;
   }
 
