@@ -19,11 +19,19 @@ class FriendService {
   }
   // 친구요청
   async requestFriend(friendRequestDto) {
-    const receiver = await this.userRepo.getUserByUsername(friendRequestDto.receiverName);
-    this.friendHelpers.validateExistingReceiver(receiver);
+    let receiver;
+    try {
+      receiver = await this.userRepo.getUserByUsername(friendRequestDto.receiverName);
+    } catch {
+      this.friendHelpers.validateExistingReceiver(receiver);
+    }
 
-    const sender = await this.userRepo.getUserById(friendRequestDto.senderId);
-    this.userHelpers.validateExistingUser(sender);
+    let sender;
+    try {
+      sender = await this.userRepo.getUserById(friendRequestDto.senderId);
+    } catch {
+      this.userHelpers.validateExistingUser(sender);
+    }
 
     const existingRelation = await this.friendRepo.findRelation(sender.id, receiver.id);
     this.friendHelpers.validateRelationNotExists(existingRelation);

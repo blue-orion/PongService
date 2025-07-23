@@ -9,7 +9,7 @@ class UserRepo {
   }
 
   async getUserById(id) {
-    return await prisma.user.findUnique({
+    return await prisma.user.findUniqueOrThrow({
       where: { id },
     });
   }
