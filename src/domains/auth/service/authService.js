@@ -42,7 +42,7 @@ class AuthService {
     this.authHelpers.validateUserEnable(user);
 
     const twoFASecret = await this.userRepo.getUser2FASecret(loginDto.username);
-    if (!twoFASecret) {
+    if (!twoFASecret.two_fa_secret) {
       return false;
     }
     return true;
