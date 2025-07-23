@@ -148,6 +148,15 @@ export class SignupComponent extends Component {
     if (this.formElement) {
       this.formElement.addEventListener("submit", this.handleSignup.bind(this));
     }
+
+    // 로그인 링크 클릭 시 로그인 화면으로 이동
+    const loginLink = this.container.querySelector(".login-link") as HTMLAnchorElement;
+    if (loginLink) {
+      loginLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.router.navigate("/login");
+      });
+    }
   }
 
   private async handleSignup(event: Event): Promise<void> {

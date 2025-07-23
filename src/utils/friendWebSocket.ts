@@ -84,7 +84,7 @@ export class FriendWebSocketManager {
     this.updateConnectionStatus("disconnected");
   }
 
-  private getUserIdFromToken(token: string): string | null {
+  private getUserIdFromToken(token: string): number | null {
     // UserManager에서 저장된 사용자 ID 사용
     return UserManager.getUserId();
   }
@@ -133,25 +133,7 @@ export class FriendWebSocketManager {
     });
 
     // 사용자 상태 업데이트 이벤트 리스너 추가
-    this.socket.on("user_status", (statusData: any) => {
-      // FriendComponent로 전달하기 위해 notification 형태로 변환
-      const notification: FriendNotification = {
-        type: "user_status",
-        payload: statusData.payload || statusData,
-      };
-
-      // 콜백으로 알림 전달
-      this.onFriendNotification?.(notification);
-    });
-
-    // 상태 업데이트 이벤트도 함께 수신 (백엔드에서 다른 이벤트명으로 전송할 수 있음)
-    this.socket.on("status_update", (statusData: any) => {
-      // FriendComponent로 전달하기 위해 notification 형태로 변환
-      const notification: FriendNotification = {
-        type: "status_update",
-        payload: statusData.payload || statusData,
-      };
-
+    this.socket.on("user_status", (notification: FriendNotification) => {
       // 콜백으로 알림 전달
       this.onFriendNotification?.(notification);
     });
@@ -208,7 +190,7 @@ export class FriendWebSocketManager {
     return this.connectionStatus;
   }
 
-  get userId(): string | null {
+  get userId(): number | null {
     const tokens = AuthManager.getTokens();
     if (!tokens?.accessToken) return null;
     return this.getUserIdFromToken(tokens.accessToken);

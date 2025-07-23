@@ -615,4 +615,44 @@ export class FriendDataManager {
       return false;
     }
   }
+
+  public updateFriendNickname(friendId: string, newNickname: string): boolean {
+    try {
+      const friendIdNum = parseInt(friendId);
+      if (isNaN(friendIdNum)) {
+        console.error("유효하지 않은 친구 ID:", friendId);
+        return false;
+      }
+
+      const friendIndex = this.friends.findIndex((friend) => friend.id === friendIdNum);
+      if (friendIndex !== -1) {
+        this.friends[friendIndex].name = newNickname;
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("친구 닉네임 업데이트 실패:", error);
+      return false;
+    }
+  }
+
+  public updateFriendProfileImage(friendId: string, newImageUrl: string): boolean {
+    try {
+      const friendIdNum = parseInt(friendId);
+      if (isNaN(friendIdNum)) {
+        console.error("유효하지 않은 친구 ID:", friendId);
+        return false;
+      }
+
+      const friendIndex = this.friends.findIndex((friend) => friend.id === friendIdNum);
+      if (friendIndex !== -1) {
+        this.friends[friendIndex].avatar = newImageUrl;
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("친구 프로필 이미지 업데이트 실패:", error);
+      return false;
+    }
+  }
 }
