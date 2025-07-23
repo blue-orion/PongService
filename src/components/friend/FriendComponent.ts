@@ -506,7 +506,7 @@ export class FriendComponent {
     }
 
     if (friendId && finalFriendName) {
-      this.deleteFriend(friendId, finalFriendName);
+      this.deleteFriend(Number(friendId), finalFriendName);
     }
   }
 
@@ -566,7 +566,7 @@ export class FriendComponent {
     }
   }
 
-  private async deleteFriend(friendId: string, friendName: string): Promise<void> {
+  private async deleteFriend(friendId: number, friendName: string): Promise<void> {
     if (!confirm(`정말로 ${friendName}님을 친구에서 삭제하시겠습니까?`)) return;
 
     try {
