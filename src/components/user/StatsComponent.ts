@@ -111,7 +111,10 @@ export class StatsComponent extends Component {
     
     // 전적 페이지 HTML 템플릿
     private renderStatsPageFallback(stats: UserStats): void {
-        const winRatePercent = Math.round(stats.winRate * 100);
+        // 승률이 이미 백분율인지 확인 (0-1 범위면 * 100, 1 초과면 그대로 사용)
+        const winRatePercent = stats.winRate <= 1 
+            ? Math.round(stats.winRate * 100) 
+            : Math.round(stats.winRate);
 
         this.container.innerHTML = `
             <div class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-cyan-100 p-4">
