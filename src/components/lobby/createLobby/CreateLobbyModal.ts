@@ -1,6 +1,8 @@
 import { Component } from "../../Component";
 import { UserManager } from "../../../utils/user";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export class CreateLobbyModal extends Component {
   private onLobbyCreated?: (lobby: any) => void;
   private isSubmitting: boolean = false;
@@ -170,7 +172,7 @@ export class CreateLobbyModal extends Component {
 
       console.log("로비 생성 요청:", requestData);
 
-      const response = await fetch("http://localhost:3333/v1/lobbies", {
+      const response = await fetch(`${API_BASE_URL}/lobbies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

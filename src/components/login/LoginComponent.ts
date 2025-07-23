@@ -1,6 +1,8 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export class LoginComponent extends Component {
   private formElement: HTMLFormElement | null = null;
 
@@ -122,9 +124,9 @@ export class LoginComponent extends Component {
 
     let socialUrl = "";
     if (provider === "Google") {
-      socialUrl = "http://localhost:3333/v1/auth/google";
+      socialUrl = `${API_BASE_URL}/auth/google`;
     } else if (provider === "42") {
-      socialUrl = "http://localhost:3333/v1/auth/42";
+      socialUrl = `${API_BASE_URL}/auth/42`;
     } else {
       this.showError(`${provider} 로그인은 준비 중입니다.`);
       return;

@@ -1,5 +1,7 @@
 import { AuthManager } from "./auth";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface Friend {
   id: number;
   username: string;
@@ -22,7 +24,6 @@ interface ApiResponse<T> {
 }
 
 export class FriendService {
-  private static readonly API_BASE_URL = "http://localhost:3333/v1";
   private baseUrl: string;
 
   constructor() {
@@ -31,7 +32,7 @@ export class FriendService {
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const response = await AuthManager.authenticatedFetch(`${FriendService.API_BASE_URL}${this.baseUrl}${endpoint}`, {
+      const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
           "Content-Type": "application/json",
