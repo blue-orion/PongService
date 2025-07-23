@@ -3,12 +3,18 @@ import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
 import { Helpers } from "#domains/lobby/utils/helpers.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
+import { GameService } from "#domains/game/service/gameService.js";
+import { LobbyStatus } from "@prisma/client";
 
 export class LobbyController {
   constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService()) {
     this.lobbyService = lobbyService;
     this.tournamentService = tournamentService;
+    this.gameService = GameService.getInstance();
     this.helpers = new Helpers();
+
+    // 게임 서비스에 로비 알림 콜백 등록
+    this.gameService.setLobbyNotificationCallback(this.handleGameCompleted.bind(this));
 
     Object.getOwnPropertyNames(Object.getPrototypeOf(this))
       .filter((prop) => typeof this[prop] === "function" && prop !== "constructor")
@@ -298,6 +304,99 @@ export class LobbyController {
       }
 
       return ApiResponse.ok(res, gameStartResult);
+    } catch (error) {
+      return ApiResponse.error(res, error);
+    }
+  }
+
+  /**
+   * 게임 완료 콜백 처리
+   * 게임 서비스에서 게임이 끝났을 때 호출되는 콜백 함수
+   * @param {number} tournamentId - 토너먼트 ID
+   * @param {number} gameId - 완료된 게임 ID
+   * @param {Object} gameResult - 게임 결과 { winnerId, loserId }
+   */
+  async handleGameCompleted(tournamentId, gameId, gameResult = {}) {
+    try {
+      console.log(`[LobbyController] Game completed: tournamentId=${tournamentId}, gameId=${gameId}`);
+      
+      const { winnerId, loserId } = gameResult;
+
+      // 1. 패자를 로비에서 제거
+      if (loserId) {
+        const updatedLobby = await this.lobbyService.removeLoserFromLobby(tournamentId, loserId);
+        console.log(`[LobbyController] Removed loser ${loserId} from lobby`);
+      }
+
+      // 2. 현재 라운드의 모든 게임이 완료되었는지 확인하고, 완료되었으면 라운드 증가 또는 토너먼트 완료
+      const result = await this.tournamentService.checkAndIncrementRoundIfAllGamesCompleted(tournamentId);
+      const { tournament: updatedTournament, isCompleted } = result;
+
+      // 3. 토너먼트 ID로 해당 로비 찾기
+      const tournament = await this.tournamentService.getTournamentById(tournamentId);
+      if (tournament && tournament.lobbies && tournament.lobbies.length > 0) {
+        const lobbyId = tournament.lobbies[0].id; // 첫 번째 로비 ID 사용
+
+        // 4. 로비 네임스페이스를 통해 게임 완료 알림 전송
+        const lobbyNamespace = websocketManager.getLobbyNamespace();
+        if (lobbyNamespace) {
+          if (isCompleted) {
+            // 토너먼트가 완료된 경우 - 로비 상태도 COMPLETED로 변경
+            await this.lobbyService.updateLobbyStatus(lobbyId, LobbyStatus.COMPLETED);
+            console.log(`[LobbyController] Updated lobby ${lobbyId} status to COMPLETED`);
+            
+            lobbyNamespace.to(`lobby-${lobbyId}`).emit("tournament:completed", {
+              tournament_id: tournamentId,
+              lobby_id: lobbyId,
+              tournament_status: updatedTournament.tournament_status,
+              tournament_type: updatedTournament.tournament_type,
+              final_round: updatedTournament.round,
+              winner_id: winnerId,
+              message: "토너먼트가 완료되었습니다!",
+            });
+          } else {
+            // 게임만 완료된 경우
+            lobbyNamespace.to(`lobby-${lobbyId}`).emit("game:completed", {
+              tournament_id: tournamentId,
+              game_id: gameId,
+              lobby_id: lobbyId,
+              current_round: updatedTournament.round,
+              tournament_status: updatedTournament.tournament_status,
+              winner_id: winnerId,
+              loser_id: loserId,
+              message: "게임이 완료되었습니다.",
+            });
+          }
+
+          // 5. 패자가 로비에서 제거되었음을 알림
+          if (loserId) {
+            lobbyNamespace.to(`lobby-${lobbyId}`).emit("lobby:playerRemoved", {
+              lobby_id: lobbyId,
+              removed_user_id: loserId,
+              reason: "game_loss",
+              message: "게임에서 패배하여 로비에서 제외되었습니다.",
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[LobbyController] Error handling game completion: ${error.message}`);
+    }
+  }
+
+  /**
+   * 토너먼트 완료 결과 조회
+   * @method GET v1/lobbies/:id/finish
+   */
+  async lobby_finish(req, res) {
+    try {
+      const { id } = req.params;
+
+      const tournamentResult = await this.lobbyService.getTournamentResult({
+        lobby_id: id,
+      });
+
+      return ApiResponse.ok(res, tournamentResult);
     } catch (error) {
       return ApiResponse.error(res, error);
     }
