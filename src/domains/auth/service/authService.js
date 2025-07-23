@@ -75,9 +75,8 @@ class AuthService {
     const { email, picture } = userRes.data;
 
     let user;
-    try {
-      user = await this.userRepo.getUserByUsername(email);
-    } catch {
+    user = await this.userRepo.getUserByUsername(email);
+    if (!user) {
       user = await this.userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
     }
     this.authHelpers.validateUserEnable(user);
@@ -93,9 +92,8 @@ class AuthService {
     const { login, image_url } = userRes.data;
 
     let user;
-    try {
-      user = await this.userRepo.getUserByUsername(login);
-    } catch {
+    user = await this.userRepo.getUserByUsername(login);
+    if (!user) {
       user = await this.userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
     }
     this.authHelpers.validateUserEnable(user);

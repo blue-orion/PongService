@@ -28,6 +28,8 @@ const userController = {
 
     await userService.updateUserNickname(user, updateProfileDto.nickname);
     await userService.updateUserProfileImage(user, updateProfileDto.profileImage);
+
+    await userService.broadcastCurrentUserProfile(user.id);
     return ApiResponse.ok(reply, { message: "User profile updated successfully" });
   },
 
