@@ -1,5 +1,8 @@
 import { AuthManager } from "../../../utils/auth";
-import { LobbyData, SocketEventHandlers } from "../../../types/lobby";
+import { UserManager } from "../../../utils/user";
+import { MatchData, LobbyData, SocketEventHandlers } from "../../../types/lobby";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
 
 export class LobbyDetailService {
   private lobbyId: string;
@@ -15,7 +18,7 @@ export class LobbyDetailService {
     this.handlers = handlers;
 
     try {
-      const userId = AuthManager.getCurrentUserId();
+      const userId = Number(UserManager.getUserId());
       if (!userId) {
         console.warn("WebSocket 연결 실패: 사용자 ID가 없습니다.");
         return;
@@ -41,7 +44,7 @@ export class LobbyDetailService {
       }
 
       const script = document.createElement("script");
-      script.src = "http://localhost:3333/socket.io/socket.io.js";
+      script.src = `${SOCKET_BASE_URL}/socket.io/socket.io.js`;
       script.onload = () => {
         console.log("Socket.IO 라이브러리 로드 완료");
         resolve();
@@ -58,7 +61,7 @@ export class LobbyDetailService {
     try {
       console.log("🔌 WebSocket 연결 시도:", { userId, lobbyId: this.lobbyId });
 
-      const socket = (window as any).io(`http://localhost:3333/ws/lobby`, {
+      const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
         query: {
           "user-id": userId,
           "lobby-id": this.lobbyId,
@@ -153,7 +156,7 @@ export class LobbyDetailService {
       this.handlers!.onConnectionStatusChange(true, this.socket.io.engine.transport.name);
 
       this.socket.emit("join_lobby", {
-        user_id: AuthManager.getCurrentUserId(),
+        user_id: Number(UserManager.getUserId()),
         lobby_id: this.lobbyId,
       });
     });
@@ -183,6 +186,13 @@ export class LobbyDetailService {
     // 디버깅용 모든 이벤트 로깅
     this.socket.onAny((eventName: string, ...args: any[]) => {
       console.log(`🔊 WebSocket 이벤트 수신: ${eventName}`, args);
+    });
+
+    // 게임 시작 이벤트
+    this.socket.on("game:started", (data: any) => {
+      console.log("🎯 WebSocket에서 게임 이벤트 수신:", data);
+
+      this.handlers?.onGameStarted(data);
     });
 
     console.log("🎯 WebSocket 초기화 완료 - 이벤트 리스너 등록됨");
@@ -216,7 +226,7 @@ export class LobbyDetailService {
   // API 관련 메서드들
   async loadLobbyData(): Promise<LobbyData> {
     try {
-      const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}`);
+      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -236,7 +246,7 @@ export class LobbyDetailService {
   }
 
   private transformApiDataToLobbyData(data: any): LobbyData {
-    const currentUserId = AuthManager.getCurrentUserId();
+    const currentUserId = Number(UserManager.getUserId());
     const activePlayers = data.players?.filter((player: any) => player.enabled === true) || [];
     const currentPlayer = activePlayers.find((p: any) => p.user_id === currentUserId);
 
@@ -266,7 +276,7 @@ export class LobbyDetailService {
   async toggleReady(): Promise<void> {
     console.log("🔄 준비 상태 토글 API 호출 시작");
 
-    const userId = AuthManager.getCurrentUserId();
+    const userId = Number(UserManager.getUserId());
     if (!userId) {
       throw new Error("로그인이 필요합니다.");
     }
@@ -276,7 +286,7 @@ export class LobbyDetailService {
       lobbyId: this.lobbyId,
     });
 
-    const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}/ready_state`, {
+    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/ready_state`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -301,12 +311,12 @@ export class LobbyDetailService {
   async leaveLobby(): Promise<void> {
     console.log("로비 나가기 API 호출");
 
-    const userId = AuthManager.getCurrentUserId();
+    const userId = Number(UserManager.getUserId());
     if (!userId) {
       throw new Error("로그인이 필요합니다.");
     }
 
-    const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}/left`, {
+    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -325,10 +335,32 @@ export class LobbyDetailService {
     console.log("로비 나가기 성공");
   }
 
+  async removeDefeatedPlayer(defeatedUserId: number): Promise<void> {
+    console.log("💀 패배자 로비 제거 API 호출:", defeatedUserId);
+
+    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/left`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        lobby_id: parseInt(this.lobbyId),
+        user_id: defeatedUserId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "패배자 제거에 실패했습니다.");
+    }
+
+    console.log("✅ 패배자 로비 제거 성공");
+  }
+
   async transferLeadership(targetUserId: number): Promise<void> {
     console.log("🔄 방장 위임 API 호출 시작:", { targetUserId });
 
-    const currentUserId = AuthManager.getCurrentUserId();
+    const currentUserId = Number(UserManager.getUserId());
     if (!currentUserId) {
       throw new Error("로그인이 필요합니다.");
     }
@@ -339,7 +371,7 @@ export class LobbyDetailService {
       lobbyId: this.lobbyId,
     });
 
-    const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}/authorize`, {
+    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/authorize`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -365,7 +397,7 @@ export class LobbyDetailService {
   async createMatch(): Promise<any> {
     console.log("🔄 매칭 생성 API 호출 시작");
 
-    const currentUserId = AuthManager.getCurrentUserId();
+    const currentUserId = Number(UserManager.getUserId());
     if (!currentUserId) {
       throw new Error("로그인이 필요합니다.");
     }
@@ -375,7 +407,7 @@ export class LobbyDetailService {
       user_id: currentUserId,
     });
 
-    const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}/create_match`, {
+    const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/create_match`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -415,7 +447,7 @@ export class LobbyDetailService {
     console.log("🔄 매칭 정보 조회 API 호출");
 
     try {
-      const response = await fetch(`http://localhost:3333/v1/lobbies/${this.lobbyId}/matches`);
+      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/matches`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -444,5 +476,57 @@ export class LobbyDetailService {
     }
   }
 
-  async startGames(): Promise<any> {}
+  async checkTournamentFinish(): Promise<any> {
+    console.log("🏆 토너먼트 완료 상태 확인 API 호출");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/finish`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // 토너먼트가 아직 완료되지 않은 경우
+          return null;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json().then((data: any) => data.data);
+      console.log("✅ 토너먼트 완료 상태 확인 성공:", result);
+
+      return result;
+    } catch (error) {
+      console.warn("⚠️ 토너먼트 완료 상태 확인 실패:", error);
+      return null;
+    }
+  }
+
+  async startGames(lobbyData: LobbyData | null): Promise<any> {
+    try {
+      const userId = Number(UserManager.getUserId());
+      const matches = lobbyData?.matchData?.matches ?? [];
+      if (!lobbyData || !matches) {
+        console.warn("존재하는 매치가 없습니다, 매치 생성 먼저하세요");
+      }
+
+      for (let match of matches) {
+        const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/start_game`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            game_id: match.game_id,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.warn("⚠️ 게임 시작 실패:", error);
+      return null;
+    }
+  }
 }

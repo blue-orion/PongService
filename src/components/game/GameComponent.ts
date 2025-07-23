@@ -1,6 +1,8 @@
 import { Component } from "../Component";
 import { io, Socket } from "socket.io-client";
-import { AuthManager } from "../../utils/auth";
+import { UserManager } from "../../utils/user";
+const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
+
 // 서버 메시지 구조에 맞는 타입 정의
 type PaddleSide = "left" | "right";
 interface Paddle {
@@ -19,7 +21,8 @@ interface GameState {
   status?: "waiting" | "playing" | "finished" | "paused";
   winner?: "left" | "right" | null;
 }
-import { KeyboardControls, ConnectionStatus } from "../../types/game";
+
+import { ArrowKey, KeyState, KeyboardControls, ConnectionStatus } from "../../types/game";
 
 export class GameComponent extends Component {
   private myRole: "left" | "right" = "left";
@@ -31,7 +34,7 @@ export class GameComponent extends Component {
   private keyboardControls: KeyboardControls = { up: false, down: false };
   private lastUpdateTime = 0;
   private animationId: number | null = null;
-  private keyState: { [key: string]: boolean } = {
+  private keyState: KeyState = {
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
@@ -42,30 +45,21 @@ export class GameComponent extends Component {
   private statusElement!: HTMLElement;
   private connectionStatusElement!: HTMLElement;
 
-  private tournamentId: number = 1;
-  private gameId: number = 1;
-  private playerId: string = "";
+  private tournamentId: number = 0;
+  private gameId: number = 0;
+  private playerId: number | null = 0;
+  private nickname: string | null = "";
 
   constructor(container: HTMLElement, ...args: any[]) {
     super(container);
-    // accessToken에서 playerId 추출 (JWT 디코딩)
-    // const tokens = AuthManager.getTokens && AuthManager.getTokens();
-    // const token = tokens && tokens.accessToken;
-    // if (token) {
-    //   try {
-    //     const payload = JSON.parse(atob(token.split(".")[1]));
-    //     this.playerId = payload.id;
-    //   } catch (e) {
-    //     this.playerId = "";
-    //   }
-    // }
+    this.playerId = UserManager.getUserId();
+    this.nickname = UserManager.getUsername();
 
-    this.playerId = "hylim";
-
+    const { gameId, tournamentId } = args[0];
+    console.log(args, tournamentId, gameId);
     // tournamentId, gameId는 임시로 1
-    this.tournamentId = 1;
-    this.gameId = 1;
-    this.playerId = "test-player";
+    this.tournamentId = Number(tournamentId);
+    this.gameId = Number(gameId);
   }
 
   private getTemplate(): string {
@@ -96,17 +90,18 @@ export class GameComponent extends Component {
     ></div>
   </div>
 
-  <div class="status-bar relative z-10 w-[800px] px-4 py-2 mb-8">
-    <div id="gameStatus" class="game-status absolute left-0 top-1/2 -translate-y-1/2">
-      <div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
-    </div>
-    <div id="scores" class="scores flex justify-center text-2xl">LEFT: 0 | RIGHT: 0</div>
-    <div class="absolute right-0 top-1/2 -translate-y-1/2 text-center text-sm text-primary-600 glass-card p-1.5">
-      <p class="font-medium">게임 조작법</p>
-      <p class="mt-1">W/A/S/D 또는 방향키로 패들을 조작하세요</p>
-    </div>
-  </div>
+  <div class="status-bar flex relative justify-between items-center w-[800px]">
+		<div id="gameStatus" class="game-status">
+			<div id="connectionStatus" class="connection-status status-connecting">연결 중...</div>
+		</div>
 
+		<div id="scores" class="scores text-2xl text-center">LEFT: 0 | RIGHT: 0</div>
+
+		<div class="text-sm text-primary-600 glass-card p-1.5 text-center">
+			<p class="font-medium">게임 조작법</p>
+			<p class="mt-1">W/A/S/D 또는 방향키로 패들을 조작하세요</p>
+		</div>
+	</div>
   <canvas id="gameCanvas" class="game-canvas relative z-0" width="800" height="600"></canvas>
 </div>
     `;
@@ -135,7 +130,7 @@ export class GameComponent extends Component {
   }
 
   private connectWebSocket(): void {
-    this.socket = io("http://localhost:3333/ws/game", {
+    this.socket = io(`${SOCKET_BASE_URL}/ws/game`, {
       auth: {
         tournamentId: this.tournamentId,
         gameId: this.gameId,
@@ -169,6 +164,12 @@ export class GameComponent extends Component {
       if (payload?.status === "finished") {
         this.showGameResult(payload);
       }
+    });
+
+    this.socket.on("gameOver", (msg) => {
+      const payload = msg?.payload;
+      console.log(msg);
+      this.showGameResult(payload);
     });
 
     this.socket.on("error", (msg) => {
@@ -208,8 +209,8 @@ export class GameComponent extends Component {
       if (keycode === "KeyA") keycode = "ArrowLeft";
       if (keycode === "KeyD") keycode = "ArrowRight";
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
-        if (this.keyState[keycode] === true) return;
-        this.keyState[keycode] = true;
+        if (this.keyState[keycode as ArrowKey] === true) return;
+        this.keyState[keycode as ArrowKey] = true;
         this.socket.emit("move", {
           type: "keydown",
           payload: {
@@ -231,7 +232,7 @@ export class GameComponent extends Component {
       if (keycode === "KeyA") keycode = "ArrowLeft";
       if (keycode === "KeyD") keycode = "ArrowRight";
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(keycode)) {
-        this.keyState[keycode] = false;
+        this.keyState[keycode as ArrowKey] = false;
         this.socket.emit("move", {
           type: "keyup",
           payload: {
@@ -290,37 +291,63 @@ export class GameComponent extends Component {
   }
 
   private showGameResult(gameData: any): void {
-    // 승자 결정 (점수 기반)
-    if (!gameData.winner && gameData.score) {
-      const leftScore = gameData.score.left || 0;
-      const rightScore = gameData.score.right || 0;
-      if (leftScore > rightScore) {
-        gameData.winner = "left";
-      } else if (rightScore > leftScore) {
-        gameData.winner = "right";
-      }
+    console.log("🎮 게임 결과 표시:", gameData);
+
+    // 결과 메시지 생성 및 승패 판단
+    let resultMessage = "게임 종료!";
+    let isWinner = false;
+
+    if (gameData.winner) {
+      const winnerName = gameData.winner;
+      const myName = UserManager.getUsername();
+      isWinner = winnerName === myName;
+      resultMessage = isWinner ? `승리! ${winnerName} 승!` : `패배! ${winnerName} 승!`;
     }
 
-    // 결과 메시지 생성
-    let resultMessage = "게임 종료!";
-    if (gameData.winner) {
-      const winnerText = gameData.winner === "left" ? "P1" : "P2";
-      const isWinner = gameData.winner === this.myRole;
-      resultMessage = isWinner ? `승리! ${winnerText} 승!` : `패배! ${winnerText} 승!`;
-    }
+    // 승자는 로비로 나가기 버튼만, 패자는 홈으로 나가기 버튼만 표시
+    const buttonHtml = isWinner
+      ? '<button class="exit-lobby-button">로비로 나가기</button>'
+      : '<button class="exit-home-button">홈으로 나가기</button>';
 
     // 결과 표시
-    const resultDiv = document.createElement("div");
-    resultDiv.className = "game-result glass-card p-6 mt-4 text-center";
-    resultDiv.innerHTML = `
+    const resultModal = document.createElement("div");
+    resultModal.className = "game-result glass-card p-6 mt-4 text-center";
+    resultModal.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
-        this.gameState?.score.right || 0
-      }</p>
-      <button class="btn-primary" onclick="location.reload()">다시 게임</button>
+      this.gameState?.score.right || 0
+    }</p>
+      ${buttonHtml}
     `;
 
-    this.statusElement.appendChild(resultDiv);
+    const modalElement = document.createElement("div");
+    modalElement.appendChild(resultModal);
+    modalElement.className = "modal-overlay";
+
+    this.container.appendChild(modalElement);
+
+    const exitLobbyButton = modalElement.querySelector(".exit-lobby-button");
+    exitLobbyButton?.addEventListener("click", () => {
+      this.container.removeChild(modalElement);
+      this.exitToLobby(); // 로비로 나가기
+    });
+
+    const exitHomeButton = modalElement.querySelector(".exit-home-button");
+    exitHomeButton?.addEventListener("click", () => {
+      this.container.removeChild(modalElement);
+      this.exitToHome(); // 홈으로 나가기
+    });
+  }
+
+  private exitToLobby() {
+    const lobbyId = sessionStorage.getItem("lastLobbyId");
+    sessionStorage.removeItem("lastLobbyId");
+    window.router.navigate(`/lobby/${lobbyId}`);
+  }
+
+  private exitToHome() {
+    sessionStorage.removeItem("lastLobbyId");
+    window.router.navigate(`/`);
   }
 
   private showError(error: string): void {

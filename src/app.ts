@@ -196,10 +196,10 @@ class App {
       if (existingMainComponent && existingMainComponent.destroy) {
         existingMainComponent.destroy();
       }
-      
+
       // 메인 콘텐츠 컨테이너 초기화
-      mainContentContainer.innerHTML = '';
-      
+      mainContentContainer.innerHTML = "";
+
       // 새 메인 컴포넌트 생성 및 렌더링
       const mainComponent = new ComponentClass(mainContentContainer, ...args);
       await mainComponent.render();
@@ -208,7 +208,7 @@ class App {
       if (this.currentComponent && this.currentComponent.setMainComponent) {
         this.currentComponent.setMainComponent(mainComponent);
       }
-      
+
       console.log(`[App] 메인 컴포넌트 교체 완료: ${ComponentClass.name}`, args);
     }
   }
@@ -248,7 +248,6 @@ class App {
     if (isAuthenticated) {
       await this.initializeFriendComponent?.();
     }
-    console.log(isAuthenticated);
 
     console.log("레이아웃과 컴포넌트 렌더링 완료");
   }
@@ -270,7 +269,7 @@ class App {
       // 친구 컴포넌트 초기화
       this.friendComponent = new FriendComponent(friendContainer);
       await this.friendComponent.render();
-      
+
       // 웹소켓 연결 (친구 컴포넌트 초기화 후에 한 번만)
       friendWebSocketManager.connect();
     } else {
