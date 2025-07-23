@@ -61,9 +61,8 @@ const authController = {
   async googleOAuthCallbackHandler(request, reply) {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.googleOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
-    const jwt = await authService.googleOAuth(jwtUtils, token);
-    const redirectUrl = `http://localhost:8080/social-callback?jwt=${encodeURIComponent(JSON.stringify(jwt))}`;
-    return reply.redirect(redirectUrl);
+    const jwt = await this.authService.googleOAuth(jwtUtils, token);
+    reply.type("text/html").send(this.oauthTokenFormat(jwt));
   },
 
   // GET /v1/auth/42/callback
@@ -71,8 +70,26 @@ const authController = {
     const jwtUtils = request.server.jwtUtils;
     const token = await request.server.fortyTwoOAuth.getAccessTokenFromAuthorizationCodeFlow(request);
     const jwt = await authService.fortyTwoOAuth(jwtUtils, token);
-    const redirectUrl = `http://localhost:8080/social-callback?jwt=${encodeURIComponent(JSON.stringify(jwt))}`;
-    return reply.redirect(redirectUrl);
+    reply.type("text/html").send(this.oauthTokenFormat(jwt));
+  },
+
+  oauthTokenFormat(token) {
+    return `
+            <!DOCTYPE html>
+            <html>
+            <head></head>
+            <body>
+                <script>
+                    window.opener.postMessage({
+                        type: 'OAUTH_RESULT',
+                        success: true,
+                        data: ${JSON.stringify(token)}
+                    }, '*');
+                    window.close();
+                </script>
+            </body>
+            </html>
+        `;
   },
 };
 
