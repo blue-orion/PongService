@@ -1,7 +1,6 @@
 import { Router } from "./router";
 import { LoginComponent } from "./components/login/LoginComponent";
 import { SignupComponent } from "./components/login/SignupComponent";
-import { SocialCallbackComponent } from "./components/login/SocialCallback";
 import { GameComponent } from "./components/game/GameComponent";
 import { AuthManager } from "./utils/auth";
 import { UserManager } from "./utils/user";
@@ -59,12 +58,6 @@ class App {
     const isAuthenticated = await AuthManager.checkAuth();
     const currentPath = window.location.pathname;
 
-    // 소셜 콜백 경로는 인증 예외
-    if (currentPath === "/social-callback") {
-      this.router.navigate("/social-callback", false);
-      return;
-    }
-
     if (isAuthenticated) {
       if (currentPath === "/login") {
         this.router.navigate("/");
@@ -100,11 +93,6 @@ class App {
     // 회원가입 페이지
     this.router.addRoute("/signup", async () => {
       await this.loadComponent(SignupComponent);
-    });
-
-    // 소셜 로그인 콜백 페이지
-    this.router.addRoute("/social-callback", async () => {
-      await this.loadComponent(SocialCallbackComponent);
     });
 
     // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링

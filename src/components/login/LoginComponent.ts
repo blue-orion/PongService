@@ -1,5 +1,6 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
+import { OAuthComponent } from "../auth/OAuthComponent";
 
 export class LoginComponent extends Component {
   private formElement: HTMLFormElement | null = null;
@@ -96,9 +97,7 @@ export class LoginComponent extends Component {
   }
 
   private setupEventListeners(): void {
-    this.formElement = this.container.querySelector(
-      "#loginForm",
-    ) as HTMLFormElement;
+    this.formElement = this.container.querySelector("#loginForm") as HTMLFormElement;
 
     if (this.formElement) {
       this.formElement.addEventListener("submit", this.handleLogin.bind(this));
@@ -111,33 +110,53 @@ export class LoginComponent extends Component {
     });
 
     // 회원가입 버튼 이벤트 리스너 추가
-    const signupLink = this.container.querySelector('.signup-link a');
+    const signupLink = this.container.querySelector(".signup-link a");
     if (signupLink) {
-      signupLink.addEventListener('click', this.handleSignup.bind(this));
+      signupLink.addEventListener("click", this.handleSignup.bind(this));
     }
   }
 
-  private handleSocialLogin(event: Event): void {
+  private async handleSocialLogin(event: Event): Promise<void> {
     event.preventDefault();
     const button = event.target as HTMLButtonElement;
     const provider = button.textContent?.trim();
 
-    let socialUrl = "";
-    if (provider === "Google") {
-      socialUrl = "http://localhost:3333/v1/auth/google";
-    } else if (provider === "42") {
-      socialUrl = "http://localhost:3333/v1/auth/42";
-    } else {
-      this.showError(`${provider} 로그인은 준비 중입니다.`);
+    if (!provider) {
+      this.showError("제공자를 확인할 수 없습니다.");
       return;
     }
-    window.location.href = socialUrl;
+
+    try {
+      let result;
+
+      switch (provider) {
+        case "Google":
+          result = await OAuthComponent.loginWithGoogle();
+          break;
+        case "42":
+          result = await OAuthComponent.loginWith42();
+          break;
+        default:
+          this.showError(`${provider} 로그인은 준비 중입니다.`);
+          return;
+      }
+
+      if (result.success) {
+        // 메인 페이지로 이동
+        window.router.navigate("/");
+      } else {
+        this.showError(result.message || `${provider} 로그인에 실패했습니다.`);
+      }
+    } catch (error) {
+      console.error(`${provider} 로그인 오류:`, error);
+      this.showError(`${provider} 로그인 중 오류가 발생했습니다.`);
+    }
   }
-  
+
   private handleSignup(event: Event): void {
     event.preventDefault();
     // 예시: 회원가입 페이지로 이동
-    window.router.navigate('/signup');
+    window.router.navigate("/signup");
   }
 
   private async handleLogin(event: Event): Promise<void> {
@@ -157,12 +176,12 @@ export class LoginComponent extends Component {
       this.setLoading(true);
 
       // 2FA 입력 필드가 아직 없는 경우 (첫 로그인 시도)
-      const has2FAInput = !!this.container.querySelector('.twofa-input-container');
-      
+      const has2FAInput = !!this.container.querySelector(".twofa-input-container");
+
       if (!has2FAInput) {
         // 먼저 2FA 활성화 여부 확인
         const is2FAEnabled = await this.check2FAEnabled(username, password);
-        
+
         if (is2FAEnabled) {
           // 2FA가 활성화된 경우 입력 필드 표시하고 토큰 요구
           this.show2FAInput();
@@ -172,7 +191,7 @@ export class LoginComponent extends Component {
         } else {
           // 2FA가 비활성화된 경우 바로 로그인 진행
           await AuthManager.login(username, password);
-          
+
           // 로그인 성공 시 친구 컴포넌트 초기화를 위해 앱에 알림
           if ((window as any).app) {
             await (window as any).app.initializeFriendComponent();
@@ -199,7 +218,6 @@ export class LoginComponent extends Component {
         this.setLoading(false);
         return;
       }
-      
     } catch (error) {
       console.error("로그인 오류:", error);
       this.showError(error instanceof Error ? error.message : "로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -226,11 +244,10 @@ export class LoginComponent extends Component {
       }
 
       const result = await response.json();
-      
+
       // API 응답에서 2FA 활성화 여부를 확인
       // API는 { isValid: boolean } 형태로 응답함
       return result.data?.isValid || false;
-      
     } catch (error) {
       // check API 실패 시에는 에러를 다시 던져서 로그인을 중단
       console.error("2FA 확인 중 오류:", error);
@@ -240,7 +257,7 @@ export class LoginComponent extends Component {
 
   private show2FAInput(): void {
     // 기존 2FA 입력 필드가 있으면 제거
-    const existing2FAInput = this.container.querySelector('.twofa-input-container');
+    const existing2FAInput = this.container.querySelector(".twofa-input-container");
     if (existing2FAInput) {
       existing2FAInput.remove();
     }
@@ -270,10 +287,10 @@ export class LoginComponent extends Component {
     // 로그인 버튼 앞에 2FA 입력 필드 삽입
     const submitButton = this.container.querySelector('button[type="submit"]');
     if (submitButton) {
-      submitButton.insertAdjacentHTML('beforebegin', twoFAHTML);
-      
+      submitButton.insertAdjacentHTML("beforebegin", twoFAHTML);
+
       // 2FA 입력 필드에 포커스 및 이벤트 설정
-      const tokenInput = this.container.querySelector('#token') as HTMLInputElement;
+      const tokenInput = this.container.querySelector("#token") as HTMLInputElement;
       if (tokenInput) {
         this.setup2FATokenInput(tokenInput);
       }
@@ -283,16 +300,16 @@ export class LoginComponent extends Component {
   // 2FA 토큰 입력 필드 이벤트 설정
   private setup2FATokenInput(tokenInput: HTMLInputElement): void {
     tokenInput.focus();
-    
+
     // 숫자만 입력 허용
-    tokenInput.addEventListener('input', (e) => {
+    tokenInput.addEventListener("input", (e) => {
       const input = e.target as HTMLInputElement;
-      input.value = input.value.replace(/[^0-9]/g, '');
+      input.value = input.value.replace(/[^0-9]/g, "");
     });
-    
+
     // Enter 키로 로그인
-    tokenInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+    tokenInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
         const submitBtn = this.container.querySelector('button[type="submit"]') as HTMLButtonElement;
         if (submitBtn) {
           submitBtn.click();
@@ -310,8 +327,7 @@ export class LoginComponent extends Component {
 
     // 새 에러 메시지 표시
     const errorDiv = document.createElement("div");
-    errorDiv.className =
-      "error-message bg-red-500/10 border border-red-500/20 text-red-700 p-3 rounded-lg mt-4";
+    errorDiv.className = "error-message bg-red-500/10 border border-red-500/20 text-red-700 p-3 rounded-lg mt-4";
     errorDiv.textContent = message;
 
     this.formElement?.appendChild(errorDiv);
@@ -321,12 +337,8 @@ export class LoginComponent extends Component {
   }
 
   private setLoading(loading: boolean): void {
-    const submitButton = this.container.querySelector(
-      'button[type="submit"]',
-    ) as HTMLButtonElement | null;
-    const inputs = this.container.querySelectorAll(
-      "input",
-    ) as NodeListOf<HTMLInputElement>;
+    const submitButton = this.container.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    const inputs = this.container.querySelectorAll("input") as NodeListOf<HTMLInputElement>;
 
     if (!submitButton) return;
 
@@ -352,9 +364,9 @@ export class LoginComponent extends Component {
       button.removeEventListener("click", this.handleSocialLogin.bind(this));
     });
 
-    const signupLink = this.container.querySelector('.signup-link a');
+    const signupLink = this.container.querySelector(".signup-link a");
     if (signupLink) {
-      signupLink.removeEventListener('click', this.handleSignup.bind(this));
+      signupLink.removeEventListener("click", this.handleSignup.bind(this));
     }
 
     // 2FA 모달이나 에러 메시지 정리
@@ -363,7 +375,7 @@ export class LoginComponent extends Component {
       existingError.remove();
     }
 
-    const existing2FAInput = this.container.querySelector('.twofa-input-container');
+    const existing2FAInput = this.container.querySelector(".twofa-input-container");
     if (existing2FAInput) {
       existing2FAInput.remove();
     }
