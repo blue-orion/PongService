@@ -244,20 +244,17 @@ class App {
     }
 
     // 친구창 초기화
-    const isAuthenticated = await AuthManager.checkAuth();
-    if (isAuthenticated) {
-      await this.initializeFriendComponent?.();
-    }
+    await this.initializeFriendComponent();
 
     console.log("레이아웃과 컴포넌트 렌더링 완료");
   }
 
-  private async initializeFriendComponent(): Promise<void> {
+  public async initializeFriendComponent(): Promise<void> {
     // 기존 친구창이 있는지 확인
     const existingFriendContainer = document.getElementById("friend-container");
 
-    if (!this.friendComponent) {
-      let friendContainer = existingFriendContainer;
+    if (!existingFriendContainer || existingFriendContainer.children.length === 0) {
+      let friendContainer = existingFriendContainer as HTMLDivElement | null;
 
       // 컨테이너가 없으면 새로 생성
       if (!friendContainer) {
