@@ -64,7 +64,6 @@ export class LobbyListComponent extends Component {
       onCreateLobby: () => this.createNewLobby(),
       onJoinLobby: (lobbyId) => this.joinLobby(lobbyId),
       onEnterLobby: (lobbyId) => this.enterLobby(lobbyId),
-      onSpectateLobby: (lobbyId) => this.spectateLobby(lobbyId),
       onFilterChange: (status, search) => this.handleFilterChange(status, search),
       onPageChange: (page) => this.goToPage(page),
       onPageSizeChange: (pageSize) => this.changePageSize(pageSize),
@@ -172,13 +171,6 @@ export class LobbyListComponent extends Component {
     console.log("이미 참여 중인 로비로 이동:", lobbyId);
     if (window.router) {
       window.router.navigate(`/lobby/${lobbyId}`);
-    }
-  }
-
-  private spectateLobby(lobbyId: number): void {
-    console.log("로비 관전 모드로 이동:", lobbyId);
-    if (window.router) {
-      window.router.navigate(`/lobby/${lobbyId}?mode=spectate`);
     }
   }
 

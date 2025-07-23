@@ -34,7 +34,7 @@ export class LobbyDetailUI {
   }
 
   renderLobbyDetail(lobbyData: LobbyData, isConnected: boolean = false, transport: string = "unknown"): void {
-    const currentUserId = AuthManager.getCurrentUserId();
+    const currentUserId = Number(AuthManager.getCurrentUserId());
     const currentPlayer = PlayerRenderer.findPlayerById(lobbyData.players, currentUserId || 0);
 
     this.container.innerHTML = `
@@ -129,13 +129,13 @@ export class LobbyDetailUI {
                         ${MatchRenderer.renderMatchDetails(matchData)}
                     </div>
                     
-                    <div class="match-result-footer">
-                        <button class="start-match-btn confirm">게임 시작</button>
-                    </div>
                 </div>
             </div>
         `;
-
+    // <div class="match-result-footer">
+    //     <button class="start-match-btn confirm">게임 시작</button>
+    // </div>
+    // 게임 시작 버튼 임시 제거
     const modalElement = document.createElement("div");
     modalElement.innerHTML = modalHTML;
     modalElement.className = "modal-overlay";

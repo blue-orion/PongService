@@ -42,9 +42,12 @@ export interface Ball {
 
 // WebSocket 연결 상태
 export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "reconnecting";
+export type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 
 // 키보드 이벤트 타입
 export interface KeyboardControls {
   up: boolean;
   down: boolean;
 }
+
+export type KeyState = Record<ArrowKey, boolean>;

@@ -4,7 +4,6 @@ export interface UIEventHandlers {
   onCreateLobby: () => void;
   onJoinLobby: (lobbyId: number) => void;
   onEnterLobby: (lobbyId: number) => void;
-  onSpectateLobby: (lobbyId: number) => void;
   onFilterChange: (status: string, search: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -116,7 +115,7 @@ export class LobbyListUI {
       if (lobby.isCurrentUserInLobby) {
         return `<button class="enter-btn" data-lobby-id="${lobby.id}">게임 참여</button>`;
       } else {
-        return `<button class="spectate-btn" data-lobby-id="${lobby.id}">관전하기</button>`;
+        return `<span class="game-status">게임 중</span>`;
       }
     }
   }
@@ -144,18 +143,6 @@ export class LobbyListUI {
         const lobbyId = target.getAttribute("data-lobby-id");
         if (lobbyId && this.handlers) {
           this.handlers.onEnterLobby(parseInt(lobbyId));
-        }
-      });
-    });
-
-    // 관전 버튼들
-    const spectateBtns = this.container.querySelectorAll(".spectate-btn");
-    spectateBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const lobbyId = target.getAttribute("data-lobby-id");
-        if (lobbyId && this.handlers) {
-          this.handlers.onSpectateLobby(parseInt(lobbyId));
         }
       });
     });

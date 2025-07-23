@@ -8,8 +8,9 @@ export class UserManager {
     localStorage.setItem(this.USERNAME_KEY, user.username);
   }
 
-  static getUserId(): string | null {
-    return localStorage.getItem(this.USER_ID_KEY);
+  static getUserId(): number | null {
+    const userId = localStorage.getItem(this.USER_ID_KEY);
+    return userId ? Number(userId) : null;
   }
 
   static getUsername(): string | null {

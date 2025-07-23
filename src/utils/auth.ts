@@ -27,23 +27,23 @@ export class AuthManager {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
     localStorage.setItem(this.EXPIRES_AT_KEY, tokens.expiresAt.toString());
-    
+
     // JWT에서 사용자 정보 추출하여 UserManager로 저장
     try {
       const payload = this.decodeJWT(tokens.accessToken);
-      
+
       // 다양한 필드명 시도
       const userId = payload?.id || payload?.user_id || payload?.userId || payload?.sub;
       const username = payload?.username || payload?.user_name || payload?.name || payload?.userName;
-      
+
       if (userId && username) {
         UserManager.saveUserInfo({
           id: String(userId), // 숫자일 수 있으므로 문자열로 변환
-          username: String(username)
+          username: String(username),
         });
       }
     } catch (e) {
-      console.error('JWT에서 사용자 정보 추출 실패:', e);
+      console.error("JWT에서 사용자 정보 추출 실패:", e);
     }
   }
 
@@ -165,7 +165,7 @@ export class AuthManager {
       const response = await fetch(`${this.API_BASE_URL}/auth/refresh`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${tokens.refreshToken}`,
+          Authorization: `Bearer ${tokens.refreshToken}`,
         },
       });
 
@@ -193,7 +193,7 @@ export class AuthManager {
         newAccessToken = responseData.accessToken;
         newRefreshToken = responseData.refreshToken || tokens.refreshToken;
       } else {
-        console.error('[AuthManager] 예상하지 못한 응답 구조:', responseData);
+        console.error("[AuthManager] 예상하지 못한 응답 구조:", responseData);
         return false;
       }
 
