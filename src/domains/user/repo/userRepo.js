@@ -3,7 +3,7 @@ import FriendsUtils from "#domains/friend/util/friendsUtils.js";
 
 class UserRepo {
   async getUserByUsername(username) {
-    return await prisma.user.findUniqueOrThrow({
+    return await prisma.user.findUnique({
       where: { username },
     });
   }

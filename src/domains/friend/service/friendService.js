@@ -1,57 +1,52 @@
-import FriendRepo from "#domains/friend/repo/friendRepo.js";
-import UserRepo from "#domains/user/repo/userRepo.js";
-import PongException from "#shared/exception/pongException.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
 
+import FriendHelpers from "#domains/friend/util/friendHelpers.js";
+import FriendRepo from "#domains/friend/repo/friendRepo.js";
+import UserHelpers from "#domains/user/utils/userHelpers.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
+
 class FriendService {
-  constructor(friendRepo = new FriendRepo(), userRepo = new UserRepo()) {
+  constructor(
+    friendHelpers = new FriendHelpers(),
+    friendRepo = new FriendRepo(),
+    userHelpers = new UserHelpers(),
+    userRepo = new UserRepo()
+  ) {
+    this.friendHelpers = friendHelpers;
     this.friendRepo = friendRepo;
+    this.userHelpers = userHelpers;
     this.userRepo = userRepo;
   }
   // 친구요청
-  async requestFriend(receiverName, senderId) {
-    if (!senderId || !receiverName) {
-      throw new PongException("Sender ID and Receiver Name are required", 400);
-    }
+  async requestFriend(friendRequestDto) {
+    const receiver = await this.userRepo.getUserByUsername(friendRequestDto.receiverName);
+    this.friendHelpers.validateExistingReceiver(receiver);
 
-    const receiver = await this.userRepo.getUserByUsername(receiverName);
-    const sender = await this.userRepo.getUserById(senderId);
-    if (!receiver || !sender) {
-      throw new PongException("Receiver not found", 404);
-    }
+    const sender = await this.userRepo.getUserById(friendRequestDto.senderId);
+    this.userHelpers.validateExistingUser(sender);
 
-    const existingRelation = await this.friendRepo.findRelation(senderId, receiver.id);
-    if (existingRelation) {
-      throw new PongException("Friend request already exists", 400);
-    }
+    const existingRelation = await this.friendRepo.findRelation(sender.id, receiver.id);
+    this.friendHelpers.validateRelationNotExists(existingRelation);
 
-    const friendRelation = await this.friendRepo.requestFriend(senderId, receiver.id);
+    const friendRelation = await this.friendRepo.requestFriend(sender.id, receiver.id);
 
-    websocketManager.sendToNamespaceUsers("friend", receiver.id, senderId, "friend_request", {
+    websocketManager.sendToNamespaceUsers("friend", receiver.id, sender.id, "friend_request", {
       type: "request",
       payload: {
         relationId: friendRelation.id,
-        senderId: senderId,
+        senderId: sender.id,
         senderUsername: sender.username,
         receiverId: receiver.id,
         receiverUsername: receiver.username,
         message: "You have a new friend request",
       },
     });
-
-    return friendRelation.id;
   }
 
   // 친구 요청 수락
   async acceptFriendRequest(relationId) {
-    if (!relationId) {
-      throw new PongException("Relation ID is required", 400);
-    }
     const relation = await this.friendRepo.acceptFriendRequest(relationId);
-
-    if (!relation) {
-      throw new PongException("Friend relation does not exist", 404);
-    }
+    this.friendHelpers.validateRelationExists(relation);
 
     await this.userRepo.addFriendToList(relation.sender_id, relation.receiver_id);
     await this.userRepo.addFriendToList(relation.receiver_id, relation.sender_id);
@@ -66,19 +61,12 @@ class FriendService {
         receiverId: relation.receiver_id,
       },
     });
-
-    return relation;
   }
 
   // 친구 삭제
-  async deleteFriend(requestUserId, deleteFriendId) {
-    if (!requestUserId || !deleteFriendId) {
-      throw new PongException("Request User ID and Delete Friend ID are required", 400);
-    }
-    const relation = await this.friendRepo.findRelation(requestUserId, deleteFriendId);
-    if (!relation) {
-      throw new PongException("Friend relation does not exist", 404);
-    }
+  async deleteFriend(friendDeleteDto) {
+    const relation = await this.friendRepo.findRelation(friendDeleteDto.userId, friendDeleteDto.friendId);
+    this.friendHelpers.validateRelationExists(relation);
 
     await this.userRepo.removeFriendFromList(relation.sender_id, relation.receiver_id);
     await this.userRepo.removeFriendFromList(relation.receiver_id, relation.sender_id);
@@ -88,12 +76,10 @@ class FriendService {
       payload: {
         message: "Friend request deleted",
         relationId: relation.id,
-        senderId: requestUserId,
-        receiverId: deleteFriendId,
+        senderId: friendDeleteDto.userId,
+        receiverId: friendDeleteDto.friendId,
       },
     });
-
-    return await this.friendRepo.deleteFriend(relation.id);
   }
 
   // 친구 목록 조회
@@ -104,27 +90,19 @@ class FriendService {
 
   // 받은 친구 요청 조회
   async getReceivedRequests(userId, pageable) {
-    if (!userId) {
-      throw new PongException("User ID is required", 400);
-    }
     return this.friendRepo.getReceivedRequests(userId, pageable);
   }
 
   // 보낸 친구 요청 조회
   async getSentRequests(userId, pageable) {
-    if (!userId) {
-      throw new PongException("User ID is required", 400);
-    }
     const response = await this.friendRepo.getSentRequests(userId, pageable);
     return response;
   }
 
   // 친구 요청 거절
   async rejectFriendRequest(relationId) {
-    if (!relationId) {
-      throw new PongException("Relation ID is required", 400);
-    }
     const relation = await this.friendRepo.deleteFriend(relationId);
+    this.friendHelpers.validateRelationExists(relation);
 
     websocketManager.sendToNamespaceUsers("friend", relation.receiver_id, relation.sender_id, "friend_request", {
       type: "rejected",
@@ -139,30 +117,21 @@ class FriendService {
   }
 
   // 친구 요청 취소
-  async cancelFriendRequest(senderId, receiverId) {
-    if (!senderId || !receiverId) {
-      throw new PongException("Sender ID and Receiver ID are required", 400);
-    }
-    const receiver = await this.userRepo.getUserById(receiverId);
-    if (!receiver) {
-      throw new PongException("User not found", 404);
-    }
+  async cancelFriendRequest(friendCancelDto) {
+    const receiver = await this.userRepo.getUserById(friendCancelDto.receiverId);
+    this.userHelpers.validateExistingUser(receiver);
 
-    const relation = await this.friendRepo.findRelation(senderId, receiverId);
-    if (!relation) {
-      throw new PongException("Friend request does not exist", 404);
-    }
+    const relation = await this.friendRepo.findRelation(friendCancelDto.senderId, friendCancelDto.receiverId);
+    this.friendHelpers.validateRelationExists(relation);
 
     websocketManager.sendToNamespaceUsers("friend", relation.receiver_id, relation.sender_id, "friend_request", {
       type: "cancelled",
       payload: {
         message: "Friend request cancelled",
         relationId: relation.id,
-        userId: senderId,
+        userId: friendCancelDto.senderId,
       },
     });
-
-    return this.friendRepo.deleteFriend(relation.id);
   }
 }
 

@@ -1,37 +1,41 @@
-import FriendService from "#domains/friend/service/friendService.js";
 import { ApiResponse } from "#shared/api/response.js";
 import PageRequest from "#shared/page/PageRequest.js";
 import PageResponse from "#shared/page/PageResponse.js";
 
+import FriendCancelDto from "#domain/friend/model/friendCancelDto.js";
+import FriendDeleteDto from "#domain/friend/model/friendDeleteDto.js";
+import FriendHelpers from "#domains/friend/util/friendHelpers.js";
+import FriendAcceptionDto from "#domain/friend/model/friendRequestDto.js";
+import FriendService from "#domains/friend/service/friendService.js";
+
+const friendHelpers = new FriendHelpers();
 const friendService = new FriendService();
 
 const friendController = {
   // POST /v1/friends/request
   async requestFriendHandler(request, reply) {
-    try {
-      const { receiverId } = request.body;
-      const senderId = request.user.id;
+    const friendRequestDto = new FriendAcceptionDto(request.body, request.user);
+    friendHelpers.validateFriendRequestForm(friendRequestDto);
 
-      await friendService.requestFriend(receiverId, parseInt(senderId));
-      return ApiResponse.ok(reply, { message: "Friend request sent successfully" });
-    } catch (error) {
-      console.error("Error in requestFriendHandler:", error);
-      throw new Error("Failed to process friend request");
-    }
+    await friendService.requestFriend(friendRequestDto);
+    return ApiResponse.ok(reply, { message: "Friend request sent successfully" });
   },
 
   // PUT /v1/friends/accept-request
   async acceptFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
+    friendHelpers.validateFriendAcceptionForm(relationId);
+
     await friendService.acceptFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request accepted successfully" });
   },
 
   // DELETE /v1/friends/delete
   async deleteFriendHandler(request, reply) {
-    const { deleteFriendId } = request.body;
-    const userId = Number(request.user.id);
-    await friendService.deleteFriend(userId, parseInt(deleteFriendId));
+    const friendDeleteDto = new FriendDeleteDto(request.body, request.user);
+    friendHelpers.validateFriendDeleteForm(friendDeleteDto);
+
+    await friendService.deleteFriend(friendDeleteDto);
     return ApiResponse.ok(reply, { message: "Friend deleted successfully" });
   },
 
@@ -62,15 +66,18 @@ const friendController = {
   // DELETE /v1/friends/reject-request
   async rejectFriendRequestHandler(request, reply) {
     const { relationId } = request.body;
+    friendHelpers.validateFriendAcceptionForm(relationId);
+
     await friendService.rejectFriendRequest(parseInt(relationId));
     return ApiResponse.ok(reply, { message: "Friend request rejected successfully" });
   },
 
   // DELETE /v1/friends/cancel-request
   async cancelFriendRequestHandler(request, reply) {
-    const { receiverId } = request.body;
-    const senderId = request.user.id;
-    await friendService.cancelFriendRequest(senderId, parseInt(receiverId));
+    const friendCancelDto = new FriendCancelDto(request.body, request.user);
+    friendHelpers.validateFriendCancelForm(friendCancelDto);
+
+    await friendService.cancelFriendRequest(friendCancelDto);
     return ApiResponse.ok(reply, { message: "Friend request cancelled successfully" });
   },
 };

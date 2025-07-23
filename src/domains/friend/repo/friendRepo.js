@@ -4,10 +4,6 @@ import { FriendStatus } from "@prisma/client";
 class FriendRepo {
   // 친구 요청 보내기
   async requestFriend(userId, friendId) {
-    if (!Number.isInteger(friendId) || !Number.isInteger(userId)) {
-      throw new Error("Invalid input: friendId and userId must be integers");
-    }
-
     return prisma.friendship.create({
       data: {
         sender_id: userId,
