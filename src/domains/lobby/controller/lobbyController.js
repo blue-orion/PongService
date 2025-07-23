@@ -1,4 +1,3 @@
-import PongException from "#shared/exception/pongException.js";
 import { ApiResponse } from "#shared/api/response.js";
 import { LobbyService } from "#domains/lobby/service/lobbyService.js";
 import { TournamentService } from "#domains/lobby/service/tournamentService.js";
