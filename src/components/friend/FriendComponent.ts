@@ -19,6 +19,47 @@ export class FriendComponent {
     this.initialize();
   }
 
+  private showErrorModal(title: string, message: string): void {
+    // 기존 에러 모달이 있다면 제거
+    const existingModal = document.querySelector(".friend-error-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // 에러 모달 HTML 생성
+    const modalHTML = `
+      <div class="friend-error-modal-overlay show">
+        <div class="friend-error-modal">
+          <div class="friend-error-modal-header">
+            <div class="friend-error-modal-title">
+              <span>⚠️</span>
+              <span>${title}</span>
+            </div>
+          </div>
+          <div class="friend-error-modal-content">
+            <div class="friend-error-modal-message">${message}</div>
+          </div>
+          <div class="friend-error-modal-footer">
+            <button class="friend-error-modal-button" onclick="this.closest('.friend-error-modal-overlay').remove()">
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // body에 모달 추가
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    // 5초 후 자동으로 모달 제거
+    setTimeout(() => {
+      const modal = document.querySelector(".friend-error-modal-overlay");
+      if (modal) {
+        modal.remove();
+      }
+    }, 5000);
+  }
+
   private initializeComponents(): void {
     this.userProfileManager = new UserProfileManager(this.container);
     this.dataManager = new FriendDataManager(this.userProfileManager);
@@ -35,7 +76,6 @@ export class FriendComponent {
     this.render();
     this.setupEventListeners();
     this.setupWebSocket();
-    this.requestNotificationPermission();
 
     await this.userProfileManager.setupUserProfile();
     await this.loadFriendsData();
@@ -54,22 +94,50 @@ export class FriendComponent {
     this.eventHandler.handleFriendNotification(data);
   }
 
-  private requestNotificationPermission(): void {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
+  private showNotification(message: string): void {
+    // 알림 권한 없이도 사용자가 볼 수 있도록 팝업으로 표시
+    this.showInfoModal("알림", message);
   }
 
-  private showNotification(message: string): void {
-    if (Notification.permission === "granted") {
-      new Notification("친구 알림", {
-        body: message,
-        icon: "/favicon.ico",
-        tag: "friend-notification",
-        requireInteraction: false,
-        silent: false,
-      });
+  private showInfoModal(title: string, message: string): void {
+    // 기존 모달이 있다면 제거
+    const existingModal = document.querySelector(".friend-info-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
     }
+
+    // 정보 모달 HTML 생성
+    const modalHTML = `
+      <div class="friend-info-modal-overlay show">
+        <div class="friend-info-modal">
+          <div class="friend-info-modal-header">
+            <div class="friend-info-modal-title">
+              <span>💬</span>
+              <span>${title}</span>
+            </div>
+          </div>
+          <div class="friend-info-modal-content">
+            <div class="friend-info-modal-message">${message}</div>
+          </div>
+          <div class="friend-info-modal-footer">
+            <button class="friend-info-modal-button" onclick="this.closest('.friend-info-modal-overlay').remove()">
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // body에 모달 추가
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    // 3초 후 자동으로 모달 제거
+    setTimeout(() => {
+      const modal = document.querySelector(".friend-info-modal-overlay");
+      if (modal) {
+        modal.remove();
+      }
+    }, 3000);
   }
 
   private async loadFriendsData(): Promise<void> {
@@ -325,7 +393,7 @@ export class FriendComponent {
     try {
       // 자기 자신을 친구로 추가하려는 경우 방지
       if (this.dataManager.isSelfUsername(username.trim())) {
-        this.showNotification("자기 자신을 친구로 추가할 수 없습니다.");
+        this.showInfoModal("친구 추가 불가", "자기 자신을 친구로 추가할 수 없습니다.");
         return;
       }
 
@@ -335,7 +403,7 @@ export class FriendComponent {
         .find((friend) => friend.username?.toLowerCase() === username.trim().toLowerCase());
 
       if (existingFriend) {
-        this.showNotification("이미 친구로 등록된 사용자입니다.");
+        this.showInfoModal("친구 추가 불가", "이미 친구로 등록된 사용자입니다.");
         return;
       }
 
@@ -345,7 +413,7 @@ export class FriendComponent {
         .find((request) => request.username?.toLowerCase() === username.trim().toLowerCase());
 
       if (existingSentRequest) {
-        this.showNotification("이미 친구 요청을 보낸 사용자입니다.");
+        this.showInfoModal("친구 추가 불가", "이미 친구 요청을 보낸 사용자입니다.");
         return;
       }
 
@@ -355,7 +423,10 @@ export class FriendComponent {
         .find((request) => request.username?.toLowerCase() === username.trim().toLowerCase());
 
       if (existingReceivedRequest) {
-        this.showNotification("해당 사용자로부터 이미 친구 요청을 받았습니다. 받은 요청에서 수락해주세요.");
+        this.showInfoModal(
+          "친구 추가 불가",
+          "해당 사용자로부터 이미 친구 요청을 받았습니다. 받은 요청에서 수락해주세요."
+        );
         return;
       }
 
@@ -374,14 +445,15 @@ export class FriendComponent {
         // UI 새로고침
         this.renderFriendItems();
 
-        this.showNotification(`${username}님에게 친구 요청을 보냈습니다.`);
+        this.showInfoModal("친구 요청 완료", `${username}님에게 친구 요청을 보냈습니다.`);
       } else {
-        const errorMsg = response.message || "네트워크 오류가 발생했습니다";
-        this.showNotification(`친구 요청 실패: ${errorMsg}`);
+        // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+        const errorMsg = response.message || "알 수 없는 오류가 발생했습니다";
+        this.showErrorModal("친구 요청 실패", errorMsg);
       }
     } catch (error) {
       console.error("친구 요청 오류:", error);
-      this.showNotification("친구 요청 중 오류가 발생했습니다.");
+      this.showErrorModal("친구 요청 오류", "친구 요청을 보내는 중 문제가 발생했습니다.");
     }
   }
 
@@ -453,13 +525,14 @@ export class FriendComponent {
         await this.dataManager.loadAllData();
         this.renderFriendItems();
         this.closeAllDropdowns();
-        this.showNotification(`${friendName}님이 친구 목록에 추가되었습니다.`);
+        this.showInfoModal("친구 요청 수락", `${friendName}님이 친구 목록에 추가되었습니다.`);
       } else {
-        this.showNotification(`친구 요청 수락 실패: ${response.message || "서버 오류"}`);
+        const errorMsg = response.message || "알 수 없는 오류가 발생했습니다";
+        this.showErrorModal("친구 요청 수락 실패", errorMsg);
       }
     } catch (error) {
       console.error("친구 요청 수락 오류:", error);
-      this.showNotification("친구 요청 수락 중 오류가 발생했습니다.");
+      this.showErrorModal("친구 요청 수락 오류", "친구 요청을 수락하는 중 문제가 발생했습니다.");
     }
   }
 
@@ -471,13 +544,14 @@ export class FriendComponent {
         await this.dataManager.loadAllData();
         this.renderFriendItems();
         this.closeAllDropdowns();
-        this.showNotification(`${friendName}님의 친구 요청을 거절했습니다.`);
+        this.showInfoModal("친구 요청 거절", `${friendName}님의 친구 요청을 거절했습니다.`);
       } else {
-        this.showNotification(`친구 요청 거절 실패: ${response.message || "서버 오류"}`);
+        const errorMsg = response.message || "알 수 없는 오류가 발생했습니다";
+        this.showErrorModal("친구 요청 거절 실패", errorMsg);
       }
     } catch (error) {
       console.error("친구 요청 거절 오류:", error);
-      this.showNotification("친구 요청 거절 중 오류가 발생했습니다.");
+      this.showErrorModal("친구 요청 거절 오류", "친구 요청을 거절하는 중 문제가 발생했습니다.");
     }
   }
 
@@ -490,13 +564,14 @@ export class FriendComponent {
       if (response.success) {
         await this.dataManager.loadAllData();
         this.renderFriendItems();
-        this.showNotification(`${friendName}님을 친구에서 삭제했습니다.`);
+        this.showInfoModal("친구 삭제 완료", `${friendName}님을 친구에서 삭제했습니다.`);
       } else {
-        this.showNotification(`친구 삭제 실패: ${response.message || "서버 오류"}`);
+        const errorMsg = response.message || "알 수 없는 오류가 발생했습니다";
+        this.showErrorModal("친구 삭제 실패", errorMsg);
       }
     } catch (error) {
       console.error("친구 삭제 오류:", error);
-      this.showNotification("친구 삭제 중 오류가 발생했습니다.");
+      this.showErrorModal("친구 삭제 오류", "친구를 삭제하는 중 문제가 발생했습니다.");
     }
   }
 
@@ -519,13 +594,14 @@ export class FriendComponent {
         // 드롭다운 닫기
         this.closeAllDropdowns();
 
-        this.showNotification(`${receiverName}님에게 보낸 친구 요청을 취소했습니다.`);
+        this.showInfoModal("친구 요청 취소", `${receiverName}님에게 보낸 친구 요청을 취소했습니다.`);
       } else {
-        this.showNotification(`친구 요청 취소 실패: ${response.message || "서버 오류"}`);
+        const errorMsg = response.message || "알 수 없는 오류가 발생했습니다";
+        this.showErrorModal("친구 요청 취소 실패", errorMsg);
       }
     } catch (error) {
       console.error("친구 요청 취소 오류:", error);
-      this.showNotification("친구 요청 취소 중 오류가 발생했습니다.");
+      this.showErrorModal("친구 요청 취소 오류", "친구 요청을 취소하는 중 문제가 발생했습니다.");
     }
   }
 

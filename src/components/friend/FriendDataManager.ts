@@ -15,9 +15,50 @@ export class FriendDataManager {
       }
       this.userProfileManager = userProfileManager;
     } catch (error) {
-      console.error("FriendDataManager 초기화 실패:", error);
+      this.showErrorModal("FriendDataManager 초기화 실패", error instanceof Error ? error.message : "알 수 없는 오류");
       throw error;
     }
+  }
+
+  private showErrorModal(title: string, message: string): void {
+    // 기존 에러 모달이 있다면 제거
+    const existingModal = document.querySelector(".friend-error-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // 에러 모달 HTML 생성
+    const modalHTML = `
+      <div class="friend-error-modal-overlay show">
+        <div class="friend-error-modal">
+          <div class="friend-error-modal-header">
+            <div class="friend-error-modal-title">
+              <span>⚠️</span>
+              <span>${title}</span>
+            </div>
+          </div>
+          <div class="friend-error-modal-content">
+            <div class="friend-error-modal-message">${message}</div>
+          </div>
+          <div class="friend-error-modal-footer">
+            <button class="friend-error-modal-button" onclick="this.closest('.friend-error-modal-overlay').remove()">
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // body에 모달 추가
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    // 3초 후 자동으로 모달 제거 (옵션)
+    setTimeout(() => {
+      const modal = document.querySelector(".friend-error-modal-overlay");
+      if (modal) {
+        modal.remove();
+      }
+    }, 5000);
   }
 
   public async loadAllData(): Promise<void> {
@@ -25,6 +66,13 @@ export class FriendDataManager {
       await Promise.all([this.loadFriends(), this.loadFriendRequests(), this.loadSentRequests()]);
     } catch (error) {
       console.error("친구 데이터 로드 실패:", error);
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "친구 목록을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      this.showErrorModal("친구 데이터 로드 실패", errorMessage);
+
       // 개별 로드 시도
       try {
         await this.loadFriends();
@@ -88,32 +136,38 @@ export class FriendDataManager {
             const friendProfile = await this.userProfileManager.fetchUserProfile(friend.id.toString());
 
             if (friendProfile) {
+              const profileImageUrl = friendProfile.profileImage || friend.profile_image || friend.profileImage;
+
               return {
                 id: friend.id.toString(),
                 name: friendProfile.nickname || friendProfile.username || friend.username || `사용자${friend.id}`,
                 username: friendProfile.username || friend.username || `user${friend.id}`,
                 status: this.userProfileManager.convertStatus(friendProfile.status || "OFFLINE"),
-                avatar: friendProfile.profileImage,
+                avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
                 relationId: friend.relationId?.toString() || friend.id.toString(),
               };
             } else {
+              const profileImageUrl = friend.profile_image || friend.profileImage;
+
               return {
                 id: friend.id.toString(),
                 name: friend.nickname || friend.username || `사용자${friend.id}`,
                 username: friend.username || `user${friend.id}`,
                 status: this.userProfileManager.convertStatus(friend.status || "OFFLINE"),
-                avatar: friend.profile_image,
+                avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
                 relationId: friend.relationId?.toString() || friend.id.toString(),
               };
             }
           } catch (error) {
             console.error(`친구 ${friend?.id || "unknown"}의 프로필 정보 가져오기 실패:`, error);
+            const profileImageUrl = friend?.profile_image || friend?.profileImage;
+
             return {
               id: friend?.id?.toString() || Math.random().toString(),
               name: friend?.nickname || friend?.username || `사용자${friend?.id || "unknown"}`,
               username: friend?.username || `user${friend?.id || "unknown"}`,
               status: this.userProfileManager.convertStatus(friend?.status || "OFFLINE"),
-              avatar: friend?.profile_image,
+              avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
               relationId: friend?.relationId?.toString() || friend?.id?.toString() || Math.random().toString(),
             };
           }
@@ -128,6 +182,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("친구 목록 로드 중 예상치 못한 오류:", error);
       this.friends = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "친구 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("친구 목록 로드 오류", errorMessage);
       throw error; // 상위에서 처리할 수 있도록 re-throw
     }
   }
@@ -174,31 +234,38 @@ export class FriendDataManager {
               const senderProfile = await this.userProfileManager.fetchUserProfile(senderId.toString());
 
               if (senderProfile) {
+                const profileImageUrl =
+                  senderProfile.profileImage || request.sender?.profile_image || request.sender?.profileImage;
+
                 return {
                   id: request.id?.toString() || Math.random().toString(),
                   name: senderProfile.nickname || senderProfile.username || `사용자 ${senderId}`,
                   username: senderProfile.username || `user${senderId}`,
-                  avatar: senderProfile.profileImage,
+                  avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
                   relationId: request.id?.toString() || Math.random().toString(),
                 };
               }
             }
 
+            const profileImageUrl = request.sender?.profile_image || request.sender?.profileImage;
+
             return {
               id: request.id?.toString() || Math.random().toString(),
               name: request.sender?.nickname || request.sender?.username || `사용자 ${request.sender_id || "unknown"}`,
               username: request.sender?.username || `user${request.sender_id || "unknown"}`,
-              avatar: request.sender?.profile_image || null,
+              avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
               relationId: request.id?.toString() || Math.random().toString(),
             };
           } catch (error) {
             console.error(`친구 요청 ${request?.id || "unknown"}의 보낸이 프로필 정보 가져오기 실패:`, error);
+            const profileImageUrl = request?.sender?.profile_image || request?.sender?.profileImage;
+
             return {
               id: request?.id?.toString() || Math.random().toString(),
               name:
                 request?.sender?.nickname || request?.sender?.username || `사용자 ${request?.sender_id || "unknown"}`,
               username: request?.sender?.username || `user${request?.sender_id || "unknown"}`,
-              avatar: request?.sender?.profile_image || null,
+              avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
               relationId: request?.id?.toString() || Math.random().toString(),
             };
           }
@@ -213,6 +280,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("친구 요청 목록 로드 중 예상치 못한 오류:", error);
       this.friendRequests = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "받은 친구 요청 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("친구 요청 로드 오류", errorMessage);
       throw error;
     }
   }
@@ -260,15 +333,20 @@ export class FriendDataManager {
               const receiverProfile = await this.userProfileManager.fetchUserProfile(receiverId.toString());
 
               if (receiverProfile) {
+                const profileImageUrl =
+                  receiverProfile.profileImage || request.receiver?.profile_image || request.receiver?.profileImage;
+
                 return {
                   id: receiverId.toString(),
                   name: receiverProfile.nickname || receiverProfile.username || `사용자 ${receiverId}`,
                   username: receiverProfile.username || `user${receiverId}`,
-                  avatar: receiverProfile.profileImage,
+                  avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
                   relationId: request.id?.toString() || Math.random().toString(),
                 };
               }
             }
+
+            const profileImageUrl = request.receiver?.profile_image || request.receiver?.profileImage;
 
             return {
               id: request.receiver_id?.toString() || request.receiver?.id?.toString() || Math.random().toString(),
@@ -277,11 +355,13 @@ export class FriendDataManager {
                 request.receiver?.username ||
                 `사용자 ${request.receiver_id || "unknown"}`,
               username: request.receiver?.username || `user${request.receiver_id || "unknown"}`,
-              avatar: request.receiver?.profile_image || undefined,
+              avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
               relationId: request.id?.toString() || Math.random().toString(),
             };
           } catch (error) {
             console.error(`보낸 요청 ${request?.id || "unknown"}의 받는이 프로필 정보 가져오기 실패:`, error);
+            const profileImageUrl = request?.receiver?.profile_image || request?.receiver?.profileImage;
+
             return {
               id: request?.receiver_id?.toString() || request?.receiver?.id?.toString() || Math.random().toString(),
               name:
@@ -289,7 +369,7 @@ export class FriendDataManager {
                 request?.receiver?.username ||
                 `사용자 ${request?.receiver_id || "unknown"}`,
               username: request?.receiver?.username || `user${request?.receiver_id || "unknown"}`,
-              avatar: request?.receiver?.profile_image || undefined,
+              avatar: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : undefined,
               relationId: request?.id?.toString() || Math.random().toString(),
             };
           }
@@ -304,6 +384,12 @@ export class FriendDataManager {
     } catch (error) {
       console.error("보낸 요청 목록 로드 중 예상치 못한 오류:", error);
       this.sentRequests = [];
+      // 500번대 에러는 이미 friendService에서 "서버 오류가 발생했습니다" 메시지로 변환됨
+      const errorMessage =
+        error instanceof Error && error.message.includes("서버 오류")
+          ? error.message
+          : "보낸 친구 요청 목록을 불러오는 중 문제가 발생했습니다.";
+      this.showErrorModal("보낸 요청 로드 오류", errorMessage);
       throw error;
     }
   }

@@ -61,7 +61,7 @@ export class FriendEventHandler {
       .then(() => {
         this.onDataUpdate();
 
-        // 자신이 보낸 요청인지 확인
+        // 자신이 보낸 요청인 경우에만 팝업 표시
         if (requestData.senderId?.toString() === currentUserId?.toString()) {
           const receiverName =
             requestData.receiverUsername ||
@@ -70,16 +70,8 @@ export class FriendEventHandler {
             requestData.receiver?.nickname ||
             `사용자${requestData.receiverId}`;
           this.onShowNotification(`${receiverName}님에게 친구 요청을 보냈습니다.`);
-        } else {
-          const senderName =
-            requestData.senderUsername ||
-            requestData.senderName ||
-            requestData.sender?.nickname ||
-            requestData.sender?.username ||
-            requestData.name ||
-            `사용자${requestData.senderId}`;
-          this.onShowNotification(`새로운 친구 요청: ${senderName}`);
         }
+        // 다른 사람이 보낸 요청은 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 새로고침 실패:", error);
@@ -103,7 +95,11 @@ export class FriendEventHandler {
       .loadAllData()
       .then(() => {
         this.onDataUpdate();
-        this.onShowNotification("친구 요청이 수락되었습니다.");
+        // 자신이 요청을 수락한 경우에만 팝업 표시
+        if (requestData.receiverId?.toString() === currentUserId?.toString()) {
+          this.onShowNotification("친구 요청을 수락했습니다.");
+        }
+        // 상대방이 수락한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 재로드 실패:", error);
@@ -122,6 +118,7 @@ export class FriendEventHandler {
 
   private handleFriendRequestRejected(payload: any): void {
     const requestData = payload.requestData || payload;
+    const currentUserId = this.userProfileManager.getCurrentUserId();
 
     const sentRequests = this.dataManager.getSentRequests();
     const removedRequest = sentRequests.find((request) => request.relationId === requestData.relationId);
@@ -133,15 +130,16 @@ export class FriendEventHandler {
       .then(() => {
         this.onDataUpdate();
 
-        const userName = removedRequest?.name || requestData.receiverName || requestData.receiverUsername || "상대방";
-        this.onShowNotification(`${userName}님이 친구 요청을 거절했습니다.`);
+        // 자신이 요청을 거절한 경우에만 팝업 표시
+        if (requestData.receiverId?.toString() === currentUserId?.toString()) {
+          const userName = requestData.senderName || requestData.senderUsername || "상대방";
+          this.onShowNotification(`${userName}님의 친구 요청을 거절했습니다.`);
+        }
+        // 상대방이 거절한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
       })
       .catch((error) => {
         console.error("데이터 새로고침 실패:", error);
         this.onDataUpdate();
-
-        const userName = removedRequest?.name || requestData.receiverName || requestData.receiverUsername || "상대방";
-        this.onShowNotification(`${userName}님이 친구 요청을 거절했습니다.`);
       });
   }
 
@@ -150,6 +148,7 @@ export class FriendEventHandler {
     const currentUserId = this.userProfileManager.getCurrentUserId();
 
     if (requestData.senderId?.toString() === currentUserId?.toString()) {
+      // 자신이 취소한 경우
       const sentRequests = this.dataManager.getSentRequests();
       const removedRequest = sentRequests.find((request) => request.relationId === requestData.relationId);
       this.dataManager.removeSentRequest(requestData.relationId);
@@ -157,12 +156,10 @@ export class FriendEventHandler {
       const userName = removedRequest?.name || requestData.receiverName || requestData.receiverUsername || "상대방";
       this.onShowNotification(`${userName}님에게 보낸 친구 요청을 취소했습니다.`);
     } else {
+      // 상대방이 취소한 경우 - 팝업 표시하지 않음
       const friendRequests = this.dataManager.getFriendRequests();
-      const removedRequest = friendRequests.find((request) => request.relationId === requestData.relationId);
       this.dataManager.removeFriendRequest(requestData.relationId);
-
-      const userName = removedRequest?.name || requestData.senderName || requestData.senderUsername || "상대방";
-      this.onShowNotification(`${userName}님이 친구 요청을 취소했습니다.`);
+      // 팝업 표시하지 않음 (데이터만 업데이트)
     }
 
     // 모든 데이터 새로고침
@@ -186,7 +183,12 @@ export class FriendEventHandler {
     if (deletedFriendId) {
       this.dataManager.removeFriend(deletedFriendId.toString());
       this.onDataUpdate();
-      this.onShowNotification("친구가 삭제되었습니다.");
+
+      // 자신이 삭제한 경우에만 팝업 표시
+      if (requestData.senderId?.toString() === currentUserId?.toString()) {
+        this.onShowNotification("친구를 삭제했습니다.");
+      }
+      // 상대방이 삭제한 경우는 팝업 표시하지 않음 (데이터만 업데이트)
     }
   }
 
