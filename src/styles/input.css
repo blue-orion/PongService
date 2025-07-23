@@ -51,7 +51,7 @@
 
   /* 로고 스타일 */
   .logo {
-    @apply text-center mb-10;
+    @apply flex justify-center;
   }
 
   .logo h1 {

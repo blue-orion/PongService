@@ -1,7 +1,6 @@
 import { Component } from "../Component";
 import { AuthManager } from "../../utils/auth";
 import { UserManager } from "../../utils/user";
-import { loadTemplate, TEMPLATE_PATHS } from "../../utils/template-loader";
 
 export class HeaderComponents extends Component {
   constructor(container: HTMLElement) {

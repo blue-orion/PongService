@@ -344,10 +344,6 @@ body {
     @apply flex items-center justify-between w-full h-full;
   }
 
-  .header .logo {
-    @apply text-[20px] font-bold;
-  }
-
   .header .navigation ul {
     @apply flex list-none gap-5 m-0 p-0;
   }
