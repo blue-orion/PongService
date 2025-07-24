@@ -1,14 +1,21 @@
 FROM node:20-alpine
 
-COPY prisma/schema.prisma /root/prisma/schema.prisma
-COPY package.json /root/package.json
-COPY src /root/src
-COPY .env /root/.env
+WORKDIR /app
 
-VOLUME ["/root/prisma/transcendence.db"]
-
-WORKDIR /root
+COPY package.json package-lock.json* ./
 
 RUN npm install
 
-ENTRYPOINT ["npm", "start"]
+COPY prisma ./prisma
+COPY start.sh ./
+
+COPY src ./src
+COPY .env* ./
+
+RUN npx prisma generate
+RUN chmod +x start.sh
+
+EXPOSE 3333
+EXPOSE 5555
+
+CMD ["./start.sh"]
