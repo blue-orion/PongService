@@ -22,6 +22,7 @@ class PongException extends Error {
   static TOURNAMENT_NOT_FOUND = new PongException("해당 토너먼트를 찾을 수 없습니다.", 404);
   static TOURNAMENT_ALREADY_STARTED = new PongException("이미 시작된 토너먼트입니다.", 409);
   static TOURNAMENT_COMPLETED = new PongException("토너먼트가 이미 종료되었습니다.", 409);
+  static TOURNAMENT_IN_PROGRESS = new PongException("아직 진행 중인 토너먼트입니다.", 409);
 
   // === 로비 관련 에러 ===
   static LOBBY_NOT_FOUND = new PongException("존재하지 않는 로비입니다.", 404);

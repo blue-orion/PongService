@@ -2,25 +2,47 @@ import prisma from "#shared/database/prisma.js";
 import { LobbyStatus } from "@prisma/client";
 
 export class LobbyRepository {
-  getCount() {
-    return prisma.lobby.count({
-      where: {
-        lobby_status: {
-          not: LobbyStatus.COMPLETED
-        }
+  getCount(filters = {}) {
+    const whereCondition = {
+      lobby_status: {
+        not: LobbyStatus.COMPLETED
       }
+    };
+
+    // status 필터가 있으면 추가
+    if (filters.status) {
+      if (filters.status === 'playing') {
+        whereCondition.lobby_status = LobbyStatus.STARTED;
+      } else if (filters.status === 'waiting') {
+        whereCondition.lobby_status = LobbyStatus.PENDING;
+      }
+    }
+
+    return prisma.lobby.count({
+      where: whereCondition
     });
   }
 
-  async findAll(skip, take) {
+  async findAll(skip, take, filters = {}) {
+    const whereCondition = {
+      lobby_status: {
+        not: LobbyStatus.COMPLETED
+      }
+    };
+
+    // status 필터가 있으면 추가
+    if (filters.status) {
+      if (filters.status === 'playing') {
+        whereCondition.lobby_status = LobbyStatus.STARTED;
+      } else if (filters.status === 'waiting') {
+        whereCondition.lobby_status = LobbyStatus.PENDING;
+      }
+    }
+
     const lobbies = await prisma.lobby.findMany({
       skip,
       take,
-      where: {
-        lobby_status: {
-          not: LobbyStatus.COMPLETED
-        }
-      },
+      where: whereCondition,
       orderBy: [
         {
           lobby_status: "asc", // PENDING이 STARTED보다 먼저 오도록

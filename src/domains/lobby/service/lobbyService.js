@@ -6,6 +6,8 @@ import { TOURNAMENT_STATUS, LOBBY_STATUS } from "#domains/lobby/utils/helpers.js
 import PongException from "#shared/exception/pongException.js";
 import prisma from "#shared/database/prisma.js";
 import { LobbyStatus } from "@prisma/client";
+import PageRequest from "#shared/page/PageRequest.js";
+import PageResponse from "#shared/page/PageResponse.js";
 import {
   CreateLobbyDto,
   CreateMatchDto,
@@ -40,26 +42,18 @@ export class LobbyService {
   // === 조회 메서드 ===
   /**
    * 로비 전체 조회 (페이징)
-   * @method GET /v1/lobbies?page=1&size=10
+   * @method GET /v1/lobbies?page=1&size=10&status=playing
    *
-   * @param {Object} requestData - { page, size }
-   * @returns {LobbiesResponseDto};
+   * @param {PageRequest} pageRequest - 페이징 및 필터 정보
+   * @returns {PageResponse} 페이징된 로비 목록
    */
-  async getAllLobbies(requestData) {
-    const dto = new GetLobbiesDto(requestData);
-    const skip = (dto.page - 1) * dto.size;
-
+  async getAllLobbies(pageRequest) {
     const [lobbies, total] = await Promise.all([
-      this.lobbyRepository.findAll(skip, dto.size),
-      this.lobbyRepository.getCount(),
+      this.lobbyRepository.findAll(pageRequest.skip, pageRequest.take, pageRequest.filters),
+      this.lobbyRepository.getCount(pageRequest.filters),
     ]);
 
-    return {
-      total,
-      page: dto.page,
-      size: dto.size,
-      lobbies,
-    };
+    return PageResponse.of(pageRequest, lobbies, total);
   }
 
   /**
@@ -475,18 +469,18 @@ export class LobbyService {
       // 1. 로비 정보 조회
       const lobby = await this.lobbyRepository.findById(lobby_id);
       if (!lobby) {
-        throw new Error("해당 로비를 찾을 수 없습니다.");
+        throw PongException.LOBBY_NOT_FOUND;
       }
 
       // 2. 토너먼트 정보 조회
       const tournament = await this.tournamentRepository.findById(lobby.tournament_id);
       if (!tournament) {
-        throw new Error("해당 토너먼트를 찾을 수 없습니다.");
+        throw PongException.TOURNAMENT_NOT_FOUND;
       }
 
       // 3. 토너먼트가 완료되었는지 확인
       if (tournament.tournament_status !== "COMPLETED") {
-        throw new Error("아직 진행 중인 토너먼트입니다.");
+        throw PongException.TOURNAMENT_IN_PROGRESS;
       }
 
       // 4. 모든 게임 결과 조회 (라운드별로 정렬)

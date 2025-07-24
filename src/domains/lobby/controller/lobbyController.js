@@ -5,6 +5,7 @@ import { Helpers } from "#domains/lobby/utils/helpers.js";
 import websocketManager from "#shared/websocket/websocketManager.js";
 import { GameService } from "#domains/game/service/gameService.js";
 import { LobbyStatus } from "@prisma/client";
+import PageRequest from "#shared/page/PageRequest.js";
 
 export class LobbyController {
   constructor(lobbyService = new LobbyService(), tournamentService = new TournamentService()) {
@@ -25,16 +26,13 @@ export class LobbyController {
 
   /**
    * 로비 전체 조회 (페이징)
-   * @method GET /v1/lobbies?page=1&size=10
+   * @method GET /v1/lobbies?page=1&size=12&status=playing
    */
   async getAll(req, res) {
     try {
-      const { page = 1, size = 6 } = req.query;
-      const lobbies = await this.lobbyService.getAllLobbies({
-        page,
-        size,
-      });
-      return ApiResponse.ok(res, lobbies);
+      const pageRequest = PageRequest.of(req.query, 1, 6);
+      const pageResponse = await this.lobbyService.getAllLobbies(pageRequest);
+      return ApiResponse.ok(res, pageResponse);
     } catch (error) {
       return ApiResponse.error(res, error);
     }
