@@ -541,9 +541,30 @@ export class LobbyService {
         throw PongException.TOURNAMENT_NOT_FOUND;
       }
 
-      // 3. 토너먼트가 완료되었는지 확인
+      // 3. 토너먼트 상태에 따른 처리
       if (tournament.tournament_status !== "COMPLETED") {
-        throw PongException.TOURNAMENT_IN_PROGRESS;
+        // 토너먼트가 아직 진행 중인 경우
+        return {
+          tournament: {
+            id: tournament.id,
+            tournament_type: tournament.tournament_type,
+            tournament_status: tournament.tournament_status,
+            round: tournament.round,
+            created_at: tournament.created_at,
+            updated_at: tournament.updated_at,
+          },
+          lobby: {
+            id: lobby.id,
+            max_player: lobby.max_player,
+            lobby_status: lobby.lobby_status,
+            creator_id: lobby.creator_id,
+          },
+          winner: null,
+          total_rounds: this.helpers._calculateTotalRounds(tournament.tournament_type),
+          round_results: {},
+          is_completed: false,
+          message: "토너먼트가 아직 진행 중입니다.",
+        };
       }
 
       // 4. 모든 게임 결과 조회 (라운드별로 정렬)
@@ -628,6 +649,7 @@ export class LobbyService {
         winner: winner,
         total_rounds: finalRound,
         round_results: roundResults,
+        is_completed: true,
         message: "토너먼트가 완료되었습니다.",
       };
     } catch (error) {
