@@ -1,0 +1,240 @@
+@import './input.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Home Page Styles */
+  .home-page {
+    @apply min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    @apply relative min-h-screen flex items-center justify-center px-4 overflow-hidden;
+  }
+
+  .hero-background {
+    @apply absolute inset-0 pointer-events-none;
+  }
+
+  .floating-shapes {
+    @apply absolute inset-0;
+  }
+
+  .shape {
+    @apply absolute rounded-full opacity-20;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .shape-1 {
+    @apply w-20 h-20 bg-primary-300 top-20 left-20;
+    animation-delay: 0s;
+  }
+
+  .shape-2 {
+    @apply w-16 h-16 bg-secondary-300 top-40 right-40;
+    animation-delay: -2s;
+  }
+
+  .shape-3 {
+    @apply w-12 h-12 bg-neutral-300 bottom-32 left-32;
+    animation-delay: -4s;
+  }
+
+  .shape-4 {
+    @apply w-24 h-24 bg-primary-200 bottom-20 right-20;
+    animation-delay: -1s;
+  }
+
+  .hero-content {
+    @apply relative z-10 text-center max-w-4xl mx-auto;
+  }
+
+  .hero-title {
+    @apply space-y-4 mb-8;
+  }
+
+  .title-main {
+    @apply block text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 text-transparent bg-clip-text;
+  }
+
+  .title-sub {
+    @apply block text-2xl md:text-3xl font-semibold text-primary-700;
+  }
+
+  .hero-description {
+    @apply text-lg md:text-xl text-primary-600 mb-12 leading-relaxed;
+  }
+
+  .hero-actions {
+    @apply flex flex-col sm:flex-row gap-4 justify-center items-center;
+  }
+
+  .hero-btn {
+    @apply px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 min-w-[200px];
+  }
+
+  /* Sections */
+  .section-container {
+    @apply max-w-6xl mx-auto px-4 py-16;
+  }
+
+  .section-title {
+    @apply text-4xl font-bold text-center text-primary-700 mb-12;
+  }
+
+  /* Features Section */
+  .features-section {
+    @apply bg-white/50 backdrop-blur-sm;
+  }
+
+  .features-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8;
+  }
+
+  .feature-card {
+    @apply glass-card p-6 text-center hover:scale-105 transition-all duration-300 hover:shadow-xl;
+  }
+
+  .feature-icon {
+    @apply text-4xl mb-4;
+  }
+
+  .feature-title {
+    @apply text-xl font-bold text-primary-700 mb-3;
+  }
+
+  .feature-description {
+    @apply text-primary-600 leading-relaxed;
+  }
+
+  /* Game Preview Section */
+  .game-preview-container {
+    @apply grid md:grid-cols-2 gap-12 items-center;
+  }
+
+  .game-screen {
+    @apply glass-card p-8 bg-gray-900 rounded-2xl overflow-hidden;
+  }
+
+  .ping-pong-demo {
+    @apply relative h-48 bg-gradient-to-b from-green-800 to-green-900 rounded-lg border-4 border-white flex items-center justify-center;
+  }
+
+  .demo-paddle {
+    @apply absolute w-2 h-16 bg-white rounded-sm;
+  }
+
+  .demo-paddle-left {
+    @apply left-4;
+  }
+
+  .demo-paddle-right {
+    @apply right-4;
+  }
+
+  .demo-ball {
+    @apply absolute w-3 h-3 bg-white rounded-full;
+    animation: pingpong 2s linear infinite;
+  }
+
+  .game-info {
+    @apply space-y-6;
+  }
+
+  .game-info-title {
+    @apply text-2xl font-bold text-primary-700;
+  }
+
+  .game-features-list {
+    @apply space-y-3;
+  }
+
+  .game-features-list li {
+    @apply text-primary-600 text-lg;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    @apply bg-gradient-to-r from-primary-100 to-secondary-100;
+  }
+
+  .stats-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 text-center hover:scale-105 transition-transform duration-300;
+  }
+
+  .stat-number {
+    @apply text-3xl sm:text-4xl font-bold text-primary-800;
+  }
+
+  .stat-label {
+    @apply text-sm uppercase text-primary-600 tracking-wider;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600 text-white;
+  }
+
+  .cta-content {
+    @apply text-center;
+  }
+
+  .cta-title {
+    @apply text-4xl font-bold mb-6;
+  }
+
+  .cta-description {
+    @apply text-xl mb-8 text-primary-100;
+  }
+
+  .cta-actions {
+    @apply flex justify-center;
+  }
+
+  .cta-btn {
+    @apply px-8 py-4 bg-white text-primary-600 font-bold rounded-xl hover:bg-primary-50 transition-colors duration-300;
+  }
+
+  /* Animations */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pingpong {
+    0% {
+      left: 2rem;
+    }
+    50% {
+      left: calc(100% - 3rem);
+    }
+    100% {
+      left: 2rem;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.8s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
