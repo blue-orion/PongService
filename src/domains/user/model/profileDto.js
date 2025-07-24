@@ -5,7 +5,7 @@ class ProfileDto {
     this.nickname = user.nickname;
     this.profileImage = user.profile_image;
     this.status = user.status;
-    this.gameRating = user.game_rating;
+    this.twoFASecret = user.two_fa_secret;
   }
 }
 

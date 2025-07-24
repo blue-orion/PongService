@@ -1,40 +1,72 @@
 import axios from "axios";
 
+import AuthHelpers from "#domains/auth/utils/authHelpers.js";
+import AuthRepo from "#domains/auth/repo/authRepo.js";
+import HashedDto from "#domains/auth/model/hashedDto.js";
+import RegisterOAuthDto from "#domains/auth/model/registerOAuthDto.js";
 import TokenDto from "#domains/auth/model/tokenDto.js";
-import RegisterOAuthDto from "#domains/user/model/registerOAuthDto.js";
-import authRepo from "#domains/auth/repo/authRepo.js";
-import userRepo from "#domains/user/repo/userRepo.js";
-import twoFAService from "#domains/auth/service/2faService.js";
-import PongException from "#shared/exception/pongException.js";
+import TwoFAService from "#domains/auth/service/2faService.js";
+import UserRepo from "#domains/user/repo/userRepo.js";
+import UserService from "#domains/user/service/userService.js";
 
-const authService = {
-  async authenticateUser(username, passwd, token, jwtUtils, encryptUtils) {
-    const user = await userRepo.getUserByUsername(username);
+class AuthService {
+  constructor(
+    authHelpers = new AuthHelpers(),
+    authRepo = new AuthRepo(),
+    userRepo = new UserRepo(),
+    twoFAService = new TwoFAService(),
+    userService = new UserService()
+  ) {
+    this.authHelpers = authHelpers;
+    this.authRepo = authRepo;
+    this.userRepo = userRepo;
+    this.twoFAService = twoFAService;
+    this.userService = userService;
+  }
 
-    if (!(await encryptUtils.comparePasswd(passwd, user.passwd))) throw new PongException("invalid password", 400);
-    if (!user.enabled) throw PongException.UNAUTHORIZED;
+  async authenticateUser(loginDto, jwtUtils, encryptUtils) {
+    const user = await this.userRepo.getUserByUsername(loginDto.username);
 
-    twoFAService.verify2FACode(user.twoFASecret, token);
+    await this.authHelpers.validateHashedPasswd(loginDto.passwd, user.passwd, encryptUtils);
+    this.authHelpers.validateUserEnable(user);
 
-    return await generateTokens(jwtUtils, user);
-  },
+    this.twoFAService.verify2FACode(user.twoFASecret, loginDto.token);
+
+    await this.userService.updateUserStatus(user.id, "ONLINE");
+
+    return await this.generateTokens(jwtUtils, user);
+  }
+
+  async checkUser2FAEnabled(loginDto) {
+    const user = await this.userRepo.getUserByUsername(loginDto.username);
+    this.authHelpers.validateUserEnable(user);
+
+    const twoFASecret = await this.userRepo.getUser2FASecret(loginDto.username);
+    if (!twoFASecret.two_fa_secret) {
+      return false;
+    }
+    return true;
+  }
 
   async signOutUser(userId) {
-    await authRepo.removeUserRefreshToken(userId);
-  },
+    await this.userService.updateUserStatus(Number(userId), "OFFLINE");
+
+    await this.authRepo.removeUserRefreshToken(Number(userId));
+  }
 
   async registerUser(registerDto, encryptUtils) {
     const hashed = await encryptUtils.hashPasswd(registerDto.passwd);
     registerDto.passwd = hashed;
-    console.log("Registering user:", registerDto);
-    await userRepo.createUser(registerDto);
-  },
+    const hashedDto = new HashedDto(registerDto);
+    console.log("Registering user:", hashedDto);
+    await this.userRepo.createUser(hashedDto);
+  }
 
-  async refreshTokens(jwtUtils, refreshToken) {
-    const user = userRepo.getUserByRefreshToken(refreshToken);
-    if (user.refreshToken !== refreshToken) throw PongException.UNAUTHORIZED;
-    return await generateTokens(jwtUtils, user);
-  },
+  async refreshTokens(userId, jwtUtils, refreshToken) {
+    const user = await this.userRepo.getUserById(userId);
+    this.authHelpers.validateUserRefreshToken(user, refreshToken);
+    return await this.generateTokens(jwtUtils, user);
+  }
 
   async googleOAuth(jwtUtils, token) {
     const userRes = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
@@ -44,13 +76,15 @@ const authService = {
 
     let user;
     try {
-      user = await userRepo.getUserByUsername(email);
+      user = await this.userRepo.getUserByUsername(email);
     } catch {
-      user = await userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
+      user = await this.userRepo.createUser(new RegisterOAuthDto(email, null, email, picture));
     }
+    this.authHelpers.validateUserEnable(user);
+    await this.userService.updateUserStatus(user.id, "ONLINE");
 
-    return await generateTokens(jwtUtils, user);
-  },
+    return await this.generateTokens(jwtUtils, user);
+  }
 
   async fortyTwoOAuth(jwtUtils, token) {
     const userRes = await axios.get("https://api.intra.42.fr/v2/me", {
@@ -60,21 +94,23 @@ const authService = {
 
     let user;
     try {
-      user = await userRepo.getUserByUsername(login);
+      user = await this.userRepo.getUserByUsername(login);
     } catch {
-      user = await userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
+      user = await this.userRepo.createUser(new RegisterOAuthDto(login, null, login, image_url));
     }
+    this.authHelpers.validateUserEnable(user);
+    await this.userService.updateUserStatus(user.id, "ONLINE");
 
-    return await generateTokens(jwtUtils, user);
-  },
-};
+    return await this.generateTokens(jwtUtils, user);
+  }
 
-async function generateTokens(jwtUtils, user) {
-  const accessToken = jwtUtils.generateAccessToken(user);
-  const refreshToken = jwtUtils.generateRefreshToken(user);
-  await authRepo.updateUserRefreshToken(user.id, refreshToken);
+  async generateTokens(jwtUtils, user) {
+    const accessToken = jwtUtils.generateAccessToken(user);
+    const refreshToken = jwtUtils.generateRefreshToken(user);
+    await this.authRepo.updateUserRefreshToken(user.id, refreshToken);
 
-  return new TokenDto(accessToken, refreshToken);
+    return new TokenDto(accessToken, refreshToken);
+  }
 }
 
-export default authService;
+export default AuthService;
