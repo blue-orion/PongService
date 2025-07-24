@@ -8,6 +8,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export class DashboardComponent extends Component {
   private rankTable!: HTMLElement;
   private animationId?: number;
+  private currentPage: number = 0;
+  private currentFilter: string = "all";
+  private currentSearch: string = "";
+  private totalPages: number = 0;
 
   constructor(container: HTMLElement) {
     console.log("대시보드 생성자 호출");
