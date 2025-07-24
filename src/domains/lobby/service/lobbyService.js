@@ -67,7 +67,7 @@ export class LobbyService {
     try {
       // STARTED 상태이면서 활성 플레이어가 0명인 로비들 조회
       const emptyStartedLobbies = await this.lobbyRepository.findEmptyStartedLobbies();
-      
+
       if (emptyStartedLobbies.length === 0) {
         return;
       }
@@ -101,7 +101,7 @@ export class LobbyService {
 
       // 3. 토너먼트가 있다면 COMPLETED로 변경
       if (lobby.tournament_id) {
-        await this.tournamentRepository.updateStatus(lobby.tournament_id, 'COMPLETED');
+        await this.tournamentRepository.updateStatus(lobby.tournament_id, "COMPLETED");
       }
 
       console.log(`[LobbyService] Successfully cleaned up lobby ${lobby.id}`);
@@ -346,6 +346,7 @@ export class LobbyService {
       tournament_status: latestTournament.tournament_status,
       total_matches: matches.length,
       matches: createdGames,
+      games: createdGames,
     };
   }
 
@@ -394,7 +395,7 @@ export class LobbyService {
 
     // 2라운드부터는 이전 라운드 승자들을 게임 순서대로 매칭
     const matches = await this.helpers._generateTournamentMatches(latestTournament.id, currentRound);
-    
+
     console.log(`[LobbyService] Generated ${matches.length} matches:`, matches);
 
     const createdGames = await this.gameRepository.createInitialMatches(matches);
