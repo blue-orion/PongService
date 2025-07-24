@@ -281,11 +281,45 @@ export class Helpers {
         player_one_id: p1.user_id,
         player_two_id: p2.user_id,
         round,
-        match: i,
+        match: Math.floor(i / 2) + 1, // match는 1부터 시작
         game_status: GAME_STATUS.PENDING,
       });
     }
 
+    return matches;
+  }
+
+  // 토너먼트 형식으로 다음 라운드 매치 생성 (승자들을 게임 순서대로 매칭)
+  async _generateTournamentMatches(tournamentId, currentRound) {
+    // 이전 라운드의 게임들을 match 순서대로 조회
+    const previousRound = currentRound - 1;
+    const previousGames = await this.gameRepository.getGamesByTournamentIdAndRound(tournamentId, previousRound);
+    
+    // match 순서대로 정렬
+    previousGames.sort((a, b) => a.match - b.match);
+    
+    const matches = [];
+    
+    // 두 게임씩 묶어서 승자들끼리 매치 생성
+    for (let i = 0; i < previousGames.length; i += 2) {
+      const game1 = previousGames[i];
+      const game2 = previousGames[i + 1];
+      
+      if (!game1?.winner_id || !game2?.winner_id) {
+        console.log(`[Helpers] Missing winners for games ${game1?.id}, ${game2?.id}`);
+        continue;
+      }
+      
+      matches.push({
+        tournament_id: tournamentId,
+        player_one_id: game1.winner_id,
+        player_two_id: game2.winner_id,
+        round: currentRound,
+        match: Math.floor(i / 2) + 1, // match는 1부터 시작
+        game_status: GAME_STATUS.PENDING,
+      });
+    }
+    
     return matches;
   }
 

@@ -18,6 +18,14 @@ export class LobbyRepository {
       }
     }
 
+    // search 필터가 있으면 추가 (로비 ID 검색)
+    if (filters.search) {
+      const searchId = parseInt(filters.search);
+      if (!isNaN(searchId)) {
+        whereCondition.id = searchId;
+      }
+    }
+
     return prisma.lobby.count({
       where: whereCondition
     });
@@ -39,6 +47,14 @@ export class LobbyRepository {
       }
     }
 
+    // search 필터가 있으면 추가 (로비 ID 검색)
+    if (filters.search) {
+      const searchId = parseInt(filters.search);
+      if (!isNaN(searchId)) {
+        whereCondition.id = searchId;
+      }
+    }
+
     const lobbies = await prisma.lobby.findMany({
       skip,
       take,
@@ -54,17 +70,11 @@ export class LobbyRepository {
       include: {
         lobby_players: { include: { user: true } },
         tournament: true,
+        creator: true, // creator 정보 포함
       },
     });
 
-    // 각 로비의 생성자 정보를 별도로 조회
-    for (const lobby of lobbies) {
-      lobby.creator = await prisma.user.findUnique({
-        where: { id: lobby.creator_id },
-        select: { id: true, nickname: true, username: true },
-      });
-    }
-
+    // creator 정보가 이미 include되어 있으므로 별도 조회 불필요
     return lobbies;
   }
 

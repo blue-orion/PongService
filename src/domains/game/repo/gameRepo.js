@@ -205,6 +205,51 @@ export class GameRepository {
     });
   }
 
+  // 특정 토너먼트의 특정 라운드 게임들 조회 (플레이어 정보 포함)
+  async getGamesByTournamentIdAndRound(tournamentId, round) {
+    return await prisma.game.findMany({
+      where: {
+        tournament_id: tournamentId,
+        round: round,
+        enabled: true,
+      },
+      include: {
+        player_one: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            profile_image: true,
+          },
+        },
+        player_two: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            profile_image: true,
+          },
+        },
+        winner: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        loser: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        tournament: true,
+      },
+      orderBy: [{ match: "asc" }],
+    });
+  }
+
   // 라운드 완료 여부 확인
   async isRoundComplete(tournamentId, round) {
     const totalGames = await prisma.game.count({

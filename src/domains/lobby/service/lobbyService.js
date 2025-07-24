@@ -279,14 +279,19 @@ export class LobbyService {
     const round = this.helpers._getRoundNumber(tournament.round);
     const matches = this.helpers._generateMatches(shuffled, tournament, round);
 
-    const games = await this.gameRepository.createInitialMatches(matches);
+    const createdGames = await this.gameRepository.createInitialMatches(matches);
+
+    // 최신 토너먼트 정보 재조회
+    const latestTournament = await this.tournamentRepository.findById(tournament.id);
 
     return {
       tournament_id: tournament.id,
       lobby_id: lobby.id,
-      round: tournament.round,
+      current_round: tournament.round,
+      total_rounds: this.helpers._calculateTotalRounds(latestTournament.tournament_type),
+      tournament_status: latestTournament.tournament_status,
       total_matches: matches.length,
-      matches: games,
+      matches: createdGames,
     };
   }
 
@@ -295,9 +300,9 @@ export class LobbyService {
     // 최신 토너먼트 정보 재조회 (라운드가 이미 증가되었을 수 있음)
     const latestTournament = await this.tournamentRepository.findById(tournament.id);
     const currentRound = latestTournament.round;
-    
+
     console.log(`[LobbyService] Starting next round. Current round: ${currentRound} (was ${tournament.round})`);
-    
+
     // 현재 라운드가 이미 게임을 가지고 있는지 확인
     const hasCurrentRoundGames = await this.gameRepository.hasGamesInRound(tournament.id, currentRound);
     if (hasCurrentRoundGames) {
@@ -306,17 +311,17 @@ export class LobbyService {
       return {
         tournament_id: tournament.id,
         lobby_id: lobby.id,
-        round: this.helpers._getRoundType(currentRound),
+        current_round: currentRound,
         total_matches: existingGames.length,
         matches: existingGames,
-        message: "이미 현재 라운드의 게임이 생성되어 있습니다."
+        message: "이미 현재 라운드의 게임이 생성되어 있습니다.",
       };
     }
-    
+
     // 현재 로비에 있는 활성 플레이어들 조회 (이전 라운드 승자들)
     const activePlayers = await this.lobbyRepository.findActivePlayersByLobbyId(lobby.id);
     console.log(`[LobbyService] Found ${activePlayers.length} active players in lobby:`, activePlayers);
-    
+
     // 모든 플레이어가 준비되었는지 확인
     await this.helpers._validateAllPlayersReady(lobby.id);
 
@@ -331,10 +336,11 @@ export class LobbyService {
       };
     }
 
-    const shuffled = this.helpers._shuffleArray(activePlayers);
     console.log(`[LobbyService] Creating matches for current round: ${currentRound}`);
+
+    // 2라운드부터는 이전 라운드 승자들을 게임 순서대로 매칭
+    const matches = await this.helpers._generateTournamentMatches(latestTournament.id, currentRound);
     
-    const matches = this.helpers._generateMatches(shuffled, latestTournament, currentRound);
     console.log(`[LobbyService] Generated ${matches.length} matches:`, matches);
 
     const createdGames = await this.gameRepository.createInitialMatches(matches);
@@ -343,7 +349,9 @@ export class LobbyService {
     return {
       tournament_id: tournament.id,
       lobby_id: lobby.id,
-      round: this.helpers._getRoundType(currentRound),
+      current_round: currentRound,
+      total_rounds: this.helpers._calculateTotalRounds(latestTournament.tournament_type),
+      tournament_status: latestTournament.tournament_status,
       total_matches: matches.length,
       matches: createdGames,
     };
@@ -422,9 +430,9 @@ export class LobbyService {
       }
 
       const lobby = tournament.lobbies[0];
-      
+
       // 패자가 로비에 있는지 확인
-      const loserInLobby = lobby.lobby_players.find(player => player.user_id === loserId);
+      const loserInLobby = lobby.lobby_players.find((player) => player.user_id === loserId);
       if (!loserInLobby) {
         console.log(`[LobbyService] Loser ${loserId} not found in lobby ${lobby.id}`);
         return null;
@@ -432,9 +440,9 @@ export class LobbyService {
 
       // 패자를 로비에서 제거 (기존 removePlayer 메서드 사용)
       await this.lobbyRepository.removePlayer(lobby.id, loserId);
-      
+
       console.log(`[LobbyService] Removed loser ${loserId} from lobby ${lobby.id}`);
-      
+
       // 업데이트된 로비 정보 반환
       return await this.lobbyRepository.findById(lobby.id);
     } catch (error) {
@@ -490,16 +498,16 @@ export class LobbyService {
       });
 
       // 5. 최종 승자 찾기 (마지막 라운드의 승리자)
-      const finalRound = Math.max(...allGames.map(game => game.round));
-      const finalGame = allGames.find(game => game.round === finalRound && game.winner_id);
-      
+      const finalRound = Math.max(...allGames.map((game) => game.round));
+      const finalGame = allGames.find((game) => game.round === finalRound && game.winner_id);
+
       let winner = null;
       if (finalGame && finalGame.winner_id) {
         const winnerData = await this.lobbyRepository.checkUserExists(finalGame.winner_id);
         if (!winnerData) {
           winner = await prisma.user.findUnique({
             where: { id: finalGame.winner_id },
-            select: { id: true, nickname: true, username: true }
+            select: { id: true, nickname: true, username: true },
           });
         }
       }
@@ -514,25 +522,32 @@ export class LobbyService {
         const gameResult = {
           game_id: game.id,
           match: game.match,
-          player_one: game.player_one ? {
-            id: game.player_one.id,
-            nickname: game.player_one.nickname,
-            username: game.player_one.username,
-          } : null,
-          player_two: game.player_two ? {
-            id: game.player_two.id,
-            nickname: game.player_two.nickname,
-            username: game.player_two.username,
-          } : null,
-          winner_id: game.winner_id,
-          winner: game.winner ? {
-            id: game.winner.id,
-            nickname: game.winner.nickname,
-            username: game.winner.username,
-          } : null,
-          score: game.player_one_score !== null && game.player_two_score !== null 
-            ? `${game.player_one_score}-${game.player_two_score}` 
+          player_one: game.player_one
+            ? {
+                id: game.player_one.id,
+                nickname: game.player_one.nickname,
+                username: game.player_one.username,
+              }
             : null,
+          player_two: game.player_two
+            ? {
+                id: game.player_two.id,
+                nickname: game.player_two.nickname,
+                username: game.player_two.username,
+              }
+            : null,
+          winner_id: game.winner_id,
+          winner: game.winner
+            ? {
+                id: game.winner.id,
+                nickname: game.winner.nickname,
+                username: game.winner.username,
+              }
+            : null,
+          score:
+            game.player_one_score !== null && game.player_two_score !== null
+              ? `${game.player_one_score}-${game.player_two_score}`
+              : null,
           play_time: game.play_time,
           game_status: game.game_status,
         };

@@ -258,8 +258,10 @@ export class LobbiesResponseDto {
 export class MatchResponseDto {
   constructor(data) {
     this.tournament_id = data.tournament_id;
+    this.tournament_status = data.tournament_status;
     this.lobby_id = data.lobby_id;
-    this.round = data.round;
+    this.current_round = data.current_round;
+    this.total_rounds = data.total_rounds;
     this.total_matches = data.total_matches;
     this.matches = data.matches?.map((match) => new GameMatchDto(match)) || [];
     this.message = data.message;
