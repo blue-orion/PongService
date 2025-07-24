@@ -13,6 +13,7 @@ export default async function authRoutes(fastify) {
 
   // 2faController.js
   fastify.post("/2fa/setup", twoFAController.setup2FAHandler);
+  fastify.post("/2fa/confirm", twoFAController.confirm2FAHandler);
   fastify.post("/2fa/disable", twoFAController.disable2FAHandler);
   fastify.post("/2fa/verify", twoFAController.verify2FAHandler);
 }
