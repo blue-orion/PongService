@@ -21,10 +21,12 @@ export class LobbyChatComponent {
         this.addMessage(message);
       },
       onUserConnected: (event: UserConnectionEvent) => {
-        this.addSystemMessage(`${event.username || `User${event.user_id}`}님이 로비에 입장했습니다.`);
+        this.addSystemMessage(`${event.username || `${event.username}`}님이 로비에 입장했습니다.`);
       },
       onUserDisconnected: (event: UserConnectionEvent) => {
-        this.addSystemMessage(`${event.username || `User${event.user_id}`}님이 로비에서 나갔습니다.`);
+        console.log("User disconnected:", event);
+        console.log("User disconnected:", event.username);
+        this.addSystemMessage(`${event.username || `${event.username}`}님이 로비에서 나갔습니다.`);
         // 타이핑 사용자 목록에서 제거
         this.typingUsers.delete(event.user_id);
         this.updateTypingIndicator();

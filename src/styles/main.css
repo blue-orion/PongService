@@ -816,7 +816,7 @@ body {
   }
 
   .char-counter {
-    @apply flex justify-between items-center text-xs text-[#6c757d];
+    @apply flex justify-end items-center gap-1 text-xs text-[#6c757d];
   }
 
   .connection-indicator {
