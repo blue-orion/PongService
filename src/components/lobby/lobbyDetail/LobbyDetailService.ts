@@ -62,7 +62,7 @@ export class LobbyDetailService {
       console.log("🔌 WebSocket 연결 시도:", { userId, lobbyId: this.lobbyId });
 
       const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
-        query: {
+        auth: {
           "user-id": userId,
           "lobby-id": this.lobbyId,
         },

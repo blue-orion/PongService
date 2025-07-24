@@ -151,3 +151,40 @@ export interface UIEventHandlers {
   onDebugSocket: () => void;
   onPlayGame: () => void;
 }
+
+// 채팅 관련 타입 정의
+export interface ChatMessage {
+  user_id: string;
+  username: string;
+  message: string;
+  lobby_id: string;
+  timestamp: string;
+}
+
+export interface TypingUser {
+  user_id: string;
+  username: string;
+  lobby_id: string;
+}
+
+export interface ChatError {
+  error: string;
+}
+
+export interface UserConnectionEvent {
+  user_id: string;
+  lobby_id: string;
+  message: string;
+  username?: string;
+}
+
+// 채팅 소켓 이벤트 핸들러 타입
+export interface ChatSocketEventHandlers {
+  onChatMessage: (message: ChatMessage) => void;
+  onUserConnected: (event: UserConnectionEvent) => void;
+  onUserDisconnected: (event: UserConnectionEvent) => void;
+  onTyping: (user: TypingUser) => void;
+  onStopTyping: (user: TypingUser) => void;
+  onConnectionStatusChange: (connected: boolean, transport?: string) => void;
+  onError: (error: string) => void;
+}

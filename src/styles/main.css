@@ -541,7 +541,8 @@ body {
 
   .lobby-info-section,
   .players-section,
-  .game-settings-section {
+  .game-settings-section,
+  .match-info-section {
     @apply bg-[#f8f9fa] p-5 rounded-lg border border-[#dee2e6];
   }
 
@@ -725,5 +726,108 @@ body {
 
   .result.lose {
     @apply text-[#e74c3c] font-bold;
+  }
+}
+
+/* 로비 채팅 관련 스타일 */
+@layer components {
+  .lobby-detail-page .chat-section {
+    @apply bg-[#f8f9fa] p-5 rounded-lg border border-[#dee2e6] mt-[30px] w-full;
+  }
+
+  .chat-container {
+    @apply h-full w-full;
+  }
+
+  .lobby-chat-box {
+    @apply bg-[#f8f9fa] border border-[#dee2e6] rounded-lg p-4 w-full;
+  }
+
+  .chat-messages-area {
+    @apply h-[280px] overflow-y-auto bg-white border border-[#e9ecef] rounded p-3 mb-3 w-full;
+  }
+
+  .welcome-message {
+    @apply text-center text-[#6c757d] text-sm py-4;
+  }
+
+  .chat-message-item {
+    @apply mb-3 pb-2 border-b border-[#f1f3f4] last:border-b-0;
+  }
+
+  .message-content .message-header {
+    @apply flex justify-between items-center mb-1;
+  }
+
+  .message-content .username {
+    @apply font-semibold text-[#495057] text-sm;
+  }
+
+  .message-content .timestamp {
+    @apply text-xs text-[#6c757d];
+  }
+
+  .message-content .message-text {
+    @apply text-[#212529] text-sm leading-relaxed;
+  }
+
+  .system-message {
+    @apply text-center text-[#6c757d] text-xs py-1 italic;
+  }
+
+  .error-message {
+    @apply text-center text-[#dc3545] text-xs py-2 bg-[#f8d7da] border border-[#f5c6cb] rounded mb-2;
+  }
+
+  .typing-status {
+    @apply text-xs text-[#6c757d] h-5 mb-2;
+  }
+
+  .typing-text {
+    @apply italic;
+  }
+
+  .typing-dots {
+    @apply ml-1 animate-pulse;
+  }
+
+  .chat-input-area {
+    @apply bg-white border border-[#dee2e6] rounded p-3 w-full;
+  }
+
+  .input-wrapper {
+    @apply flex gap-2 mb-2 w-full;
+  }
+
+  .message-input {
+    @apply flex-1 px-3 py-2 border border-[#ced4da] rounded focus:outline-none focus:ring-2 focus:ring-[#0d6efd] focus:border-transparent text-sm bg-white text-[#212529];
+  }
+
+  .message-input:disabled {
+    @apply bg-[#e9ecef] text-[#6c757d] cursor-not-allowed;
+  }
+
+  .send-button {
+    @apply bg-[#0d6efd] hover:bg-[#0b5ed7] text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .send-button:disabled {
+    @apply bg-[#6c757d];
+  }
+
+  .char-counter {
+    @apply flex justify-between items-center text-xs text-[#6c757d];
+  }
+
+  .connection-indicator {
+    @apply px-2 py-1 rounded text-xs;
+  }
+
+  .connection-indicator.connected {
+    @apply bg-[#d1edff] text-[#084298];
+  }
+
+  .connection-indicator.disconnected {
+    @apply bg-[#f8d7da] text-[#721c24];
   }
 }
