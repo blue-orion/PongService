@@ -351,4 +351,38 @@ export class LobbyRepository {
 
     return readyWinnersCount === winners.length;
   }
+
+  /**
+   * STARTED 상태이면서 활성 플레이어가 0명인 로비들 조회
+   * @returns {Array} 빈 STARTED 로비 목록
+   */
+  async findEmptyStartedLobbies() {
+    const lobbies = await prisma.lobby.findMany({
+      where: {
+        lobby_status: LobbyStatus.STARTED,
+      },
+      include: {
+        lobby_players: {
+          where: {
+            enabled: true, // 활성 플레이어만 조회
+          },
+        },
+      },
+    });
+
+    // 활성 플레이어가 0명인 로비만 필터링
+    return lobbies.filter(lobby => lobby.lobby_players.length === 0);
+  }
+
+  /**
+   * 로비의 모든 비활성 플레이어들을 완전히 제거
+   * @param {number} lobbyId - 로비 ID
+   */
+  async removeAllPlayersInLobby(lobbyId) {
+    await prisma.lobbyPlayer.deleteMany({
+      where: {
+        lobby_id: lobbyId,
+      },
+    });
+  }
 }

@@ -48,12 +48,66 @@ export class LobbyService {
    * @returns {PageResponse} 페이징된 로비 목록
    */
   async getAllLobbies(pageRequest) {
+    // 먼저 게임 중인데 플레이어가 0명인 로비들을 정리
+    await this._cleanupEmptyStartedLobbies();
+
     const [lobbies, total] = await Promise.all([
       this.lobbyRepository.findAll(pageRequest.skip, pageRequest.take, pageRequest.filters),
       this.lobbyRepository.getCount(pageRequest.filters),
     ]);
 
     return PageResponse.of(pageRequest, lobbies, total);
+  }
+
+  /**
+   * 게임 중인데 플레이어가 0명인 로비들을 자동으로 정리
+   * @private
+   */
+  async _cleanupEmptyStartedLobbies() {
+    try {
+      // STARTED 상태이면서 활성 플레이어가 0명인 로비들 조회
+      const emptyStartedLobbies = await this.lobbyRepository.findEmptyStartedLobbies();
+      
+      if (emptyStartedLobbies.length === 0) {
+        return;
+      }
+
+      console.log(`[LobbyService] Found ${emptyStartedLobbies.length} empty started lobbies to cleanup`);
+
+      // 각 로비에 대해 정리 작업 수행
+      for (const lobby of emptyStartedLobbies) {
+        await this._cleanupLobby(lobby);
+      }
+    } catch (error) {
+      console.error(`[LobbyService] Error during lobby cleanup: ${error.message}`);
+      // 정리 작업 실패해도 조회 작업은 계속 진행
+    }
+  }
+
+  /**
+   * 개별 로비 정리 작업
+   * @private
+   * @param {Object} lobby - 정리할 로비 객체
+   */
+  async _cleanupLobby(lobby) {
+    try {
+      console.log(`[LobbyService] Cleaning up lobby ${lobby.id}`);
+
+      // 1. 해당 로비의 모든 비활성 플레이어들을 완전히 제거
+      await this.lobbyRepository.removeAllPlayersInLobby(lobby.id);
+
+      // 2. 로비 상태를 COMPLETED로 변경
+      await this.lobbyRepository.updateLobbyStatus(lobby.id, LobbyStatus.COMPLETED);
+
+      // 3. 토너먼트가 있다면 COMPLETED로 변경
+      if (lobby.tournament_id) {
+        await this.tournamentRepository.updateStatus(lobby.tournament_id, 'COMPLETED');
+      }
+
+      console.log(`[LobbyService] Successfully cleaned up lobby ${lobby.id}`);
+    } catch (error) {
+      console.error(`[LobbyService] Error cleaning up lobby ${lobby.id}: ${error.message}`);
+    }
   }
 
   /**

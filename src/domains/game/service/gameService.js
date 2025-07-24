@@ -217,6 +217,7 @@ export class GameService {
   async _processEndGame(gameId, intervalId, tournamentId) {
     clearInterval(intervalId);
 
+    this._sendGameState(gameId);
     const time = this.playTimes.get(gameId);
     time.endTime = performance.now();
     const totalSeconds = Math.floor((time.endTime - time.startTime) / 1000);
@@ -244,10 +245,10 @@ export class GameService {
     this.broadcastCallback(game.getPlayers(), "gameOver", payload);
 
     // 로비 네임스페이스에 게임 종료 알림 (승자, 패자 정보 포함)
-    if (this.lobbyNotificationCallback && typeof this.lobbyNotificationCallback === 'function') {
+    if (this.lobbyNotificationCallback && typeof this.lobbyNotificationCallback === "function") {
       this.lobbyNotificationCallback(tournamentId, gameId, { winnerId, loserId });
     } else {
-      console.warn('[GameService] lobbyNotificationCallback is not set or not a function');
+      console.warn("[GameService] lobbyNotificationCallback is not set or not a function");
     }
   }
 
