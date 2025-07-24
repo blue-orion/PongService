@@ -16,7 +16,6 @@ export class HeaderComponents extends Component {
     <nav class="navigation">
         <ul>
             <li><a href="/" data-route="/">홈</a></li>
-            <li><a href="/lobby" data-route="/lobby">로비 리스트</a></li>
             <li><a href="/dashboard" data-route="/dashboard">대시보드</a></li>
             <li><a href="#" class="my-profile-btn">내 프로필</a></li>
         </ul>
@@ -28,6 +27,7 @@ export class HeaderComponents extends Component {
 </header>
         `;
   }
+  // <li><a href="/lobby" data-route="/lobby">로비 리스트</a></li>
 
   async render(): Promise<void> {
     this.clearContainer();

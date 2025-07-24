@@ -18,6 +18,12 @@ interface GameState {
     right: Paddle;
   };
   score: { left: number; right: number };
+  players?: {
+    left?: { username?: string };
+    right?: { username?: string };
+    leftUsername?: string;
+    rightUsername?: string;
+  };
   status?: "waiting" | "playing" | "finished" | "paused";
   winner?: "left" | "right" | null;
 }
@@ -274,7 +280,12 @@ export class GameComponent extends Component {
 
   private updateGameStatus(state: GameState): void {
     if (!state || !state.score) return;
-    const scores = `LEFT: ${state.score.left} | RIGHT: ${state.score.right}`;
+    
+    // 여러 가능한 username 필드를 체크하여 안전하게 접근
+    const leftUsername = state.players?.left?.username || "LEFT";
+    const rightUsername = state.players?.right?.username || "RIGHT";
+
+    const scores = `${leftUsername}: ${state.score.left} | ${rightUsername}: ${state.score.right}`;
     this.scoresElement.textContent = scores;
   }
 
@@ -304,14 +315,12 @@ export class GameComponent extends Component {
       resultMessage = isWinner ? `승리! ${winnerName} 승!` : `패배! ${winnerName} 승!`;
     }
 
-    // 승자는 로비로 나가기 버튼만, 패자는 홈으로 나가기 버튼만 표시
-    const buttonHtml = isWinner
-      ? '<button class="exit-lobby-button">로비로 나가기</button>'
-      : '<button class="exit-home-button">홈으로 나가기</button>';
+    // 모든 플레이어가 로비로 돌아가는 버튼 표시
+    const buttonHtml = '<button class="exit-lobby-button">로비로 돌아가기</button>';
 
     // 결과 표시
     const resultModal = document.createElement("div");
-    resultModal.className = "game-result glass-card p-6 mt-4 text-center";
+    resultModal.className = "game-result bg-white border border-gray-200 rounded-lg shadow-lg p-6 mt-4 text-center";
     resultModal.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
@@ -322,7 +331,7 @@ export class GameComponent extends Component {
 
     const modalElement = document.createElement("div");
     modalElement.appendChild(resultModal);
-    modalElement.className = "modal-overlay";
+    modalElement.className = "modal-overlay bg-black bg-opacity-50 fixed inset-0 flex items-center justify-center z-50";
 
     this.container.appendChild(modalElement);
 
@@ -331,24 +340,24 @@ export class GameComponent extends Component {
       this.container.removeChild(modalElement);
       this.exitToLobby(); // 로비로 나가기
     });
-
-    const exitHomeButton = modalElement.querySelector(".exit-home-button");
-    exitHomeButton?.addEventListener("click", () => {
-      this.container.removeChild(modalElement);
-      this.exitToHome(); // 홈으로 나가기
-    });
   }
 
   private exitToLobby() {
     const lobbyId = sessionStorage.getItem("lastLobbyId");
-    setTimeout(() => {
-      sessionStorage.removeItem("lastLobbyId");
-    }, 5000);
-    window.router.navigate(`/lobby/${lobbyId}`);
-  }
-
-  private exitToHome() {
-    window.router.navigate(`/`);
+    console.log("🔍 로비로 돌아가기 - lastLobbyId:", lobbyId);
+    
+    if (lobbyId && lobbyId !== "null") {
+      console.log("✅ 저장된 로비 ID로 이동:", lobbyId);
+      // 사용된 후 세션에서 제거
+      setTimeout(() => {
+        sessionStorage.removeItem("lastLobbyId");
+      }, 5000);
+      window.router.navigate(`/lobby/${lobbyId}`);
+    } else {
+      console.warn("⚠️ lastLobbyId가 없습니다. 홈으로 이동합니다.");
+      // 저장된 로비 ID가 없으면 홈으로 이동
+      window.router.navigate(`/`);
+    }
   }
 
   private showError(error: string): void {

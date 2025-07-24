@@ -168,6 +168,18 @@ body {
     @apply flex justify-between items-center mb-8;
   }
 
+  .header-buttons {
+    @apply flex gap-3 items-center;
+  }
+
+  .refresh-btn {
+    @apply bg-blue-600 text-white border-none px-4 py-3 rounded-md cursor-pointer text-sm hover:bg-blue-700 transition-colors duration-200;
+  }
+
+  .refresh-btn:hover {
+    @apply transform scale-105;
+  }
+
   .create-lobby-btn {
     @apply bg-green-600 text-white border-none px-6 py-3 rounded-md cursor-pointer text-sm hover:bg-green-700;
   }
@@ -816,7 +828,7 @@ body {
   }
 
   .char-counter {
-    @apply flex justify-between items-center text-xs text-[#6c757d];
+    @apply flex justify-end items-center gap-1 text-xs text-[#6c757d];
   }
 
   .connection-indicator {

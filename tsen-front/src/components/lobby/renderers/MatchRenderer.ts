@@ -1,4 +1,4 @@
-import { MatchData, MatchInfo, PlayerInfo } from "../../../types/lobby";
+import { MatchData, MatchInfo, PlayerInfo, GameMatch } from "../../../types/lobby";
 import { UserManager } from "../../../utils/user";
 
 export class MatchRenderer {
@@ -10,7 +10,7 @@ export class MatchRenderer {
     // 매칭이 새로 생성된 경우 VS 화면을 먼저 표시
     const currentUserId = UserManager.getUserId();
     const currentMatch = this.findCurrentUserMatch(matchData, currentUserId);
-    
+
     if (currentMatch && currentMatch.game_status === "PENDING") {
       return this.renderVersusScreen(currentMatch);
     }
@@ -41,7 +41,7 @@ export class MatchRenderer {
   private static renderVersusScreen(match: any): string {
     const player1 = match.player_one;
     const player2 = match.player_two;
-    
+
     return `
             <div class="match-versus-screen">
                 <div class="match-versus-header">
@@ -52,9 +52,10 @@ export class MatchRenderer {
                 <div class="match-versus-content">
                     <div class="match-player-card card-left">
                         <div class="match-player-avatar">
-                            ${player1?.user?.profile_image 
-                              ? `<img src="${player1.user.profile_image}" alt="프로필" class="avatar-img">` 
-                              : `<div class="avatar-placeholder">👤</div>`
+                            ${
+                              player1?.user?.profile_image
+                                ? `<img src="${player1.user.profile_image}" alt="프로필" class="avatar-img">`
+                                : `<div class="avatar-placeholder">👤</div>`
                             }
                         </div>
                         <div class="player-info">
@@ -70,9 +71,10 @@ export class MatchRenderer {
                     
                     <div class="match-player-card card-right">
                         <div class="match-player-avatar">
-                            ${player2?.user?.profile_image 
-                              ? `<img src="${player2.user.profile_image}" alt="프로필" class="avatar-img">` 
-                              : `<div class="avatar-placeholder">👤</div>`
+                            ${
+                              player2?.user?.profile_image
+                                ? `<img src="${player2.user.profile_image}" alt="프로필" class="avatar-img">`
+                                : `<div class="avatar-placeholder">👤</div>`
                             }
                         </div>
                         <div class="player-info">
@@ -106,16 +108,25 @@ export class MatchRenderer {
         `;
   }
 
-  private static findCurrentUserMatch(matchData: MatchData, currentUserId: number | null): any | null {
-    if (!currentUserId || !matchData.matches) {
+  private static findCurrentUserMatch(matchData: MatchData, currentUserId: number | null): GameMatch | null {
+    if (!currentUserId) {
       return null;
     }
 
-    return matchData.matches.find((match: any) => {
-      const player1Id = match.player_one?.user?.id;
-      const player2Id = match.player_two?.user?.id;
-      return player1Id === currentUserId || player2Id === currentUserId;
-    }) || null;
+    // 백엔드 호환성 - games 배열 또는 matches 배열 모두 지원
+    const matches = matchData.games || matchData.matches || [];
+    if (!matches || matches.length === 0) {
+      return null;
+    }
+
+    return (
+      matches.find((match: GameMatch) => {
+        // 백엔드 DTO 호환성 - player_one/player_two 또는 left_player/right_player 모두 지원
+        const player1Id = match.player_one?.user?.id || match.player_one?.id || match.left_player?.id;
+        const player2Id = match.player_two?.user?.id || match.player_two?.id || match.right_player?.id;
+        return player1Id === currentUserId || player2Id === currentUserId;
+      }) || null
+    );
   }
 
   private static renderActiveTournament(matchData: MatchData): string {
@@ -123,7 +134,6 @@ export class MatchRenderer {
     return `
             <div class="tournament-bracket">
                 <div class="tournament-header">
-                    <h3>토너먼트 브라켓</h3>
                     <div class="tournament-info-grid">
                         <div class="info-item">
                             <label>토너먼트 ID:</label>
@@ -144,41 +154,42 @@ export class MatchRenderer {
                     </div>
                 </div>
                 
-                ${this.renderTournamentBracket(matchData.matches || [], matchData.total_rounds || 0)}
+                ${this.renderTournamentBracket(matchData.games || matchData.matches || [], matchData.total_rounds || 0)}
             </div>
         `;
   }
 
-  static renderTournamentBracket(matches: MatchInfo[], totalRounds: number): string {
+  static renderTournamentBracket(matches: GameMatch[], totalRounds: number): string {
     const matchesByRound = this.groupMatchesByRound(matches);
 
-    let bracketHTML = '<div class="bracket-container">';
+    // 토너먼트 브라켓 구조 생성
+    let bracketHTML = '<div class="tournament-bracket-container">';
 
+    // 각 라운드별로 처리
     for (let round = 1; round <= totalRounds; round++) {
       const roundMatches = matchesByRound[round] || [];
-      bracketHTML += `
-                <div class="bracket-round" data-round="${round}">
-                    <div class="round-header">
-                        <h4>${this.getRoundName(round, totalRounds)}</h4>
-                        <span class="round-number">라운드 ${round}</span>
-                    </div>
-                    <div class="round-matches">
-                        ${roundMatches.map((match) => this.renderBracketMatch(match)).join("")}
-                    </div>
-                </div>
-            `;
+      const nextRoundMatches = matchesByRound[round + 1] || [];
+      const roundName = this.getRoundName(round, totalRounds);
 
-      if (round < totalRounds) {
-        bracketHTML += '<div class="bracket-connector"></div>';
-      }
+      bracketHTML += `
+        <div class="bracket-round-wrapper" data-round="${round}">
+          <div class="bracket-round-column">
+            <div class="round-label">${roundName}</div>
+            <div class="round-matches-container">
+              ${roundMatches.map((match, index) => this.renderTournamentMatch(match, round, index)).join("")}
+            </div>
+          </div>
+      `;
+
+      bracketHTML += "</div>";
     }
 
     bracketHTML += "</div>";
     return bracketHTML;
   }
 
-  private static groupMatchesByRound(matches: MatchInfo[]): { [round: number]: MatchInfo[] } {
-    const matchesByRound: { [round: number]: MatchInfo[] } = {};
+  private static groupMatchesByRound(matches: GameMatch[]): { [round: number]: GameMatch[] } {
+    const matchesByRound: { [round: number]: GameMatch[] } = {};
     matches.forEach((match) => {
       if (!matchesByRound[match.round]) {
         matchesByRound[match.round] = [];
@@ -193,13 +204,157 @@ export class MatchRenderer {
     if (round === totalRounds - 1) return "준결승";
     if (round === totalRounds - 2) return "8강";
     if (round === totalRounds - 3) return "16강";
-    return `라운드 ${round}`;
+    return `${round}라운드`;
   }
 
-  static renderBracketMatch(match: MatchInfo): string {
+  private static renderTournamentMatch(match: GameMatch, round: number, index: number): string {
+    const isCompleted = match.game_status === "COMPLETED";
+    const isInProgress = match.game_status === "IN_PROGRESS";
+    const isPending = match.game_status === "PENDING";
+
+    // 백엔드 DTO 호환성 - left_player/right_player 또는 player_one/player_two 지원
+    const leftPlayer =
+      match.left_player ||
+      (match.player_one?.user
+        ? {
+            id: match.player_one.user.id,
+            nickname: match.player_one.user.nickname,
+            username: match.player_one.user.username,
+            profile_image: match.player_one.user.profile_image,
+            score: match.player_one.user.score,
+          }
+        : undefined);
+
+    const rightPlayer =
+      match.right_player ||
+      (match.player_two?.user
+        ? {
+            id: match.player_two.user.id,
+            nickname: match.player_two.user.nickname,
+            username: match.player_two.user.username,
+            profile_image: match.player_two.user.profile_image,
+            score: match.player_two.user.score,
+          }
+        : undefined);
+
+    return `
+      <div class="tournament-match" data-game-id="${match.game_id}" data-round="${round}" data-index="${index}">
+        <div class="match-bracket">
+          <div class="match-player top-player ${isCompleted && match.winner?.position === "left" ? "winner" : ""}">
+            <div class="player-info">
+              ${
+                leftPlayer?.profile_image
+                  ? `<img src="${leftPlayer.profile_image}" alt="프로필" class="player-avatar-small">`
+                  : `<div class="player-avatar-placeholder-small">👤</div>`
+              }
+              <span class="player-name">${leftPlayer?.nickname || "대기 중"}</span>
+            </div>
+            <div class="player-score">
+              ${isCompleted ? leftPlayer?.score || 0 : isPending ? "" : leftPlayer?.score || 0}
+            </div>
+          </div>
+          
+          <div class="match-connector">
+            <div class="connector-line"></div>
+            ${
+              isInProgress
+                ? '<div class="match-status-indicator playing">▶</div>'
+                : isCompleted
+                  ? '<div class="match-status-indicator completed">✓</div>'
+                  : '<div class="match-status-indicator pending">○</div>'
+            }
+          </div>
+          
+          <div class="match-player bottom-player ${isCompleted && match.winner?.position === "right" ? "winner" : ""}">
+            <div class="player-info">
+              ${
+                rightPlayer?.profile_image
+                  ? `<img src="${rightPlayer.profile_image}" alt="프로필" class="player-avatar-small">`
+                  : `<div class="player-avatar-placeholder-small">👤</div>`
+              }
+              <span class="player-name">${rightPlayer?.nickname || "대기 중"}</span>
+            </div>
+            <div class="player-score">
+              ${isCompleted ? rightPlayer?.score || 0 : isPending ? "" : rightPlayer?.score || 0}
+            </div>
+          </div>
+        </div>
+        
+        <div class="match-info-tooltip">
+          <div class="match-id">Game ${match.game_id}</div>
+          <div class="match-status">${this.getGameStatusText(match.game_status)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  private static renderRoundConnectors(
+    currentRoundMatches: MatchInfo[],
+    nextRoundMatches: MatchInfo[],
+    round: number
+  ): string {
+    let connectorsHTML =
+      '<div class="round-connectors" data-from-round="' + round + '" data-to-round="' + (round + 1) + '">';
+
+    // 현재 라운드의 매치 수에 따라 연결선 생성
+    for (let i = 0; i < nextRoundMatches.length; i++) {
+      const match1Index = i * 2;
+      const match2Index = i * 2 + 1;
+
+      // 두 매치가 존재하는 경우에만 연결선 생성
+      if (match1Index < currentRoundMatches.length && match2Index < currentRoundMatches.length) {
+        connectorsHTML += `
+          <div class="connector-group" data-next-match="${i}">
+            <div class="connector-line-horizontal from-match-${match1Index}"></div>
+            <div class="connector-line-horizontal from-match-${match2Index}"></div>
+            <div class="connector-line-vertical"></div>
+            <div class="connector-line-horizontal to-next-round"></div>
+          </div>
+        `;
+      } else if (match1Index < currentRoundMatches.length) {
+        // 홀수 개의 매치가 있는 경우 (부전승)
+        connectorsHTML += `
+          <div class="connector-group bye-connector" data-next-match="${i}">
+            <div class="connector-line-horizontal from-match-${match1Index} bye-line"></div>
+            <div class="connector-line-horizontal to-next-round"></div>
+          </div>
+        `;
+      }
+    }
+
+    connectorsHTML += "</div>";
+    return connectorsHTML;
+  }
+
+  static renderBracketMatch(match: GameMatch): string {
     const isCompleted = match.game_status === "COMPLETED";
     const isPending = match.game_status === "PENDING";
     const isInProgress = match.game_status === "IN_PROGRESS";
+
+    // 백엔드 DTO 호환성 - left_player/right_player 또는 player_one/player_two 지원
+    const leftPlayer =
+      match.left_player ||
+      (match.player_one?.user
+        ? {
+            id: match.player_one.user.id,
+            nickname: match.player_one.user.nickname,
+            username: match.player_one.user.username,
+            profile_image: match.player_one.user.profile_image,
+            score: match.player_one.user.score,
+          }
+        : undefined);
+
+    const rightPlayer =
+      match.right_player ||
+      (match.player_two?.user
+        ? {
+            id: match.player_two.user.id,
+            nickname: match.player_two.user.nickname,
+            username: match.player_two.user.username,
+            profile_image: match.player_two.user.profile_image,
+            score: match.player_two.user.score,
+          }
+        : undefined);
 
     return `
             <div class="bracket-match ${match.game_status.toLowerCase()}" data-game-id="${match.game_id}">
@@ -209,13 +364,13 @@ export class MatchRenderer {
                 </div>
                 
                 <div class="match-players">
-                    ${this.renderPlayerSlot(match.left_player, match.winner, match.loser, "left", isCompleted, isPending)}
+                    ${this.renderPlayerSlot(leftPlayer, match.winner, match.loser, "left", isCompleted, isPending)}
                     
                     <div class="vs-divider">
                         <span class="vs-text">VS</span>
                     </div>
                     
-                    ${this.renderPlayerSlot(match.right_player, match.winner, match.loser, "right", isCompleted, isPending)}
+                    ${this.renderPlayerSlot(rightPlayer, match.winner, match.loser, "right", isCompleted, isPending)}
                 </div>
                 
                 ${isCompleted && match.winner ? this.renderMatchResult(match) : ""}
@@ -225,9 +380,9 @@ export class MatchRenderer {
   }
 
   private static renderPlayerSlot(
-    player: PlayerInfo,
-    winner: PlayerInfo | undefined,
-    loser: PlayerInfo | undefined,
+    player: any, // Changed to any for backend DTO compatibility
+    winner: any | undefined,
+    loser: any | undefined,
     position: "left" | "right",
     isCompleted: boolean,
     isPending: boolean
@@ -239,7 +394,7 @@ export class MatchRenderer {
             <div class="player-slot ${isWinner ? "winner" : isLoser ? "loser" : ""}">
                 <div class="player-info">
                     ${
-                      player.profile_image
+                      player?.profile_image
                         ? `<img src="${player.profile_image}" alt="프로필" class="player-avatar">`
                         : `<div class="player-avatar-placeholder">👤</div>`
                     }
@@ -249,18 +404,18 @@ export class MatchRenderer {
                     </div>
                 </div>
                 <div class="player-score">
-                    ${isCompleted ? player.score : isPending ? "-" : player.score || 0}
+                    ${isCompleted ? player?.score || 0 : isPending ? "-" : player?.score || 0}
                 </div>
             </div>
         `;
   }
 
-  private static renderMatchResult(match: MatchInfo): string {
+  private static renderMatchResult(match: GameMatch): string {
     return `
             <div class="match-result">
                 <div class="winner-info">
                     <span class="winner-label">승자:</span>
-                    <span class="winner-name">${match.winner?.nickname}</span>
+                    <span class="winner-name">${match.winner?.nickname || "Unknown"}</span>
                 </div>
                 ${
                   match.play_time
@@ -349,8 +504,9 @@ export class MatchRenderer {
   }
 
   private static renderInlineActiveTournament(matchData: MatchData): string {
-    const currentRoundMatches =
-      matchData.matches?.filter((match: MatchInfo) => match.round === matchData.current_round) || [];
+    // 백엔드 호환성 - games 배열 또는 matches 배열 모두 지원
+    const matches = matchData.games || matchData.matches || [];
+    const currentRoundMatches = matches.filter((match: GameMatch) => match.round === matchData.current_round) || [];
 
     return `
             <div class="tournament-info-inline">
@@ -370,7 +526,7 @@ export class MatchRenderer {
         `;
   }
 
-  private static renderCurrentMatches(currentRoundMatches: MatchInfo[]): string {
+  private static renderCurrentMatches(currentRoundMatches: GameMatch[]): string {
     if (currentRoundMatches.length === 0) {
       return '<p class="no-matches">현재 라운드 매치가 없습니다.</p>';
     }
@@ -392,17 +548,41 @@ export class MatchRenderer {
         `;
   }
 
-  private static renderMatchSummaryCard(match: MatchInfo): string {
+  private static renderMatchSummaryCard(match: GameMatch): string {
+    // 백엔드 DTO 호환성 - left_player/right_player 또는 player_one/player_two 지원
+    const leftPlayer =
+      match.left_player ||
+      (match.player_one?.user
+        ? {
+            id: match.player_one.user.id,
+            nickname: match.player_one.user.nickname,
+            username: match.player_one.user.username,
+            profile_image: match.player_one.user.profile_image,
+            score: match.player_one.user.score,
+          }
+        : undefined);
+
+    const rightPlayer =
+      match.right_player ||
+      (match.player_two?.user
+        ? {
+            id: match.player_two.user.id,
+            nickname: match.player_two.user.nickname,
+            username: match.player_two.user.username,
+            profile_image: match.player_two.user.profile_image,
+            score: match.player_two.user.score,
+          }
+        : undefined);
+
     return `
             <div class="match-summary-card">
                 <div class="match-info-header">
-                    <span class="match-number">Game ${match.game_id}</span>
                     <span class="match-status ${match.game_status.toLowerCase()}">${this.getGameStatusText(match.game_status)}</span>
                 </div>
                 <div class="match-players-summary">
-                    ${this.renderPlayerSummary(match.left_player, match.game_status)}
+                    ${this.renderPlayerSummary(leftPlayer, match.game_status)}
                     <span class="vs-text">vs</span>
-                    ${this.renderPlayerSummary(match.right_player, match.game_status)}
+                    ${this.renderPlayerSummary(rightPlayer, match.game_status)}
                 </div>
                 ${
                   match.winner
@@ -418,7 +598,7 @@ export class MatchRenderer {
         `;
   }
 
-  private static renderPlayerSummary(player: PlayerInfo, gameStatus: string): string {
+  private static renderPlayerSummary(player: any, gameStatus: string): string {
     return `
             <div class="player-summary">
                 ${
