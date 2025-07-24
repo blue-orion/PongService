@@ -183,11 +183,6 @@ export class LobbyDetailService {
       console.error("💥 로비 방 입장 실패:", error);
     });
 
-    // 디버깅용 모든 이벤트 로깅
-    this.socket.onAny((eventName: string, ...args: any[]) => {
-      console.log(`🔊 WebSocket 이벤트 수신: ${eventName}`, args);
-    });
-
     // 게임 시작 이벤트
     this.socket.on("game:started", (data: any) => {
       console.log("🎯 WebSocket에서 게임 이벤트 수신:", data);
