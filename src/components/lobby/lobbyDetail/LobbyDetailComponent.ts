@@ -48,10 +48,13 @@ export class LobbyDetailComponent extends Component {
   }
 
   private initializeChat(): void {
-    // 채팅 컨테이너가 UI에 있는지 확인
     const chatContainer = this.container.querySelector("#chat-container");
-
-    if (chatContainer && !this.chatComponent) {
+    // 채팅 컨테이너가 UI에 있는지 확인
+    if (chatContainer) {
+      if (this.chatComponent) {
+        this.chatComponent.destroy();
+        this.chatComponent = null;
+      }
       this.chatComponent = new LobbyChatComponent(chatContainer as HTMLElement, this.lobbyId);
       console.log("💬 채팅 컴포넌트 초기화 완료");
     }
@@ -116,6 +119,7 @@ export class LobbyDetailComponent extends Component {
       }
 
       this.ui.renderLobbyDetail(this.lobbyData, this.service.isConnected());
+      this.initializeChat();
     } catch (error) {
       console.error("로비 데이터 로드 실패:", error);
       this.ui.showErrorState(error instanceof Error ? error.message : "로비 정보를 불러오는데 실패했습니다.");
