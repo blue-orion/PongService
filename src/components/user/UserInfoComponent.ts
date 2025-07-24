@@ -530,34 +530,74 @@ export class UserInfoComponent extends Component {
 
       if (!response.ok) {
         // 에러 응답 내용을 확인
-        const errorData = await response.text();
-        throw new Error(`2FA 설정 요청 실패: ${response.status} ${response.statusText} - ${errorData}`);
+        let errorMessage = `2FA 설정 요청 실패: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage += ` - ${errorData.message}`;
+          }
+          console.error("[UserInfoComponent] 2FA setup 에러 응답:", errorData);
+        } catch (e) {
+          // JSON 파싱에 실패하면 텍스트로 읽어보기
+          try {
+            const errorText = await response.text();
+            errorMessage += ` - ${errorText}`;
+            console.error("[UserInfoComponent] 2FA setup 에러 텍스트:", errorText);
+          } catch (e2) {
+            console.error("[UserInfoComponent] 에러 응답 읽기 실패:", e2);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
+      
+      // 디버깅을 위한 응답 구조 로그
+      console.log("[UserInfoComponent] 2FA setup 응답 구조:", responseData);
 
-      // 백엔드 응답 구조에 맞게 QR 코드 데이터 추출
+      // 백엔드 응답 구조에 맞게 QR 코드 데이터 추출 (TwoFATempDto 구조)
       let qrCodeDataURL: string;
-      if (responseData.data?.qrCodeDataURL) {
-        // ApiResponse.ok() 구조: { success: true, data: { qrCodeDataURL: "..." } }
+      let tempSecret: string;
+      
+      // 다양한 응답 구조 처리
+      if (responseData.data?.qrCodeDataURL && responseData.data?.tempSecret) {
+        // ApiResponse.ok() 구조: { success: true, data: { qrCodeDataURL: "...", tempSecret: "..." } }
         qrCodeDataURL = responseData.data.qrCodeDataURL;
-      } else if (responseData.qrCodeDataURL) {
-        // 직접 구조: { qrCodeDataURL: "..." }
+        tempSecret = responseData.data.tempSecret;
+        console.log("[UserInfoComponent] data 구조에서 추출:", { qrCodeDataURL: qrCodeDataURL.substring(0, 50), tempSecret: tempSecret.substring(0, 10) + "..." });
+      } else if (responseData.qrCodeDataURL && responseData.tempSecret) {
+        // 직접 구조: { qrCodeDataURL: "...", tempSecret: "..." }
         qrCodeDataURL = responseData.qrCodeDataURL;
+        tempSecret = responseData.tempSecret;
+        console.log("[UserInfoComponent] 직접 구조에서 추출:", { qrCodeDataURL: qrCodeDataURL.substring(0, 50), tempSecret: tempSecret.substring(0, 10) + "..." });
+      } else if (responseData.data?.qrCode && responseData.data?.secret) {
+        // 다른 가능한 구조: { data: { qrCode: "...", secret: "..." } }
+        qrCodeDataURL = responseData.data.qrCode;
+        tempSecret = responseData.data.secret;
+        console.log("[UserInfoComponent] qrCode/secret 구조에서 추출:", { qrCodeDataURL: qrCodeDataURL.substring(0, 50), tempSecret: tempSecret.substring(0, 10) + "..." });
+      } else if (responseData.qrCode && responseData.secret) {
+        // 직접 구조: { qrCode: "...", secret: "..." }
+        qrCodeDataURL = responseData.qrCode;
+        tempSecret = responseData.secret;
+        console.log("[UserInfoComponent] 직접 qrCode/secret 구조에서 추출:", { qrCodeDataURL: qrCodeDataURL.substring(0, 50), tempSecret: tempSecret.substring(0, 10) + "..." });
       } else {
-        throw new Error("QR 코드 데이터를 찾을 수 없습니다.");
+        console.error("[UserInfoComponent] 응답에서 QR 코드 또는 임시 시크릿을 찾을 수 없음. 응답 구조:", Object.keys(responseData));
+        if (responseData.data) {
+          console.error("[UserInfoComponent] data 객체 구조:", Object.keys(responseData.data));
+        }
+        throw new Error(`QR 코드 데이터 또는 임시 시크릿을 찾을 수 없습니다. 응답 구조를 확인해주세요. 받은 키들: ${Object.keys(responseData).join(', ')}`);
       }
 
-      // QR 코드 모달 표시
-      this.show2FASetupModal(qrCodeDataURL);
+      // QR 코드 모달 표시 (임시 시크릿 포함)
+      this.show2FASetupModal(qrCodeDataURL, tempSecret);
     } catch (error) {
       console.error("[UserInfoComponent] 2FA 설정 오류:", error);
       alert(error instanceof Error ? error.message : "2FA 설정 중 오류가 발생했습니다.");
     }
   }
 
-  // 2FA 설정 모달 표시
-  private show2FASetupModal(qrCodeDataURL: string): void {
+  // 2FA 설정 모달 표시 (임시 시크릿 포함)
+  private show2FASetupModal(qrCodeDataURL: string, tempSecret: string): void {
     // 모달 HTML 생성
     const modalHTML = `
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="twofa-modal">
@@ -595,6 +635,8 @@ export class UserInfoComponent extends Component {
                                 placeholder="000000"
                                 autocomplete="off"
                             />
+                            <!-- 임시 시크릿을 hidden input으로 저장 -->
+                            <input type="hidden" id="temp-secret" value="${tempSecret}" />
                         </div>
 
                         <!-- 버튼 -->
@@ -640,19 +682,21 @@ export class UserInfoComponent extends Component {
     // 확인 버튼
     confirmBtn?.addEventListener("click", () => {
       const token = tokenInput?.value?.trim();
+      const tempSecret = (modal?.querySelector("#temp-secret") as HTMLInputElement)?.value;
       if (!token || token.length !== 6) {
         alert("6자리 인증 코드를 입력해주세요.");
         return;
       }
-      this.verify2FASetup(token);
+      this.confirm2FASetup(token, tempSecret);
     });
 
     // Enter 키로 확인
     tokenInput?.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         const token = tokenInput.value.trim();
+        const tempSecret = (modal?.querySelector("#temp-secret") as HTMLInputElement)?.value;
         if (token && token.length === 6) {
-          this.verify2FASetup(token);
+          this.confirm2FASetup(token, tempSecret);
         }
       }
     });
@@ -704,6 +748,68 @@ export class UserInfoComponent extends Component {
     } catch (error) {
       console.error("[UserInfoComponent] 2FA 검증 오류:", error);
       alert(error instanceof Error ? error.message : "2FA 검증 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 2FA 설정 확인 (임시 secret을 실제 secret으로 등록)
+  private async confirm2FASetup(token: string, tempSecret: string): Promise<void> {
+    try {
+      // UserManager에서 저장된 username 가져오기
+      const username = UserManager.getUsername();
+
+      if (!username) {
+        alert("사용자명을 찾을 수 없습니다.");
+        return;
+      }
+
+      if (!tempSecret) {
+        alert("임시 시크릿을 찾을 수 없습니다. 다시 시도해주세요.");
+        return;
+      }
+
+      console.log("[UserInfoComponent] 2FA confirm 요청:", { username, tempSecret: tempSecret.substring(0, 10) + "...", token });
+
+      const response = await AuthManager.authenticatedFetch(`${UserInfoComponent.API_BASE_URL}/auth/2fa/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          tempSecret: tempSecret,
+          token: token,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = `2FA 설정 확인 실패: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error("[UserInfoComponent] 2FA confirm 에러 응답:", errorData);
+        } catch (e) {
+          console.error("[UserInfoComponent] 에러 응답 파싱 실패:", e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log("[UserInfoComponent] 2FA confirm 성공:", result);
+
+      // 성공 시 모달 닫기 및 버튼 상태 업데이트
+      this.close2FAModal();
+
+      // 버튼 상태 업데이트
+      const toggle2faBtn = this.container.querySelector(".toggle-2fa-btn");
+      if (toggle2faBtn) {
+        toggle2faBtn.setAttribute("data-enabled", "true");
+        toggle2faBtn.textContent = "2FA 비활성화";
+      }
+
+      alert("2FA가 성공적으로 활성화되었습니다!");
+    } catch (error) {
+      console.error("[UserInfoComponent] 2FA 설정 확인 오류:", error);
+      alert(error instanceof Error ? error.message : "2FA 설정 확인 중 오류가 발생했습니다.");
     }
   }
 
