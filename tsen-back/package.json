@@ -1,0 +1,47 @@
+{
+  "name": "tsen-back",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "type": "module",
+  "imports": {
+    "#env": "./src/env.js",
+    "#domains/*": "./src/domains/*",
+    "#routes/*": "./src/routes/*",
+    "#shared/*": "./src/shared/*"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "dotenv -e .env.dev -- prisma migrate dev",
+    "migrate:prod": "dotenv -e .env.prod -- prisma migrate deploy",
+    "dev": "npm run generate && npm run migrate:dev -- --name dev-update && node --watch src/server.js",
+    "start": "npm run generate && npm run migrate:prod && node src/server.js",
+    "lint": "eslint . --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/oauth2": "^7.0.0",
+    "@prisma/client": "^6.11.1",
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.0.0",
+    "fastify": "^4.29.1",
+    "fastify-plugin": "^5.0.1",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.9.0",
+    "@eslint/js": "^9.30.0",
+    "dotenv-cli": "^8.0.0",
+    "eslint": "^9.30.0",
+    "globals": "^16.2.0",
+    "prisma": "^6.11.1"
+  }
+}
