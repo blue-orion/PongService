@@ -2,10 +2,13 @@ import { Component } from "../Component";
 import { UserManager } from "../../utils/user";
 import { AuthManager } from "../../utils/auth";
 import { friendService } from "../../utils/friendService";
+import { FriendDataManager } from "../friend/FriendDataManager";
+import { UserProfileManager } from "../friend/UserProfileManager";
 
 export class UserInfoComponent extends Component {
   private userId: string;
-  private currentUsername: string = "";
+  private username: string = ""; // 해당 사용자의 username 저장
+  private friendDataManager: FriendDataManager | null = null;
   private static readonly API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   constructor(container: HTMLElement, userId: string) {
@@ -75,10 +78,23 @@ export class UserInfoComponent extends Component {
     let friendStatus = null;
     if (!isMe) {
       try {
-        friendStatus = await this.checkFriendStatus(this.userId);
+        // FriendDataManager 초기화 (필요한 경우)
+        if (!this.friendDataManager) {
+          // 임시 컨테이너로 UserProfileManager 생성
+          const tempContainer = document.createElement('div');
+          const userProfileManager = new UserProfileManager(tempContainer);
+          this.friendDataManager = new FriendDataManager(userProfileManager);
+          // 친구 데이터 로딩
+          await this.friendDataManager.loadFriends();
+          await this.friendDataManager.loadFriendRequests();
+          await this.friendDataManager.loadSentRequests();
+        }
+        
+        friendStatus = this.friendDataManager.checkFriendStatus(Number(this.userId));
       } catch (error) {
         console.error("[UserInfoComponent] 친구 상태 확인 오류:", error);
         // 친구 상태 확인에 실패해도 계속 진행
+        friendStatus = "none";
       }
     }
 
@@ -95,8 +111,8 @@ export class UserInfoComponent extends Component {
       friendStatus: friendStatus,
     };
 
-    // 친구 관련 메서드에서 사용할 수 있도록 username 저장
-    this.currentUsername = username;
+    // 해당 사용자의 username 저장 (친구 요청 시 사용)
+    this.username = username;
 
     // HTML 직접 렌더링
     this.container.innerHTML = this.getUserInfoTemplate(templateData);
@@ -375,11 +391,15 @@ export class UserInfoComponent extends Component {
 
   private async addFriend(): Promise<void> {
     try {
-      // friendService의 requestFriend 메서드 사용
-      const response = await friendService.requestFriend(this.currentUsername || this.userId);
+      // friendService의 requestFriend 메서드에 username 전달
+      const response = await friendService.requestFriend(this.username);
 
       if (response.success) {
         alert("친구 요청을 보냈습니다!");
+        // FriendDataManager 상태도 업데이트
+        if (this.friendDataManager) {
+          await this.friendDataManager.loadSentRequests();
+        }
         // 페이지 새로고침하여 버튼 상태 업데이트
         this.render();
       } else {
@@ -387,22 +407,26 @@ export class UserInfoComponent extends Component {
         alert(errorMsg);
       }
     } catch (error) {
-      console.error("[UserInfoComponent] 친구 추가 오류:", error);
-      const message = error instanceof Error ? error.message : "친구 추가 중 오류가 발생했습니다.";
+      console.error("[UserInfoComponent] 친구 요청 오류:", error);
+      const message = error instanceof Error ? error.message : "친구 요청 중 오류가 발생했습니다.";
       alert(message);
     }
   }
 
   private async removeFriend(): Promise<void> {
     try {
-      const confirmed = confirm("정말로 친구를 해제하시겠습니까?");
+      const confirmed = confirm("정말로 친구를 삭제하시겠습니까?");
       if (!confirmed) return;
 
       // friendService의 deleteFriend 메서드 사용
       const response = await friendService.deleteFriend(Number(this.userId));
 
       if (response.success) {
-        alert("친구가 해제되었습니다.");
+        alert("친구가 삭제되었습니다.");
+        // FriendDataManager 상태도 업데이트
+        if (this.friendDataManager) {
+          await this.friendDataManager.loadFriends();
+        }
         // 페이지 새로고침하여 버튼 상태 업데이트
         this.render();
       } else {
@@ -410,8 +434,8 @@ export class UserInfoComponent extends Component {
         alert(errorMsg);
       }
     } catch (error) {
-      console.error("[UserInfoComponent] 친구 해제 오류:", error);
-      const message = error instanceof Error ? error.message : "친구 해제 중 오류가 발생했습니다.";
+      console.error("[UserInfoComponent] 친구 삭제 오류:", error);
+      const message = error instanceof Error ? error.message : "친구 삭제 중 오류가 발생했습니다.";
       alert(message);
     }
   }
@@ -421,11 +445,33 @@ export class UserInfoComponent extends Component {
       const confirmed = confirm("친구 요청을 취소하시겠습니까?");
       if (!confirmed) return;
 
-      // friendService의 cancelFriendRequest 메서드 사용
-      const response = await friendService.cancelFriendRequest(Number(this.userId), this.currentUsername);
+      // FriendDataManager에서 해당 사용자에게 보낸 요청의 relationId 찾기
+      if (!this.friendDataManager) {
+        alert("친구 데이터를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      const sentRequests = this.friendDataManager.getSentRequests();
+      const targetRequest = sentRequests.find(request => 
+        request.id === Number(this.userId) || 
+        request.username?.toLowerCase() === this.username.toLowerCase()
+      );
+
+      if (!targetRequest) {
+        alert("해당 사용자에게 보낸 친구 요청을 찾을 수 없습니다.");
+        return;
+      }
+
+      // friendService의 cancelFriendRequest는 실제로는 rejectFriendRequest를 사용해야 할 수도 있음
+      // relationId를 사용하는 API 호출
+      const response = await friendService.rejectFriendRequest(targetRequest.relationId.toString());
 
       if (response.success) {
         alert("친구 요청을 취소했습니다.");
+        // FriendDataManager 상태도 업데이트
+        if (this.friendDataManager) {
+          await this.friendDataManager.loadSentRequests();
+        }
         // 페이지 새로고침하여 버튼 상태 업데이트
         this.render();
       } else {
@@ -468,8 +514,6 @@ export class UserInfoComponent extends Component {
         username: username,
       };
 
-      console.log("2FA 설정 요청 데이터:", requestData);
-
       const response = await AuthManager.authenticatedFetch(`${UserInfoComponent.API_BASE_URL}/auth/2fa/setup`, {
         method: "POST",
         headers: {
@@ -481,16 +525,10 @@ export class UserInfoComponent extends Component {
       if (!response.ok) {
         // 에러 응답 내용을 확인
         const errorData = await response.text();
-        console.error("2FA 설정 에러 응답:", {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorData,
-        });
         throw new Error(`2FA 설정 요청 실패: ${response.status} ${response.statusText} - ${errorData}`);
       }
 
       const responseData = await response.json();
-      console.log("2FA 설정 응답:", responseData);
 
       // 백엔드 응답 구조에 맞게 QR 코드 데이터 추출
       let qrCodeDataURL: string;
@@ -501,11 +539,8 @@ export class UserInfoComponent extends Component {
         // 직접 구조: { qrCodeDataURL: "..." }
         qrCodeDataURL = responseData.qrCodeDataURL;
       } else {
-        console.error("예상하지 못한 응답 구조:", responseData);
         throw new Error("QR 코드 데이터를 찾을 수 없습니다.");
       }
-
-      console.log("QR 코드 데이터:", qrCodeDataURL);
 
       // QR 코드 모달 표시
       this.show2FASetupModal(qrCodeDataURL);
@@ -676,60 +711,12 @@ export class UserInfoComponent extends Component {
   private getFriendButtonHtml(friendStatus: string): string {
     switch (friendStatus) {
       case "friend":
-        return `<button class="remove-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-red-600 text-white hover:bg-red-700 hover:shadow-lg">친구 해제</button>`;
+        return `<button class="remove-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-red-600 text-white hover:bg-red-700 hover:shadow-lg">친구 삭제</button>`;
       case "pending":
         return `<button class="cancel-friend-request-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-yellow-600 text-white hover:bg-yellow-700 hover:shadow-lg">요청 취소</button>`;
       case "none":
       default:
-        return `<button class="add-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg">친구 추가</button>`;
-    }
-  }
-
-  // 친구 상태 확인 메서드
-  private async checkFriendStatus(userId: string): Promise<string> {
-    try {
-      // friendService를 사용하여 친구 목록 조회
-      const friendsResponse = await friendService.getFriendsList(1, 100); // 충분한 수의 친구 목록 조회
-
-      if (friendsResponse.success && friendsResponse.data) {
-        // 친구 목록에서 해당 사용자 찾기
-        const friends = friendsResponse.data.friends || [];
-        
-        const isFriend = friends.some((friend: any) => {
-          return String(friend.id) === String(userId) || String(friend.userId) === String(userId);
-        });
-
-        if (isFriend) {
-          return "friend";
-        }
-      }
-
-      // friendService를 사용하여 받은 친구 요청 조회
-      const receivedResponse = await friendService.getReceivedRequests(1, 100);
-      if (receivedResponse.success && receivedResponse.data) {
-        const receivedRequests = receivedResponse.data.requests || [];
-        const hasReceivedRequest = receivedRequests.some((request: any) => String(request.id) === String(userId));
-
-        if (hasReceivedRequest) {
-          return "pending";
-        }
-      }
-
-      // friendService를 사용하여 보낸 친구 요청 조회
-      const sentResponse = await friendService.getSentRequests(1, 100);
-      if (sentResponse.success && sentResponse.data) {
-        const sentRequests = sentResponse.data.requests || [];
-        const hasSentRequest = sentRequests.some((request: any) => String(request.id) === String(userId));
-
-        if (hasSentRequest) {
-          return "pending";
-        }
-      }
-
-      return "none";
-    } catch (error) {
-      console.error("[UserInfoComponent] 친구 상태 확인 오류:", error);
-      return "none";
+        return `<button class="add-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg">친구 요청</button>`;
     }
   }
 
