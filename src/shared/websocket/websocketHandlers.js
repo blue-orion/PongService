@@ -37,8 +37,8 @@ const websocketHandlers = {
     websocketManager.registerNamespace("lobby", lobbyNamespace);
 
     lobbyNamespace.on("connection", (socket) => {
-      const userId = socket.handshake.query["user-id"];
-      const lobbyId = socket.handshake.query["lobby-id"];
+      const userId = socket.handshake.auth["user-id"];
+      const lobbyId = socket.handshake.auth["lobby-id"];
 
       console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
 
@@ -73,6 +73,63 @@ const websocketHandlers = {
           socket.leave(`lobby-${lobby_id}`);
           console.log(`User ${userId} left room lobby-${lobby_id}`);
         }
+      });
+
+      // 채팅 메시지 전송 이벤트 처리
+      socket.on("chat:message", (data) => {
+        const { lobby_id, message, username } = data;
+
+        if (!lobby_id || !message || message.trim() === "") {
+          socket.emit("chat:error", { error: "Invalid message data" });
+          return;
+        }
+
+        // 메시지 길이 제한 (예: 500자)
+        if (message.length > 500) {
+          socket.emit("chat:error", { error: "Message too long" });
+          return;
+        }
+
+        const chatData = {
+          user_id: userId,
+          username: username || `User${userId}`,
+          message: message.trim(),
+          lobby_id: lobby_id,
+          timestamp: new Date().toISOString(),
+        };
+
+        // 같은 로비의 모든 사용자에게 메시지 브로드캐스트 (본인 포함)
+        lobbyNamespace.to(`lobby-${lobby_id}`).emit("chat:message", chatData);
+
+        console.log(`Chat message in lobby ${lobby_id} from user ${userId}: ${message}`);
+      });
+
+      // 사용자가 현재 타이핑 중임을 알리는 이벤트
+      socket.on("chat:typing", (data) => {
+        const { lobby_id, username } = data;
+
+        if (!lobby_id) return;
+
+        // 본인을 제외한 같은 로비의 사용자들에게 타이핑 상태 전송
+        socket.to(`lobby-${lobby_id}`).emit("chat:typing", {
+          user_id: userId,
+          username: username || `User${userId}`,
+          lobby_id: lobby_id,
+        });
+      });
+
+      // 사용자가 타이핑을 중단했음을 알리는 이벤트
+      socket.on("chat:stop-typing", (data) => {
+        const { lobby_id, username } = data;
+
+        if (!lobby_id) return;
+
+        // 본인을 제외한 같은 로비의 사용자들에게 타이핑 중단 상태 전송
+        socket.to(`lobby-${lobby_id}`).emit("chat:stop-typing", {
+          user_id: userId,
+          username: username || `User${userId}`,
+          lobby_id: lobby_id,
+        });
       });
 
       socket.on("disconnect", () => {
