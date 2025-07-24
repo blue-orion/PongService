@@ -11,8 +11,8 @@ export interface OAuthResult {
 }
 
 export class OAuthComponent {
-  private static readonly GOOGLE_OAUTH_URL = "http://localhost:3333/v1/auth/google";
-  private static readonly FORTYTWO_OAUTH_URL = "http://localhost:3333/v1/auth/42";
+  private static readonly GOOGLE_OAUTH_URL = "/v1/auth/google";
+  private static readonly FORTYTWO_OAUTH_URL = "/v1/auth/42";
 
   /**
    * Google OAuth 로그인 처리 (서버의 Fastify OAuth2 플러그인 사용)

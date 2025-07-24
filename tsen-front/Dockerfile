@@ -9,7 +9,6 @@ COPY tailwind.config.js ./
 COPY postcss.config.js ./
 COPY ./src ./src
 COPY ./.env.production ./.env
-COPY ./public ./public
 COPY ./index.html ./index.html
 
 RUN npm install && npm run build
