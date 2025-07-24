@@ -196,7 +196,7 @@ export class SocketEventProcessor {
         </div>
         
         <div class="text-sm text-gray-500">
-          게임 ID: \${data.game_id || "알 수 없음"}
+          게임 ID: ${data.game_id || "알 수 없음"}
         </div>
       </div>
     `;

@@ -105,20 +105,6 @@ export class LobbyDetailService {
       this.handlers!.onLeadershipChange(data);
     });
 
-    // 호스트 자동 이전 이벤트 (호스트 퇴장 시)
-    this.socket.on("lobby:hostTransferred", (data: any) => {
-      console.log("🎯 WebSocket에서 호스트 자동 이전 이벤트 수신:", data);
-      console.log("📊 호스트 이전 이벤트 상세:", {
-        lobby_id: data.lobby_id,
-        previous_host_id: data.previous_host_id,
-        new_host_id: data.new_host_id,
-        new_host_nickname: data.new_host_nickname,
-        message: data.message,
-        timestamp: new Date().toISOString(),
-      });
-      this.handlers!.onHostTransferred(data);
-    });
-
     // 로비 퇴장 이벤트
     this.socket.on("lobby:left", (data: any) => {
       console.log("🎯 WebSocket에서 로비 퇴장 이벤트 수신:", data);
