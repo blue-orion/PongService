@@ -2,7 +2,7 @@ import { LobbyData, LobbyPlayer, SocketEventHandlers } from "../../../types/lobb
 import { AuthManager } from "../../../utils/auth";
 import { UserManager } from "../../../utils/user";
 import { PlayerRenderer } from "../renderers/PlayerRenderer";
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export class SocketEventProcessor {
   private lobbyData: LobbyData | null = null;
   private onUIUpdate: (lobbyData: LobbyData) => void;
@@ -25,7 +25,7 @@ export class SocketEventProcessor {
   setLobbyData(lobbyData: LobbyData | null): void {
     console.log("lobbyData: ", lobbyData);
     this.lobbyData = lobbyData;
-    
+
     // lobbyData와 matchData가 모두 존재하는 경우에만 처리
     if (lobbyData && lobbyData.matchData && this.lobbyData && this.lobbyData.matchData) {
       if (lobbyData.matchData.games) {
@@ -153,9 +153,7 @@ export class SocketEventProcessor {
     console.log("게임 시작 이벤트 발생 전 게임 정보 조회", games);
 
     const participatedGame = games?.find(
-      (game) =>
-        game.game_status !== "COMPLETED" &&
-        ((game.player_one?.id === userId) || (game.player_two?.id === userId))
+      (game) => game.game_status !== "COMPLETED" && (game.player_one?.id === userId || game.player_two?.id === userId)
     );
 
     console.log("🔍 SocketEventProcessor 참여 게임 검색 결과:", {
@@ -385,7 +383,7 @@ export class SocketEventProcessor {
     // 호스트 이전 알림
     const oldHost = oldHostId ? PlayerRenderer.findPlayerById(players, oldHostId) : null;
     const newHost = PlayerRenderer.findPlayerById(players, newHostId);
-    
+
     const oldHostName = oldHost ? PlayerRenderer.getPlayerDisplayName(oldHost) : `사용자 ${oldHostId}`;
     const newHostName = newHost ? PlayerRenderer.getPlayerDisplayName(newHost) : `사용자 ${newHostId}`;
 
@@ -466,7 +464,7 @@ export class SocketEventProcessor {
       // 기존 플레이어의 enabled 상태 변경
       players[existingPlayerIndex].enabled = true;
       if (lobbyInfo) {
-        this.updateLobbyDataFromSocket(lobbyInfo);
+        this.updateLobbyDataFromSocket(lobbyInfo); // 반환값 무시 (입장 시에는 호스트 변경 체크 불필요)
       }
     } else {
       // 신규 플레이어 추가
@@ -514,7 +512,7 @@ export class SocketEventProcessor {
   // 새로운 백엔드 이벤트 핸들러들
   handleGameCompleted(data: any): void {
     console.log("🎮 게임 완료 이벤트 처리:", data);
-    
+
     if (!this.lobbyData) {
       console.warn("❌ 로비 데이터가 없어서 게임 완료를 처리할 수 없습니다.");
       return;
@@ -523,13 +521,13 @@ export class SocketEventProcessor {
     // 매치 데이터 업데이트 필요 시 처리
     if (this.lobbyData.matchData && this.lobbyData.matchData.matches) {
       const gameId = data.game_id;
-      const matchIndex = this.lobbyData.matchData.matches.findIndex(match => match.game_id === gameId);
-      
+      const matchIndex = this.lobbyData.matchData.matches.findIndex((match) => match.game_id === gameId);
+
       if (matchIndex !== -1) {
         this.lobbyData.matchData.matches[matchIndex].game_status = "COMPLETED";
-        this.lobbyData.matchData.matches[matchIndex].winner = { 
-          id: data.winner_id, 
-          nickname: "Winner"
+        this.lobbyData.matchData.matches[matchIndex].winner = {
+          id: data.winner_id,
+          nickname: "Winner",
         };
         console.log(`✅ 게임 ${gameId} 상태를 COMPLETED로 업데이트`);
       }
@@ -542,14 +540,14 @@ export class SocketEventProcessor {
     }
 
     this.onUIUpdate(this.lobbyData);
-    
+
     // 사용자에게 게임 완료 알림
     console.log(`🎉 게임이 완료되었습니다. 승자: ${data.winner_id}`);
   }
 
   handleTournamentCompleted(data: any): void {
     console.log("🏆 토너먼트 완료 이벤트 처리:", data);
-    
+
     if (!this.lobbyData) {
       console.warn("❌ 로비 데이터가 없어서 토너먼트 완료를 처리할 수 없습니다.");
       return;
@@ -558,10 +556,10 @@ export class SocketEventProcessor {
     // 토너먼트 완료 상태 업데이트
     if (this.lobbyData.matchData) {
       this.lobbyData.matchData.tournament_status = "COMPLETED";
-      this.lobbyData.matchData.winner = { 
-        id: data.winner_id, 
-        nickname: "Tournament Winner", 
-        username: "winner" 
+      this.lobbyData.matchData.winner = {
+        id: data.winner_id,
+        nickname: "Tournament Winner",
+        username: "winner",
       };
     }
 
@@ -569,7 +567,7 @@ export class SocketEventProcessor {
 
     // 토너먼트 완료 알림
     console.log(`🏆 토너먼트가 완료되었습니다! 우승자: ${data.winner_id}`);
-    
+
     // 토너먼트 완료 시 자동으로 결과 페이지로 이동하거나 알림 표시
     setTimeout(() => {
       if (this.onDataRefresh) {
@@ -580,7 +578,7 @@ export class SocketEventProcessor {
 
   handlePlayerRemoved(data: any): void {
     console.log("💀 플레이어 제거 이벤트 처리:", data);
-    
+
     if (!this.lobbyData) {
       console.warn("❌ 로비 데이터가 없어서 플레이어 제거를 처리할 수 없습니다.");
       return;
@@ -588,12 +586,12 @@ export class SocketEventProcessor {
 
     const removedUserId = data.removed_user_id;
     const currentUserId = UserManager.getUserId();
-    
+
     // 현재 사용자가 제거된 경우
     if (removedUserId === currentUserId) {
       console.log("💀 현재 사용자가 로비에서 제거되었습니다.");
       alert(`로비에서 제거되었습니다. 사유: ${data.reason}`);
-      
+
       // 홈으로 이동
       if (window.router) {
         window.router.navigate("/lobby");
@@ -604,13 +602,13 @@ export class SocketEventProcessor {
     // 다른 플레이어가 제거된 경우
     const players = this.lobbyData.players || this.lobbyData.lobby_players || [];
     const removedPlayerIndex = players.findIndex((p: LobbyPlayer) => p.user_id === removedUserId);
-    
+
     if (removedPlayerIndex !== -1) {
       const removedPlayer = players[removedPlayerIndex];
       const playerName = PlayerRenderer.getPlayerDisplayName(removedPlayer);
-      
+
       console.log(`💀 플레이어 ${playerName}(${removedUserId})가 제거됨`);
-      
+
       // 플레이어 목록에서 제거
       if (this.lobbyData.players) {
         this.lobbyData.players.splice(removedPlayerIndex, 1);
@@ -618,10 +616,10 @@ export class SocketEventProcessor {
       if (this.lobbyData.lobby_players) {
         this.lobbyData.lobby_players.splice(removedPlayerIndex, 1);
       }
-      
+
       this.updatePlayerCounts();
       this.onUIUpdate(this.lobbyData);
-      
+
       // 제거 알림
       console.log(`📢 ${playerName}님이 로비에서 제거되었습니다. 사유: ${data.reason}`);
     }
@@ -646,19 +644,8 @@ export class SocketEventProcessor {
       onGameCompleted: (data) => this.handleGameCompleted(data),
       onTournamentCompleted: (data) => this.handleTournamentCompleted(data),
       onPlayerRemoved: (data) => this.handlePlayerRemoved(data),
+      onRefresh: () => this.onDataRefresh(),
     };
-  }
-
-  // 누락된 private 메소드들
-
-  private showLeadershipChangeAlert(newLeaderId: number, currentUserId: number | null, newLeader: LobbyPlayer | undefined): void {
-    const playerName = newLeader ? PlayerRenderer.getPlayerDisplayName(newLeader) : `사용자 ${newLeaderId}`;
-    
-    if (newLeaderId === currentUserId) {
-      console.log(`🏆 축하합니다! 당신이 새로운 방장이 되었습니다.`);
-    } else {
-      console.log(`🔄 ${playerName}님이 새로운 방장이 되었습니다.`);
-    }
   }
 
   private processPlayerLeft(leftUserId: number, data: any): void {
@@ -673,7 +660,7 @@ export class SocketEventProcessor {
     const leftPlayer = players[leftPlayerIndex];
     const playerName = PlayerRenderer.getPlayerDisplayName(leftPlayer);
 
-    // 플레이어를 목록에서 제거거나 비활성화
+    // 플레이어 목록에서 제거
     if (this.lobbyData) {
       if (this.lobbyData.players) {
         this.lobbyData.players.splice(leftPlayerIndex, 1);
@@ -683,23 +670,32 @@ export class SocketEventProcessor {
       }
     }
 
+    // 퇴장한 플레이어가 호스트였는지 확인
+    if (leftUserId === this.lobbyData?.creatorId) {
+      console.log("🔄 호스트가 퇴장함 - 새로운 호스트 확인 필요");
+
+      // 백엔드에서 새로운 호스트 정보가 왔는지 확인
+      if (data.lobby && data.lobby.creator_id && data.lobby.creator_id !== leftUserId) {
+        console.log("📥 백엔드에서 새로운 호스트 정보 수신:", data.lobby.creator_id);
+        const hostUpdated = this.updateLobbyDataFromSocket(data.lobby);
+
+        if (!hostUpdated) {
+          console.log("❌ 백엔드 호스트 정보 업데이트 실패 - 자동 방장 선정 실행");
+          this.autoAssignNewLeader();
+          return;
+        }
+      } else {
+        console.log("⚡ 백엔드에서 새로운 호스트 정보가 없음 - 자동 방장 선정 실행");
+        // 백엔드에서 새로운 호스트 정보가 없으면 자동으로 방장 선정
+        this.autoAssignNewLeader();
+        return;
+      }
+    }
+
     this.updatePlayerCounts();
     this.onUIUpdate(this.lobbyData!);
 
     console.log(`👋 ${playerName}님이 로비에서 퇴장했습니다.`);
-  }
-
-  private updateLobbyDataFromSocket(lobbyInfo: any): void {
-    if (!this.lobbyData || !lobbyInfo) return;
-
-    // 백엔드 DTO 호환성을 위한 로비 정보 업데이트
-    Object.keys(lobbyInfo).forEach(key => {
-      if (key in this.lobbyData!) {
-        (this.lobbyData as any)[key] = lobbyInfo[key];
-      }
-    });
-
-    console.log("🔄 소켓에서 받은 로비 정보로 업데이트 완료");
   }
 
   private processNewPlayerJoined(joinedUserId: number, lobbyInfo: any): void {
@@ -708,17 +704,19 @@ export class SocketEventProcessor {
     // 새로운 플레이어 정보가 lobbyInfo에 포함되어 있으면 전체 플레이어 목록 업데이트
     if (lobbyInfo && (lobbyInfo.players || lobbyInfo.lobby_players)) {
       const newPlayers = lobbyInfo.players || lobbyInfo.lobby_players;
-      
+
       if (this.lobbyData.players) {
         this.lobbyData.players = newPlayers;
       }
       if (this.lobbyData.lobby_players) {
         this.lobbyData.lobby_players = newPlayers;
       }
-      
+
       console.log(`👤 신규 플레이어 ${joinedUserId} 추가 및 전체 플레이어 목록 업데이트`);
     } else {
-      console.warn("⚠️ 새로운 플레이어 정보를 lobbyInfo에서 찾을 수 없습니다. 전체 데이터 새로고침이 필요할 수 있습니다.");
+      console.warn(
+        "⚠️ 새로운 플레이어 정보를 lobbyInfo에서 찾을 수 없습니다. 전체 데이터 새로고침이 필요할 수 있습니다."
+      );
       // 전체 데이터 새로고침 요청
       this.onDataRefresh();
       return;
@@ -743,5 +741,125 @@ export class SocketEventProcessor {
     this.lobbyData.max_player = maxPlayers;
 
     console.log(`📊 플레이어 수 업데이트: ${activePlayers.length}/${maxPlayers}`);
+  }
+
+  private updateLobbyDataFromSocket(socketLobbyData: any): boolean {
+    if (!this.lobbyData) return false;
+
+    let hostUpdated = false;
+
+    // 호스트 정보 업데이트
+    if (socketLobbyData.creator_id) {
+      const newCreatorId = socketLobbyData.creator_id;
+      this.lobbyData.creatorId = newCreatorId;
+      this.lobbyData.host = socketLobbyData.creator_nickname || "알 수 없음";
+
+      const currentUserId = UserManager.getUserId();
+      this.lobbyData.isHost = currentUserId === newCreatorId;
+
+      // 모든 플레이어의 is_leader 상태 업데이트
+      this.lobbyData.players?.forEach((player: LobbyPlayer) => {
+        player.is_leader = player.user_id === newCreatorId;
+        // 새로운 방장의 enabled 상태를 true로 설정
+        if (player.user_id === newCreatorId) {
+          player.enabled = true;
+        }
+      });
+
+      hostUpdated = true;
+      console.log(`🎯 백엔드에서 새로운 호스트 정보 업데이트 완료: ${this.lobbyData.host} (ID: ${newCreatorId})`);
+    }
+
+    // 로비 상태 업데이트
+    if (socketLobbyData.lobby_status) {
+      this.lobbyData.status = socketLobbyData.lobby_status === "PENDING" ? "waiting" : "playing";
+      this.lobbyData.statusText = socketLobbyData.lobby_status === "PENDING" ? "대기 중" : "게임 중";
+    }
+
+    return hostUpdated;
+  }
+
+  private showLeadershipChangeAlert(
+    newLeaderId: number,
+    currentUserId: number | null,
+    newLeader: LobbyPlayer | undefined
+  ): void {
+    if (currentUserId === newLeaderId) {
+      console.log("🎉 현재 사용자가 새로운 방장이 됨");
+      alert("🎉 축하합니다! 당신이 새로운 방장이 되었습니다!");
+    } else if (newLeader) {
+      const newLeaderName = PlayerRenderer.getPlayerDisplayName(newLeader);
+      console.log(`📢 다른 사용자가 방장이 됨: ${newLeaderName}`);
+      alert(`👑 ${newLeaderName}님이 새로운 방장이 되었습니다.`);
+    }
+  }
+
+  // 자동 방장 선정 기능 추가
+  private autoAssignNewLeader(): void {
+    if (!this.lobbyData || !this.lobbyData.players || this.lobbyData.players.length === 0) {
+      console.warn("❌ 새로운 방장을 선정할 플레이어가 없습니다.");
+      this.onDataRefresh();
+      return;
+    }
+    // 활성화된 플레이어 중에서 새로운 방장 선정
+    const activePlayers = this.lobbyData.players.filter((player: LobbyPlayer) => player.enabled !== false);
+
+    if (activePlayers.length === 0) {
+      console.warn("❌ 활성화된 플레이어가 없어서 새로운 방장을 선정할 수 없습니다.");
+      this.onDataRefresh();
+      return;
+    }
+
+    // 방장 선정: 가장 먼저 입장한 플레이어 (user_id가 가장 작은 플레이어)
+    const newLeader = activePlayers.reduce((prev, current) => {
+      return prev.user_id < current.user_id ? prev : current;
+    });
+
+    console.log("👑 새로운 방장 자동 선정:", {
+      newLeaderId: newLeader.user_id,
+      newLeaderName: PlayerRenderer.getPlayerDisplayName(newLeader),
+      totalActivePlayers: activePlayers.length,
+    });
+
+    // 기존 방장 위임 로직을 활용하여 방장 변경 처리
+    this.transferLeadership(newLeader.user_id, this.lobbyData.id);
+  }
+
+  // 자동 방장 변경 알림
+  async transferLeadership(targetUserId: number, lobbyId: number): Promise<void> {
+    console.log("🔄 방장 위임 API 호출 시작:", { targetUserId });
+
+    const currentUserId = Number(UserManager.getUserId());
+    if (!currentUserId) {
+      throw new Error("로그인이 필요합니다.");
+    }
+
+    console.log("📤 방장 위임 요청 데이터:", {
+      current_leader_id: currentUserId,
+      target_user_id: targetUserId,
+      lobbyId: lobbyId,
+    });
+
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${lobbyId}/authorize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        current_leader_id: currentUserId,
+        target_user_id: targetUserId,
+      }),
+    });
+
+    console.log("📥 방장 위임 응답:", response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("❌ 방장 위임 API 실패:", errorData);
+      throw new Error(errorData.message || "방장 위임에 실패했습니다.");
+    }
+
+    const result = await response.json();
+    console.log("✅ 방장 위임 API 성공:", result);
   }
 }

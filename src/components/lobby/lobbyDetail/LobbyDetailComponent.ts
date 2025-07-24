@@ -321,6 +321,12 @@ export class LobbyDetailComponent extends Component {
     if (confirm("정말로 로비를 나가시겠습니까?")) {
       console.log("로비 나가기");
       try {
+        console.log("this.lobbyData:", this.lobbyData);
+        console.log("현재 사용자:", UserManager.getUsername());
+        if (this.lobbyData?.isHost) {
+          // 방장이 나가는 경우 자동으로 새로운 방장 선정
+          this.service.autoAssignNewLeader(this.lobbyData);
+        }
         await this.service.leaveLobby();
         console.log("로비 나가기 성공");
         if (window.router) {

@@ -14,7 +14,7 @@ export interface LobbyData {
   tournament: any;
   lobby_players: LobbyPlayer[]; // 백엔드는 lobby_players 사용
   players?: LobbyPlayer[]; // 호환성을 위한 선택적 필드
-  
+
   // UI에서 사용하는 계산된 필드들
   tournamentId?: number; // 호환성을 위한 필드
   maxPlayers?: number; // 호환성을 위한 필드
@@ -69,7 +69,7 @@ export interface GameMatch {
   match?: number; // 백엔드 추가 필드
   game_status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
   tournament_id: number;
-  
+
   // 백엔드 DTO 방식 (player_one, player_two)
   player_one?: {
     id: number;
@@ -79,7 +79,7 @@ export interface GameMatch {
     id: number;
     user?: PlayerInfo;
   };
-  
+
   // 백엔드 DetailedGameMatchDto 방식 (left_player, right_player)
   left_player?: {
     id: number;
@@ -95,7 +95,7 @@ export interface GameMatch {
     profile_image?: string;
     score?: number;
   };
-  
+
   winner?: {
     id: number;
     nickname?: string;
@@ -106,7 +106,7 @@ export interface GameMatch {
     nickname?: string;
     position?: "left" | "right";
   };
-  
+
   play_time?: string;
   created_at: string;
   updated_at: string;
@@ -207,6 +207,7 @@ export interface SocketEventHandlers {
   onGameCompleted: (data: GameCompletedEvent) => void; // 새로운 이벤트
   onTournamentCompleted: (data: TournamentCompletedEvent) => void; // 새로운 이벤트
   onPlayerRemoved: (data: PlayerRemovedEvent) => void; // 새로운 이벤트
+  onRefresh: () => void;
 }
 
 export interface GameStartedEvent {
