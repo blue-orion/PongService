@@ -47,7 +47,6 @@ export class LobbyChatService {
       const script = document.createElement("script");
       script.src = `${SOCKET_BASE_URL}/socket.io/socket.io.js`;
       script.onload = () => {
-        console.log("Socket.IO 라이브러리 로드 완료");
         resolve();
       };
       script.onerror = () => {
@@ -60,8 +59,6 @@ export class LobbyChatService {
 
   private connectWebSocket(userId: number): void {
     try {
-      console.log("💬 채팅 WebSocket 연결 시도:", { userId, lobbyId: this.lobbyId });
-
       // 채팅 전용 네임스페이스로 연결
       const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
         query: {
@@ -85,29 +82,24 @@ export class LobbyChatService {
 
     // 채팅 메시지 수신
     this.socket.on("chat:message", (data: ChatMessage) => {
-      console.log("💬 채팅 메시지 수신:", data);
       this.handlers!.onChatMessage(data);
     });
 
     // 사용자 연결/해제 이벤트
     this.socket.on("user:connected", (data: UserConnectionEvent) => {
-      console.log("👋 사용자 입장:", data);
       this.handlers!.onUserConnected(data);
     });
 
     this.socket.on("user:disconnected", (data: UserConnectionEvent) => {
-      console.log("👋 사용자 퇴장:", data);
       this.handlers!.onUserDisconnected(data);
     });
 
     // 타이핑 이벤트
     this.socket.on("chat:typing", (data: TypingUser) => {
-      console.log("⌨️ 타이핑 시작:", data);
       this.handlers!.onTyping(data);
     });
 
     this.socket.on("chat:stop-typing", (data: TypingUser) => {
-      console.log("⌨️ 타이핑 중지:", data);
       this.handlers!.onStopTyping(data);
     });
 
@@ -119,7 +111,6 @@ export class LobbyChatService {
 
     // 연결 상태 관리
     this.socket.on("connect", () => {
-      console.log("✅ 채팅 WebSocket 연결 성공");
       this.handlers!.onConnectionStatusChange(true, this.socket.io.engine.transport.name);
 
       // 로비 방에 입장
@@ -129,7 +120,6 @@ export class LobbyChatService {
     });
 
     this.socket.on("disconnect", (reason: string) => {
-      console.log("❌ 채팅 WebSocket 연결 해제:", reason);
       this.handlers!.onConnectionStatusChange(false);
     });
 
@@ -138,12 +128,9 @@ export class LobbyChatService {
       this.handlers!.onError("채팅 서버와의 연결이 끊어졌습니다.");
 
       setTimeout(() => {
-        console.log("🔄 채팅 WebSocket 재연결 시도...");
         this.socket.connect();
       }, 3000);
     });
-
-    console.log("💬 채팅 WebSocket 초기화 완료 - 이벤트 리스너 등록됨");
   }
 
   // 채팅 관련 메서드들
@@ -164,8 +151,6 @@ export class LobbyChatService {
     }
 
     const username = UserManager.getUsername() || `User${UserManager.getUserId()}`;
-
-    console.log("📤 채팅 메시지 전송:", { lobby_id: this.lobbyId, message: message.trim(), username });
 
     this.socket.emit("chat:message", {
       lobby_id: this.lobbyId,
@@ -219,14 +204,12 @@ export class LobbyChatService {
       this.lobbyId = lobbyId;
     }
 
-    console.log("🚪 채팅 로비 입장:", lobbyId);
     this.socket.emit("join-lobby", { lobby_id: lobbyId });
   }
 
   leaveLobby(): void {
     if (!this.socket || !this.socket.connected) return;
 
-    console.log("🚪 채팅 로비 퇴장:", this.lobbyId);
     this.socket.emit("leave-lobby", { lobby_id: this.lobbyId });
   }
 
@@ -263,7 +246,6 @@ export class LobbyChatService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      console.log("💬 채팅 WebSocket 연결 해제됨");
     }
   }
 
