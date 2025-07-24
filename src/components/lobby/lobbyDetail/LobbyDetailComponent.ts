@@ -38,11 +38,8 @@ export class LobbyDetailComponent extends Component {
     // WebSocket 연결
     await this.initWebSocket();
 
-    // 로비 데이터 로드
+    // 로비 데이터 로드 (내부에서 채팅 컴포넌트도 초기화)
     await this.loadLobbyData();
-
-    // 채팅 컴포넌트 초기화
-    this.initializeChat();
 
     console.log("로비 상세 컴포넌트 렌더링 완료");
   }
@@ -55,7 +52,8 @@ export class LobbyDetailComponent extends Component {
         this.chatComponent.destroy();
         this.chatComponent = null;
       }
-      this.chatComponent = new LobbyChatComponent(chatContainer as HTMLElement, this.lobbyId);
+      // 기존 서비스를 전달하여 동일한 WebSocket 연결 사용
+      this.chatComponent = new LobbyChatComponent(chatContainer as HTMLElement, this.lobbyId, this.service);
       console.log("💬 채팅 컴포넌트 초기화 완료");
     }
   }

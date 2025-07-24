@@ -1,22 +1,29 @@
-import { LobbyChatService } from "./LobbyChatService";
+import { LobbyDetailService } from "../lobbyDetail/LobbyDetailService";
 import { ChatMessage, TypingUser, UserConnectionEvent } from "../../../types/lobby";
 
 export class LobbyChatComponent {
   private container: HTMLElement;
-  private chatService: LobbyChatService;
+  private chatService: LobbyDetailService;
   private messages: ChatMessage[] = [];
   private typingUsers: Map<string, TypingUser> = new Map();
   private isVisible: boolean = false;
 
-  constructor(container: HTMLElement, lobbyId: string) {
+  constructor(container: HTMLElement, lobbyId: string, service?: LobbyDetailService) {
     this.container = container;
-    this.chatService = new LobbyChatService(lobbyId);
+    // 기존 서비스가 전달되면 사용하고, 없으면 새로 생성
+    this.chatService = service || new LobbyDetailService(lobbyId);
+
+    // 채팅 핸들러 설정
     this.setupEventHandlers();
+
+    // UI 렌더링
     this.render();
+
+    console.log("💬 LobbyChatComponent 초기화 완료");
   }
 
   private setupEventHandlers(): void {
-    this.chatService.initWebSocket({
+    this.chatService.setChatHandlers({
       onChatMessage: (message: ChatMessage) => {
         this.addMessage(message);
       },
@@ -81,7 +88,7 @@ export class LobbyChatComponent {
           </div>
           <div class="char-counter">
             <span id="char-count">0</span>/500
-            <span class="connection-indicator" id="connection-status">연결 중...</span>
+            <span class="connection-indicator" id="connection-status"></span>
           </div>
         </div>
       </div>
@@ -279,7 +286,8 @@ export class LobbyChatComponent {
 
   // 퍼블릭 메서드들
   public destroy(): void {
-    this.chatService.disconnect();
+    // 채팅 관련만 정리하고 서비스 전체는 해제하지 않음
+    // this.chatService.disconnect(); // 주석 처리: 전체 서비스를 해제하지 않음
   }
 
   public getConnectionInfo(): any {

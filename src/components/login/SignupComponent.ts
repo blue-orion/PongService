@@ -191,7 +191,7 @@ export class SignupComponent extends Component {
     const previewImg = this.container.querySelector("#profileImagePreview") as HTMLImageElement;
     const textSpan = this.container.querySelector("#profileImageText") as HTMLElement;
     const removeBtn = this.container.querySelector("#removeImageBtn") as HTMLButtonElement;
-    
+
     if (!area || !fileInput || !previewImg || !textSpan || !removeBtn) return;
 
     // 이미지 영역 클릭 시 파일 선택 (제거 버튼이 아닌 경우에만)
@@ -219,7 +219,7 @@ export class SignupComponent extends Component {
         }
 
         // 파일 타입 체크
-        if (!file.type.startsWith('image/')) {
+        if (!file.type.startsWith("image/")) {
           alert("이미지 파일만 선택할 수 있습니다.");
           fileInput.value = "";
           return;
@@ -309,51 +309,51 @@ export class SignupComponent extends Component {
     const passwordInput = this.container.querySelector("#password") as HTMLInputElement;
     const confirmPasswordInput = this.container.querySelector("#confirmPassword") as HTMLInputElement;
     const passwordMatchStatus = this.container.querySelector("#passwordMatchStatus") as HTMLElement;
-    
+
     // 비밀번호 조건 검사 요소들
     const lengthCheck = this.container.querySelector("#lengthCheck") as HTMLElement;
     const lowercaseCheck = this.container.querySelector("#lowercaseCheck") as HTMLElement;
     const uppercaseCheck = this.container.querySelector("#uppercaseCheck") as HTMLElement;
     const numberCheck = this.container.querySelector("#numberCheck") as HTMLElement;
     const specialCheck = this.container.querySelector("#specialCheck") as HTMLElement;
-    
+
     if (passwordInput && confirmPasswordInput && passwordMatchStatus) {
       const checkPasswordRequirements = () => {
         const password = passwordInput.value;
-        
+
         // 길이 체크 (6-12자)
         const isValidLength = password.length >= 6 && password.length <= 12;
         this.updateCheckStatus(lengthCheck, isValidLength);
-        
+
         // 소문자 체크
         const hasLowercase = /[a-z]/.test(password);
         this.updateCheckStatus(lowercaseCheck, hasLowercase);
-        
+
         // 대문자 체크
         const hasUppercase = /[A-Z]/.test(password);
         this.updateCheckStatus(uppercaseCheck, hasUppercase);
-        
+
         // 숫자 체크
         const hasNumber = /[0-9]/.test(password);
         this.updateCheckStatus(numberCheck, hasNumber);
-        
+
         // 특수문자 체크
         const hasSpecial = /[^a-zA-Z0-9]/.test(password);
         this.updateCheckStatus(specialCheck, hasSpecial);
       };
-      
+
       const checkPasswordMatch = () => {
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
-        
+
         // 비밀번호 확인 필드가 비어있으면 상태 숨김
         if (!confirmPassword) {
           passwordMatchStatus.classList.add("hidden");
           return;
         }
-        
+
         passwordMatchStatus.classList.remove("hidden");
-        
+
         if (password === confirmPassword) {
           passwordMatchStatus.textContent = "✓ 비밀번호가 일치합니다";
           passwordMatchStatus.className = "text-xs text-green-600";
@@ -362,20 +362,25 @@ export class SignupComponent extends Component {
           passwordMatchStatus.className = "text-xs text-red-600";
         }
       };
-      
+
       passwordInput.addEventListener("input", () => {
         checkPasswordRequirements();
         checkPasswordMatch();
       });
       confirmPasswordInput.addEventListener("input", checkPasswordMatch);
-      
+
       // 초기 상태 설정
       checkPasswordRequirements();
     }
 
     // 비밀번호 보이기/숨기기 토글 기능
     this.setupPasswordToggle("password", "togglePassword", "passwordShowIcon", "passwordHideIcon");
-    this.setupPasswordToggle("confirmPassword", "toggleConfirmPassword", "confirmPasswordShowIcon", "confirmPasswordHideIcon");
+    this.setupPasswordToggle(
+      "confirmPassword",
+      "toggleConfirmPassword",
+      "confirmPasswordShowIcon",
+      "confirmPasswordHideIcon"
+    );
   }
 
   private setupPasswordToggle(inputId: string, buttonId: string, showIconId: string, hideIconId: string): void {
@@ -402,7 +407,7 @@ export class SignupComponent extends Component {
   }
 
   private updateCheckStatus(element: HTMLElement, isValid: boolean): void {
-    const icon = element.querySelector('span') as HTMLElement;
+    const icon = element.querySelector("span") as HTMLElement;
     if (isValid) {
       icon.textContent = "✓";
       icon.className = "w-4 h-4 flex items-center justify-center text-green-600 font-bold";
@@ -420,7 +425,7 @@ export class SignupComponent extends Component {
     if (!this.formElement) return;
 
     const formData = new FormData(this.formElement);
-    
+
     const username = formData.get("username") as string;
     const nickname = formData.get("nickname") as string;
     const password = formData.get("password") as string;
@@ -461,7 +466,7 @@ export class SignupComponent extends Component {
         nickname,
         passwd: password,
         confirmPasswd: confirmPassword,
-        profileImage
+        profileImage,
       };
 
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
@@ -477,7 +482,7 @@ export class SignupComponent extends Component {
         window.router.navigate("/login");
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || "회원가입에 실패했습니다.");
+        throw new Error(errorData.error || "회원가입에 실패했습니다.");
       }
     } catch (error) {
       console.error("Signup error:", error);

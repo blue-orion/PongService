@@ -1,6 +1,15 @@
 import { AuthManager } from "../../../utils/auth";
 import { UserManager } from "../../../utils/user";
-import { MatchData, LobbyData, SocketEventHandlers } from "../../../types/lobby";
+import {
+  MatchData,
+  LobbyData,
+  SocketEventHandlers,
+  ChatMessage,
+  TypingUser,
+  ChatError,
+  UserConnectionEvent,
+  ChatSocketEventHandlers,
+} from "../../../types/lobby";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
 
@@ -8,6 +17,8 @@ export class LobbyDetailService {
   private lobbyId: string;
   private socket: any = null;
   private handlers: SocketEventHandlers | null = null;
+  private chatHandlers: ChatSocketEventHandlers | null = null;
+  private typingTimeout: number | null = null;
 
   constructor(lobbyId: string) {
     this.lobbyId = lobbyId;
@@ -34,6 +45,11 @@ export class LobbyDetailService {
     } catch (error) {
       console.error("WebSocket 초기화 실패:", error);
     }
+  }
+
+  // 채팅 핸들러 설정 메서드 추가
+  setChatHandlers(chatHandlers: ChatSocketEventHandlers): void {
+    this.chatHandlers = chatHandlers;
   }
 
   private loadSocketIO(): Promise<void> {
@@ -156,8 +172,19 @@ export class LobbyDetailService {
       console.log("✅ 로비 WebSocket 연결 성공");
       this.handlers!.onConnectionStatusChange(true, this.socket.io.engine.transport.name);
 
+      // 채팅 핸들러가 있으면 연결 상태 알림
+      if (this.chatHandlers) {
+        this.chatHandlers.onConnectionStatusChange(true, this.socket.io.engine.transport.name);
+      }
+
+      // 로비에 입장
       this.socket.emit("join_lobby", {
         user_id: Number(UserManager.getUserId()),
+        lobby_id: this.lobbyId,
+      });
+
+      // 채팅 방에도 입장
+      this.socket.emit("join-lobby", {
         lobby_id: this.lobbyId,
       });
     });
@@ -165,6 +192,11 @@ export class LobbyDetailService {
     this.socket.on("disconnect", (reason: string) => {
       console.log("❌ 로비 WebSocket 연결 해제:", reason);
       this.handlers!.onConnectionStatusChange(false);
+
+      // 채팅 핸들러가 있으면 연결 해제 상태 알림
+      if (this.chatHandlers) {
+        this.chatHandlers.onConnectionStatusChange(false);
+      }
     });
 
     this.socket.on("connect_error", (error: any) => {
@@ -191,6 +223,44 @@ export class LobbyDetailService {
       this.handlers?.onGameStarted(data);
     });
 
+    // 채팅 이벤트 리스너들 직접 설정
+    this.socket.on("chat:message", (data: ChatMessage) => {
+      if (this.chatHandlers) {
+        this.chatHandlers.onChatMessage(data);
+      }
+    });
+
+    this.socket.on("user:connected", (data: UserConnectionEvent) => {
+      if (this.chatHandlers) {
+        this.chatHandlers.onUserConnected(data);
+      }
+    });
+
+    this.socket.on("user:disconnected", (data: UserConnectionEvent) => {
+      if (this.chatHandlers) {
+        this.chatHandlers.onUserDisconnected(data);
+      }
+    });
+
+    this.socket.on("chat:typing", (data: TypingUser) => {
+      if (this.chatHandlers) {
+        this.chatHandlers.onTyping(data);
+      }
+    });
+
+    this.socket.on("chat:stop-typing", (data: TypingUser) => {
+      if (this.chatHandlers) {
+        this.chatHandlers.onStopTyping(data);
+      }
+    });
+
+    this.socket.on("chat:error", (data: ChatError) => {
+      console.error("💥 채팅 에러:", data);
+      if (this.chatHandlers) {
+        this.chatHandlers.onError(data.error || "채팅 오류가 발생했습니다.");
+      }
+    });
+
     console.log("🎯 WebSocket 초기화 완료 - 이벤트 리스너 등록됨");
   }
 
@@ -212,6 +282,15 @@ export class LobbyDetailService {
   }
 
   disconnect(): void {
+    // 타이핑 타이머 정리
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = null;
+    }
+
+    // 채팅 로비에서 나가기
+    this.leaveLobbyChat();
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
@@ -524,5 +603,89 @@ export class LobbyDetailService {
       console.warn("⚠️ 게임 시작 실패:", error);
       return null;
     }
+  }
+
+  // 채팅 관련 메서드들
+  sendMessage(message: string): void {
+    if (!this.socket || !this.socket.connected) {
+      this.chatHandlers?.onError("채팅을 보낼 수 없습니다. 연결을 확인해주세요.");
+      return;
+    }
+
+    if (!message || message.trim().length === 0) {
+      this.chatHandlers?.onError("빈 메시지는 보낼 수 없습니다.");
+      return;
+    }
+
+    if (message.length > 500) {
+      this.chatHandlers?.onError("메시지가 너무 깁니다. (최대 500자)");
+      return;
+    }
+
+    const username = UserManager.getUsername() || `User${UserManager.getUserId()}`;
+
+    this.socket.emit("chat:message", {
+      lobby_id: this.lobbyId,
+      message: message.trim(),
+      username: username,
+    });
+  }
+
+  sendTyping(): void {
+    if (!this.socket || !this.socket.connected) return;
+
+    const username = UserManager.getUsername() || `User${UserManager.getUserId()}`;
+
+    this.socket.emit("chat:typing", {
+      lobby_id: this.lobbyId,
+      username: username,
+    });
+
+    // 타이핑 상태를 3초 후 자동으로 중지
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    this.typingTimeout = setTimeout(() => {
+      this.sendStopTyping();
+    }, 3000);
+  }
+
+  sendStopTyping(): void {
+    if (!this.socket || !this.socket.connected) return;
+
+    const username = UserManager.getUsername() || `User${UserManager.getUserId()}`;
+
+    this.socket.emit("chat:stop-typing", {
+      lobby_id: this.lobbyId,
+      username: username,
+    });
+
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = null;
+    }
+  }
+
+  joinLobbyChat(lobbyId: string): void {
+    if (!this.socket || !this.socket.connected) return;
+
+    if (this.lobbyId !== lobbyId) {
+      // 기존 로비에서 나가기
+      this.leaveLobbyChat();
+      this.lobbyId = lobbyId;
+    }
+
+    this.socket.emit("join-lobby", { lobby_id: lobbyId });
+  }
+
+  leaveLobbyChat(): void {
+    if (!this.socket || !this.socket.connected) return;
+
+    this.socket.emit("leave-lobby", { lobby_id: this.lobbyId });
+  }
+
+  getCurrentLobbyId(): string {
+    return this.lobbyId;
   }
 }
