@@ -12,6 +12,8 @@ import {
   LobbyPlayer,
 } from "../../../types/lobby";
 import { PlayerRenderer } from "../renderers/PlayerRenderer";
+import { io } from "socket.io-client";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
 
@@ -37,12 +39,6 @@ export class LobbyDetailService {
         return;
       }
 
-      // Socket.IO가 로드되었는지 확인
-      if (typeof (window as any).io === "undefined") {
-        console.error("Socket.IO 라이브러리가 로드되지 않았습니다.");
-        await this.loadSocketIO();
-      }
-
       this.connectWebSocket(userId);
     } catch (error) {
       console.error("WebSocket 초기화 실패:", error);
@@ -54,32 +50,11 @@ export class LobbyDetailService {
     this.chatHandlers = chatHandlers;
   }
 
-  private loadSocketIO(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (typeof (window as any).io !== "undefined") {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = `${SOCKET_BASE_URL}/socket.io/socket.io.js`;
-      script.onload = () => {
-        console.log("Socket.IO 라이브러리 로드 완료");
-        resolve();
-      };
-      script.onerror = () => {
-        console.error("Socket.IO 라이브러리 로드 실패");
-        reject(new Error("Socket.IO 라이브러리 로드 실패"));
-      };
-      document.head.appendChild(script);
-    });
-  }
-
   private connectWebSocket(userId: number): void {
     try {
       console.log("🔌 WebSocket 연결 시도:", { userId, lobbyId: this.lobbyId });
 
-      const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
+      const socket = io(`${SOCKET_BASE_URL}/ws/lobby`, {
         auth: {
           userId,
           lobbyId: Number(this.lobbyId),
@@ -773,11 +748,11 @@ export class LobbyDetailService {
   // 자동 방장 선정 기능 추가
   autoAssignNewLeader(lobbyData: LobbyData): void {
     // 활성화된 플레이어 중에서 새로운 방장 선정
-    const activePlayers = lobbyData.players.filter(
+    const activePlayers = lobbyData.players?.filter(
       (player: LobbyPlayer) => player.enabled !== false && player.user_id !== UserManager.getUserId()
     );
     console.log("👑 자동 방장 선정 시작:", {
-      totalActivePlayers: activePlayers.length,
+      totalActivePlayers: activePlayers?.length,
       lobbyId: lobbyData.id,
     });
     if (!activePlayers || activePlayers.length === 0) {

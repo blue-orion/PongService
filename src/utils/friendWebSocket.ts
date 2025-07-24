@@ -28,7 +28,7 @@ export class FriendWebSocketManager {
   private onError?: (error: string) => void;
 
   constructor(
-    private serverUrl: string = import.meta.env.VITE_API_BASE_URL?.replace("/v1", "") || "http://localhost:3333",
+    private serverUrl: string = import.meta.env.VITE_SOCKET_BASE_URL,
     private options = {
       withCredentials: true,
       transports: ["websocket", "polling"] as ["websocket", "polling"],
