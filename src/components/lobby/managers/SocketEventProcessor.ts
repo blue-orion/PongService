@@ -231,8 +231,8 @@ export class SocketEventProcessor {
 
     const playerIndex = this.lobbyData.players.findIndex((p: LobbyPlayer) => p.user_id === userId);
     if (playerIndex === -1) {
-      console.warn(`❌ 플레이어 ${userId}를 찾을 수 없습니다.`);
-      this.onDataRefresh();
+      console.warn(`❌ 플레이어 ${userId}를 찾을 수 없습니다. 부분 업데이트만 진행합니다.`);
+      // onDataRefresh() 제거 - 전체 페이지 리로드 방지
       return;
     }
 
@@ -263,12 +263,14 @@ export class SocketEventProcessor {
 
   handlePlayerChange(data: any): void {
     console.log("플레이어 변경 처리:", data);
-    this.onDataRefresh();
+    // onDataRefresh() 제거 - 전체 페이지 리로드 방지
+    console.warn("⚠️ 플레이어 변경 이벤트는 현재 부분 업데이트로 처리되지 않습니다.");
   }
 
   handleLobbyUpdate(data: any): void {
     console.log("🎯 WebSocket에서 로비 업데이트 수신:", data);
-    this.onDataRefresh();
+    // onDataRefresh() 제거 - 전체 페이지 리로드 방지
+    console.warn("⚠️ 로비 업데이트 이벤트는 현재 부분 업데이트로 처리되지 않습니다.");
   }
 
   handleLeadershipChange(data: any): void {
@@ -329,6 +331,13 @@ export class SocketEventProcessor {
 
   handlePlayerJoined(data: any): void {
     console.log("🔄 플레이어 입장 처리 시작:", data);
+    console.log("🔍 받은 데이터 상세 분석:", {
+      dataKeys: Object.keys(data),
+      user_id: data.user_id,
+      hasLobby: !!data.lobby,
+      lobbyKeys: data.lobby ? Object.keys(data.lobby) : [],
+      lobbyData: data.lobby
+    });
 
     if (!this.lobbyData?.players) {
       console.warn("❌ 로비 데이터가 없어서 플레이어 입장을 처리할 수 없습니다.");
@@ -339,10 +348,17 @@ export class SocketEventProcessor {
     const currentUserId = UserManager.getUserId();
     const lobbyInfo = data.lobby;
 
+    console.log("🔍 현재 로비 플레이어 목록:", {
+      currentPlayers: this.lobbyData.players.map(p => ({ user_id: p.user_id, enabled: p.enabled })),
+      joinedUserId,
+      currentUserId
+    });
+
     // 기존 플레이어인지 신규 플레이어인지 확인
     const existingPlayerIndex = this.lobbyData.players.findIndex((p: LobbyPlayer) => p.user_id === joinedUserId);
 
     if (existingPlayerIndex !== -1) {
+      console.log("🔄 기존 플레이어의 재입장입니다.");
       // 기존 플레이어의 enabled 상태 변경
       this.lobbyData.players[existingPlayerIndex].enabled = true;
       if (lobbyInfo) {
@@ -350,6 +366,8 @@ export class SocketEventProcessor {
       }
     } else {
       // 신규 플레이어 추가
+      console.log(`👤 신규 플레이어 ${joinedUserId}가 로비에 입장함`);
+      console.log("🔍 현재 this.lobbyData:", this.lobbyData);
       this.processNewPlayerJoined(joinedUserId, lobbyInfo);
       return;
     }
@@ -387,7 +405,7 @@ export class SocketEventProcessor {
     });
 
     this.onUIUpdate(this.lobbyData);
-    this.onDataRefresh();
+    // onDataRefresh() 제거 - UI 업데이트만으로 충분
   }
 
   private processPlayerLeft(leftUserId: number, data: any): void {
@@ -395,8 +413,8 @@ export class SocketEventProcessor {
 
     const leftPlayerIndex = this.lobbyData.players.findIndex((p: LobbyPlayer) => p.user_id === leftUserId);
     if (leftPlayerIndex === -1) {
-      console.warn(`❌ 퇴장한 플레이어 ${leftUserId}를 찾을 수 없습니다.`);
-      this.onDataRefresh();
+      console.warn(`❌ 퇴장한 플레이어 ${leftUserId}를 찾을 수 없습니다. 부분 업데이트만 진행합니다.`);
+      // onDataRefresh() 제거 - 전체 페이지 리로드 방지
       return;
     }
 
@@ -414,7 +432,8 @@ export class SocketEventProcessor {
       if (data.lobby) {
         this.updateLobbyDataFromSocket(data.lobby);
       } else {
-        this.onDataRefresh();
+        console.warn("❌ 새로운 호스트 정보가 없어서 부분 업데이트만 진행합니다.");
+        // onDataRefresh() 제거 - 전체 페이지 리로드 방지
         return;
       }
     }
@@ -424,13 +443,41 @@ export class SocketEventProcessor {
   }
 
   private processNewPlayerJoined(joinedUserId: number, lobbyInfo: any): void {
-    if (!this.lobbyData || !lobbyInfo?.lobby_players) {
-      console.warn("❌ 로비 정보가 없어서 전체 데이터를 새로고침합니다.");
-      this.onDataRefresh();
+    console.log("🔍 processNewPlayerJoined 상세 디버깅:", {
+      joinedUserId,
+      hasLobbyData: !!this.lobbyData,
+      hasLobbyInfo: !!lobbyInfo,
+      lobbyInfoKeys: lobbyInfo ? Object.keys(lobbyInfo) : [],
+      hasPlayers: !!lobbyInfo?.players,
+      playersLength: lobbyInfo?.players?.length || 0,
+      lobbyInfo: lobbyInfo
+    });
+
+    if (!this.lobbyData) {
+      console.warn("❌ this.lobbyData가 없습니다.");
       return;
     }
 
-    const newPlayer = lobbyInfo.lobby_players.find((p: any) => p.user_id === joinedUserId && p.enabled === true);
+    if (!lobbyInfo) {
+      console.warn("❌ lobbyInfo가 없습니다.");
+      return;
+    }
+
+    if (!lobbyInfo.players) {
+      console.warn("❌ lobbyInfo.players가 없습니다. 대신 전체 lobbyInfo를 확인합니다:", lobbyInfo);
+      
+      // 만약 lobbyInfo 자체가 플레이어 정보라면 직접 추가
+      if (lobbyInfo.user_id === joinedUserId) {
+        console.log("🎉 lobbyInfo 자체가 새 플레이어 정보입니다:", lobbyInfo);
+        this.lobbyData.players.push(lobbyInfo);
+        this.updatePlayerCounts();
+        this.onUIUpdate(this.lobbyData);
+        return;
+      }
+      return;
+    }
+
+    const newPlayer = lobbyInfo.players.find((p: any) => p.user_id === joinedUserId && p.enabled === true);
 
     if (newPlayer) {
       console.log("🎉 새 플레이어 정보:", newPlayer);
@@ -439,7 +486,10 @@ export class SocketEventProcessor {
       this.onUIUpdate(this.lobbyData);
     } else {
       console.warn("❌ 로비 정보에서 새 플레이어를 찾을 수 없습니다.");
-      this.onDataRefresh();
+      console.log("🔍 모든 players:", lobbyInfo.players);
+      console.log("🔍 찾고 있는 user_id:", joinedUserId);
+      console.log("🔍 enabled 조건 확인:", lobbyInfo.players.map((p: any) => ({ user_id: p.user_id, enabled: p.enabled })));
+      // onDataRefresh() 호출 제거 - 전체 페이지 리로드 방지
     }
   }
 

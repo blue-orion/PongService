@@ -116,6 +116,8 @@ export class LobbyDetailComponent extends Component {
       }
 
       this.ui.renderLobbyDetail(this.lobbyData, this.service.isConnected());
+
+          this.initializeChat();
     } catch (error) {
       console.error("로비 데이터 로드 실패:", error);
       this.ui.showErrorState(error instanceof Error ? error.message : "로비 정보를 불러오는데 실패했습니다.");
@@ -132,6 +134,9 @@ export class LobbyDetailComponent extends Component {
 
     // 매칭 정보가 변경된 경우 렌더링
     this.ui.renderMatchInfoInLobby(lobbyData);
+
+    // 채팅 컴포넌트가 사라진 경우 재초기화
+    this.initializeChat();
   }
 
   private handleConnectionStatusChange(isConnected: boolean, transport?: string): void {
