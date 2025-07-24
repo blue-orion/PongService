@@ -98,7 +98,7 @@ class App {
 
     // 메인 페이지 (홈 화면) - Layout 내에서 HomeComponent 렌더링
     this.router.addRoute("/", async () => {
-      await this.loadLayoutWithComponent(HomeComponent);
+      await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
     // 로비 목록 페이지 (헤더에서 접근)

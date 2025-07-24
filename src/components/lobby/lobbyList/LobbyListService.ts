@@ -65,7 +65,7 @@ export class LobbyListService {
       const lobbiesArray = data.content || [];
       let transformedLobbies = this.transformLobbiesData(lobbiesArray);
 
-      const totalItems = transformedLobbies.length;
+      const totalItems = data.totalElements || 0;
 
       return {
         lobbies: transformedLobbies,
@@ -73,7 +73,7 @@ export class LobbyListService {
           currentPage: params.page,
           pageSize: params.size,
           totalItems: totalItems,
-          totalPages: Math.ceil(totalItems / params.size),
+          totalPages: data.totalPages || Math.ceil(totalItems / params.size),
         },
       };
     } catch (error) {

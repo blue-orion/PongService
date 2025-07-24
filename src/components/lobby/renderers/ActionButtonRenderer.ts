@@ -115,9 +115,6 @@ export class ActionButtonRenderer {
             <button class="create-match-btn" id="create-match-btn" ${disabled}>
                 매칭 생성
             </button>
-            <button class="start-game-btn" id="start-game-btn" ${disabled}>
-                게임 시작
-            </button>
         `;
   }
 

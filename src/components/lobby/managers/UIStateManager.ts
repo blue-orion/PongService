@@ -18,11 +18,8 @@ export class UIStateManager {
     }
 
     updatePlayersUI(lobbyData: LobbyData): void {
-        console.log('🎨 플레이어 UI 업데이트 시작...');
-        
         const playersList = this.container.querySelector('.players-list');
         if (!playersList) {
-            console.warn('❌ .players-list 요소를 찾을 수 없습니다.');
             return;
         }
 
@@ -31,19 +28,14 @@ export class UIStateManager {
 
         const oldHTML = playersList.innerHTML;
         if (oldHTML === newHTML) {
-            console.log('📊 플레이어 목록 HTML이 동일하여 업데이트 건너뜀');
+            return; // 변경이 없으면 리렌더링하지 않음
         } else {
-            console.log('🔄 플레이어 목록 HTML 업데이트 적용');
             playersList.innerHTML = newHTML;
             this.eventManager.setupTransferLeadershipButtons();
         }
-
-        console.log('✅ 플레이어 목록 UI 업데이트 완료');
     }
 
     updateActionButtonsUI(lobbyData: LobbyData): void {
-        console.log('🎨 액션 버튼 UI 업데이트 시작...');
-        
         // 준비 버튼 개별 업데이트
         ActionButtonRenderer.updateReadyButton(this.container, lobbyData);
         
@@ -52,8 +44,6 @@ export class UIStateManager {
 
         // 매칭 정보 확인 버튼 동적 관리
         this.updateMatchInfoButton(lobbyData);
-
-        console.log('✅ 액션 버튼 UI 업데이트 완료');
     }
 
     private updateMatchInfoButton(lobbyData: LobbyData): void {

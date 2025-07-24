@@ -22,7 +22,9 @@ export class LobbyDetailComponent extends Component {
 
     this.socketProcessor = new SocketEventProcessor(
       (lobbyData) => this.handleUIUpdate(lobbyData),
-      () => this.loadLobbyData()
+      () => this.loadLobbyData(),
+      () => this.playGame(),
+      () => this.getParticipatedGameId()
     );
 
     this.setupEventHandlers();
@@ -31,14 +33,11 @@ export class LobbyDetailComponent extends Component {
   async render(): Promise<void> {
     this.ui.clearContainer();
 
-    console.log("로비 상세 컴포넌트 렌더링 시작..., 로비 ID:", this.lobbyId);
-
     // WebSocket 연결
     await this.initWebSocket();
 
     // 로비 데이터 로드
     await this.loadLobbyData();
-    console.log("로비 상세 컴포넌트 렌더링 완료");
   }
 
   private setupEventHandlers(): void {
@@ -88,13 +87,13 @@ export class LobbyDetailComponent extends Component {
       const matchData = await this.service.getMatchInfo();
       if (matchData) {
         this.lobbyData.matchData = matchData;
-        console.log("📊 기존 매칭 정보 로드됨:", matchData);
+        // 매칭 정보 포함된 최신 로비 데이터를 SocketEventProcessor에 전달
+        this.socketProcessor.setLobbyData(this.lobbyData);
       }
 
       // 토너먼트 완료 상태 확인
       const tournamentFinishData = await this.service.checkTournamentFinish();
       if (tournamentFinishData) {
-        console.log("🏆 토너먼트 완료됨:", tournamentFinishData);
         this.showTournamentResult(tournamentFinishData);
         return;
       }
@@ -110,18 +109,15 @@ export class LobbyDetailComponent extends Component {
 
   private handleUIUpdate(lobbyData: LobbyData): void {
     this.lobbyData = lobbyData;
-    console.log("🎨 UI 업데이트 시작...");
+    this.socketProcessor.setLobbyData(this.lobbyData); // 최신 로비 데이터 동기화
     this.ui.updatePlayersUI(lobbyData);
     this.ui.updateActionButtonsUI(lobbyData);
 
     // 매칭 정보가 변경된 경우 렌더링
     this.ui.renderMatchInfoInLobby(lobbyData);
-
-    console.log("✅ UI 업데이트 완료");
   }
 
   private handleConnectionStatusChange(isConnected: boolean, transport?: string): void {
-    console.log("🔌 연결 상태 변경:", { connected: isConnected, transport });
     this.ui.updateConnectionStatus(isConnected, transport);
   }
 
@@ -133,7 +129,6 @@ export class LobbyDetailComponent extends Component {
   }
 
   private async toggleReady(): Promise<void> {
-    console.log("🔄 준비 상태 토글 시작");
     try {
       if (!this.lobbyData) return;
 
@@ -145,8 +140,6 @@ export class LobbyDetailComponent extends Component {
           const originalReadyState = this.lobbyData.isPlayerReady;
           const newReadyState = !this.lobbyData.isPlayerReady;
 
-          console.log(`🎯 낙관적 UI 업데이트: ${originalReadyState} → ${newReadyState}`);
-
           this.lobbyData.players[currentPlayerIndex].is_ready = newReadyState;
           this.lobbyData.isPlayerReady = newReadyState;
           this.lobbyData.allPlayersReady =
@@ -157,7 +150,6 @@ export class LobbyDetailComponent extends Component {
 
           try {
             await this.service.toggleReady();
-            console.log("✅ 준비 상태 API 성공");
           } catch (error) {
             // API 실패 시 원래 상태로 되돌리기
             console.error("❌ 준비 상태 API 실패 - 원래 상태로 롤백");
@@ -180,7 +172,6 @@ export class LobbyDetailComponent extends Component {
   }
 
   private async startGame(): Promise<void> {
-    console.log("게임 시작");
     try {
       if (window.router) {
         this.service.startGames(this.lobbyData);
@@ -195,29 +186,68 @@ export class LobbyDetailComponent extends Component {
     }
   }
 
-  private playGame(): void {
+  public playGame(): void {
     console.log("게임 참여");
     const match = this.getParticipatedGameId();
     if (!match) {
       console.warn("매칭된 게임이 없습니다.");
+      return;
     }
     if (window.router) {
-      sessionStorage.setItem("lastLobbyId", this.lobbyId.toString());
       window.router.navigate(`/game/${match?.game_id}/${this.lobbyData?.tournamentId}`, false);
     }
   }
 
-  private getParticipatedGameId(): MatchInfo | undefined {
+  public getParticipatedGameId(): MatchInfo | undefined {
+    console.log("🔍 getParticipatedGameId 호출 시작");
+    console.log("🔍 현재 로비 데이터:", {
+      hasLobbyData: !!this.lobbyData,
+      hasMatchData: !!this.lobbyData?.matchData,
+      lobbyId: this.lobbyData?.id,
+      tournamentId: this.lobbyData?.tournamentId,
+    });
+
     if (!this.lobbyData || !this.lobbyData.matchData) {
       console.warn("로비 데이터 혹은 매치가 생성되기 이전입니다.");
+      return undefined;
     }
+
     const matches = this.lobbyData?.matchData?.matches;
     const userId = UserManager.getUserId();
-    return matches?.find(
+
+    console.log("🔍 매치 검색 조건:", {
+      userId,
+      userIdType: typeof userId,
+      totalMatches: matches?.length || 0,
+      matches: matches?.map((m) => ({
+        game_id: m.game_id,
+        game_status: m.game_status,
+        left_player_id: m.left_player.id,
+        left_player_id_type: typeof m.left_player.id,
+        right_player_id: m.right_player.id,
+        right_player_id_type: typeof m.right_player.id,
+      })),
+    });
+
+    const participatedMatch = matches?.find(
       (match) =>
-        match.game_status !== "COMPLETED" &&
-        (match.left_player.id === userId || match.right_player.id === userId)
+        match.game_status !== "COMPLETED" && (match.left_player.id === userId || match.right_player.id === userId)
     );
+
+    console.log("🔍 참여 게임 검색 결과:", {
+      userId,
+      totalMatches: matches?.length || 0,
+      participatedMatch: participatedMatch
+        ? {
+            game_id: participatedMatch.game_id,
+            game_status: participatedMatch.game_status,
+            left_player: participatedMatch.left_player,
+            right_player: participatedMatch.right_player,
+          }
+        : "없음",
+    });
+
+    return participatedMatch;
   }
 
   private async leaveLobby(): Promise<void> {
@@ -287,12 +317,23 @@ export class LobbyDetailComponent extends Component {
           this.lobbyData.matchData = matchResult;
           console.log("📊 로비 데이터에 매칭 정보 저장 완료");
 
+          // SocketEventProcessor에 최신 로비 데이터 동기화
+          this.socketProcessor.setLobbyData(this.lobbyData);
+
           // 로비 내 매칭 정보 섹션 즉시 업데이트
           this.ui.renderMatchInfoInLobby(this.lobbyData);
         }
 
-        // 매칭 결과 UI 표시
-        this.ui.showMatchResult(matchResult);
+        // 매칭 생성 성공 후 게임 시작 호출
+        console.log("🎮 게임 시작 호출 시작");
+        try {
+          await this.service.startGames(this.lobbyData);
+          console.log("✅ 게임 시작 성공");
+        } catch (startError) {
+          console.error("❌ 게임 시작 실패:", startError);
+          // 게임 시작 실패는 매칭 생성이 성공했으므로 사용자에게 경고만 표시
+          console.warn("⚠️ 매칭은 생성되었지만 게임 시작에 실패했습니다.");
+        }
 
         // 로비 데이터 새로고침 (상태가 변경될 수 있음)
         await this.loadLobbyData();
@@ -335,13 +376,13 @@ export class LobbyDetailComponent extends Component {
         console.log("🏆 토너먼트 완료 후 로비 퇴장 성공");
 
         if (window.router) {
-          window.router.navigate("/");
+          window.router.navigate("/lobby");
         }
       } catch (error) {
         console.error("❌ 토너먼트 완료 후 로비 퇴장 실패:", error);
         // 에러가 발생해도 홈으로 이동
         if (window.router) {
-          window.router.navigate("/");
+          window.router.navigate("/lobby");
         }
       }
     });

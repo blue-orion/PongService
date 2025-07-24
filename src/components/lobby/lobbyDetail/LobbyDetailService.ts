@@ -418,8 +418,6 @@ export class LobbyDetailService {
       }),
     });
 
-    console.log("📥 매칭 생성 응답:", response.status, response.statusText);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("❌ 매칭 생성 API 실패:", errorData);
@@ -433,8 +431,10 @@ export class LobbyDetailService {
     const matchData = result.data || result;
     return {
       tournament_id: matchData.tournament_id,
+      tournament_status: matchData.tournament_status,
       lobby_id: matchData.lobby_id,
-      round: matchData.round,
+      current_round: matchData.current_round,
+      total_rounds: matchData.total_rounds,
       total_matches: matchData.total_matches,
       matches: matchData.matches,
       games: matchData.games, // 새로운 games 필드 추가

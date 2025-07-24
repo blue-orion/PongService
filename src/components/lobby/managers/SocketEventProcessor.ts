@@ -7,20 +7,214 @@ export class SocketEventProcessor {
   private lobbyData: LobbyData | null = null;
   private onUIUpdate: (lobbyData: LobbyData) => void;
   private onDataRefresh: () => void;
+  private onPlayGame?: () => void;
+  private getParticipatedGame?: () => any;
 
-  constructor(onUIUpdate: (lobbyData: LobbyData) => void, onDataRefresh: () => void) {
+  constructor(
+    onUIUpdate: (lobbyData: LobbyData) => void,
+    onDataRefresh: () => void,
+    onPlayGame?: () => void,
+    getParticipatedGame?: () => any
+  ) {
     this.onUIUpdate = onUIUpdate;
     this.onDataRefresh = onDataRefresh;
+    this.onPlayGame = onPlayGame;
+    this.getParticipatedGame = getParticipatedGame;
   }
 
   setLobbyData(lobbyData: LobbyData | null): void {
+    console.log("lobbyData: ", lobbyData);
     this.lobbyData = lobbyData;
   }
 
-  handleGameStarted(data: any) {
-    console.log("게임 시작 이벤트 처리 시작:", data);
+  // TODO: 게임 시작 시 사용자가 참여하는 게임에 대한 시작 이벤트만 처리하게 해야 함
+  // 이벤트 발생 시 어떤 데이터가 넘어오는지 확인해야함
+  handleGameStarted(data: any, retryCount: number = 0) {
+    console.log("🎮 게임 시작 이벤트 처리 시작:", data, `(재시도: ${retryCount})`);
+    console.log("🔍 SocketEventProcessor의 lobbyData:", this.lobbyData);
 
-    window.router.navigate(`/game/${data.game_id}/${data.tournament_id}`, false);
+    // matchData가 없으면 잠시 기다렸다가 다시 시도 (match:created 이벤트 대기)
+    if (!this.lobbyData?.matchData) {
+      if (retryCount < 10) { // 최대 10번 재시도 (1초)
+        console.log(`⏳ matchData가 아직 없습니다. 100ms 후 다시 시도합니다... (${retryCount + 1}/10)`);
+        setTimeout(() => {
+          this.handleGameStarted(data, retryCount + 1);
+        }, 100);
+        return;
+      } else {
+        console.warn("❌ matchData를 찾을 수 없어서 게임 시작 처리를 중단합니다.");
+        return;
+      }
+    }
+
+    // SocketEventProcessor의 lobbyData로 직접 게임 참여 확인
+    const participatedGame = this.findParticipatedGame();
+    console.log("🔍 SocketEventProcessor에서 직접 찾은 참여 게임:", participatedGame);
+
+    if (!participatedGame) {
+      console.log("🚫 현재 사용자가 참여하는 게임이 없습니다. 라우팅을 건너뜁니다.");
+      return;
+    }
+
+    // 이벤트로 받은 game_id와 사용자가 참여하는 게임의 game_id가 일치하는지 확인
+    console.log("🔍 게임 ID 비교:", {
+      participatedGameId: participatedGame.game_id,
+      eventGameId: data.game_id,
+      isMatch: participatedGame.game_id === data.game_id,
+    });
+
+    if (participatedGame.game_id !== data.game_id) {
+      console.log("🚫 다른 게임의 시작 이벤트입니다. 라우팅을 건너뜁니다.");
+      console.log(`참여 게임 ID: ${participatedGame.game_id}, 이벤트 게임 ID: ${data.game_id}`);
+      return;
+    }
+
+    console.log("✅ 현재 사용자가 참여하는 게임입니다. 게임으로 이동합니다.");
+
+    // 현재 로비 ID를 세션 스토리지에 저장 (게임 종료 후 돌아가기 위함)
+    if (this.lobbyData?.id) {
+      sessionStorage.setItem("lastLobbyId", this.lobbyData.id.toString());
+      console.log("💾 현재 로비 ID 저장:", this.lobbyData.id);
+    }
+
+    // 게임 시작 알림 모달 표시
+    this.showGameStartCountdown(data);
+
+    // 3초 후 playGame() 콜백을 통해 게임 라우트로 이동
+    setTimeout(() => {
+      console.log("🎯 playGame() 콜백을 통해 게임으로 이동");
+      if (this.onPlayGame) {
+        this.onPlayGame();
+      } else {
+        console.warn("❌ onPlayGame 콜백이 설정되지 않았습니다.");
+      }
+    }, 3000);
+  }
+
+  private findParticipatedGame(): any {
+    console.log("🔍 SocketEventProcessor에서 참여 게임 직접 검색 시작");
+    console.log("🔍 this.lobbyData 존재 여부:", !!this.lobbyData);
+    console.log("🔍 this.lobbyData.matchData 존재 여부:", !!this.lobbyData?.matchData);
+    
+    // JSON.stringify로 실제 그 순간의 객체 상태 확인
+    if (this.lobbyData) {
+      console.log("🔍 실제 lobbyData JSON:", JSON.stringify({
+        id: this.lobbyData.id,
+        hasMatchData: !!this.lobbyData.matchData,
+        matchDataKeys: this.lobbyData.matchData ? Object.keys(this.lobbyData.matchData) : [],
+        matchDataType: typeof this.lobbyData.matchData,
+        matchDataValue: this.lobbyData.matchData
+      }, null, 2));
+    }
+
+    if (!this.lobbyData || !this.lobbyData.matchData) {
+      console.warn("❌ SocketEventProcessor의 로비 데이터 혹은 매치가 생성되기 이전입니다.");
+      console.warn("상세 정보:", {
+        hasLobbyData: !!this.lobbyData,
+        hasMatchData: !!this.lobbyData?.matchData,
+        lobbyDataKeys: this.lobbyData ? Object.keys(this.lobbyData) : [],
+        matchDataValue: this.lobbyData?.matchData
+      });
+      return undefined;
+    }
+
+    const matches = this.lobbyData.matchData.matches;
+    const userId = UserManager.getUserId();
+
+    console.log("🔍 SocketEventProcessor 매치 검색 조건:", {
+      userId,
+      userIdType: typeof userId,
+      totalMatches: matches?.length || 0,
+      matches: matches?.map((m) => ({
+        game_id: m.game_id,
+        game_status: m.game_status,
+        left_player_id: m.left_player.id,
+        left_player_id_type: typeof m.left_player.id,
+        right_player_id: m.right_player.id,
+        right_player_id_type: typeof m.right_player.id,
+      })),
+    });
+
+    const participatedMatch = matches?.find(
+      (match) =>
+        match.game_status !== "COMPLETED" && (match.left_player.id === userId || match.right_player.id === userId)
+    );
+
+    console.log("🔍 SocketEventProcessor 참여 게임 검색 결과:", {
+      userId,
+      totalMatches: matches?.length || 0,
+      participatedMatch: participatedMatch
+        ? {
+            game_id: participatedMatch.game_id,
+            game_status: participatedMatch.game_status,
+            left_player: participatedMatch.left_player,
+            right_player: participatedMatch.right_player,
+          }
+        : "없음",
+    });
+
+    return participatedMatch;
+  }
+
+  private showGameStartCountdown(data: any): void {
+    // 기존 카운트다운 모달이 있으면 제거
+    const existingModal = document.querySelector(".game-start-countdown-modal");
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // 카운트다운 모달 생성
+    const modal = document.createElement("div");
+    modal.className =
+      "game-start-countdown-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+
+    modal.innerHTML = `
+      <div class="glass-card p-8 text-center max-w-md mx-4">
+        <div class="mb-6">
+          <h2 class="text-3xl font-bold text-primary-700 mb-2">🎮 게임 시작!</h2>
+          <p class="text-lg text-gray-600">곧 게임으로 이동합니다</p>
+        </div>
+        
+        <div class="countdown-circle mb-4">
+          <div class="text-6xl font-bold text-primary-600 countdown-number">3</div>
+        </div>
+        
+        <div class="text-sm text-gray-500">
+          게임 ID: ${data.game_id || "알 수 없음"}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 카운트다운 애니메이션
+    let count = 3;
+    const countdownElement = modal.querySelector(".countdown-number");
+
+    const countdownInterval = setInterval(() => {
+      count--;
+      if (countdownElement) {
+        countdownElement.textContent = count.toString();
+
+        // 카운트다운 애니메이션 효과
+        countdownElement.classList.add("animate-pulse");
+        setTimeout(() => {
+          countdownElement.classList.remove("animate-pulse");
+        }, 500);
+      }
+
+      if (count <= 0) {
+        clearInterval(countdownInterval);
+        modal.remove();
+      }
+    }, 1000);
+
+    // 3초 후 모달 자동 제거 (안전장치)
+    setTimeout(() => {
+      if (modal.parentNode) {
+        modal.remove();
+      }
+    }, 3000);
   }
 
   handleReadyStateChange(data: any): void {

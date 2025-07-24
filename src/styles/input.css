@@ -1309,6 +1309,106 @@
     }
   }
 
+  /* 매칭 VS 화면 전용 스타일 */
+  .match-versus-screen {
+    @apply bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-8 text-center;
+  }
+
+  .match-versus-header {
+    @apply mb-8;
+  }
+
+  .match-versus-header h3 {
+    @apply text-3xl font-bold text-gray-800 mb-2;
+  }
+
+  .match-versus-header p {
+    @apply text-gray-600;
+  }
+
+  .match-versus-content {
+    @apply flex items-center justify-center gap-8 mb-8;
+  }
+
+  .match-player-card {
+    @apply flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px];
+  }
+
+  .match-player-card.card-left {
+    @apply border-blue-300 bg-blue-50/50;
+  }
+
+  .match-player-card.card-right {
+    @apply border-purple-300 bg-purple-50/50;
+  }
+
+  .match-player-avatar {
+    @apply w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg;
+  }
+
+  .match-player-nickname {
+    @apply text-xl font-bold text-gray-800;
+  }
+
+  .match-player-username {
+    @apply text-sm text-gray-500;
+  }
+
+  .match-versus-divider {
+    @apply flex flex-col items-center gap-3;
+  }
+
+  .match-vs-text {
+    @apply text-4xl font-bold text-gray-700 px-6 py-3 bg-white rounded-full shadow-lg border-2 border-gray-200;
+  }
+
+  .match-versus-animation {
+    @apply text-2xl;
+    animation: matchVersusSparkle 1.5s ease-in-out infinite;
+  }
+
+  @keyframes matchVersusSparkle {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+  }
+
+  .match-versus-footer {
+    @apply mt-6 p-4 bg-white/80 rounded-lg border border-gray-200;
+  }
+
+  .match-instruction-text {
+    @apply text-gray-600 font-medium;
+  }
+
+  .match-status-pending {
+    @apply text-orange-600 font-semibold;
+  }
+
+  /* 매칭 VS 화면 모바일 반응형 */
+  @media (max-width: 768px) {
+    .match-versus-content {
+      @apply flex-col gap-4;
+    }
+
+    .match-player-card {
+      @apply min-w-[160px] p-4;
+    }
+
+    .match-vs-text {
+      @apply text-3xl px-4 py-2;
+    }
+
+    .match-versus-divider {
+      @apply order-2;
+    }
+  }
+
   /* 페이징 섹션 스타일 */
   .pagination-section {
     @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-6 bg-white/80 rounded-lg border border-gray-200;
@@ -1406,4 +1506,55 @@
   /*     padding-top: 50px; */
   /*   } */
   /* } */
+
+  /* 게임 시작 카운트다운 모달 */
+  .game-start-countdown-modal {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+    .countdown-circle {
+    width: 6rem;
+    height: 6rem;
+    margin: 0 auto;
+    background: linear-gradient(135deg, rgb(239 246 255), rgb(219 234 254));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid rgb(147 197 253);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .countdown-number {
+    animation: countdownBounce 1s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes countdownBounce {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(var(--primary-300), 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(var(--primary-300), 0);
+    }
+  }
 }

@@ -315,8 +315,8 @@ export class GameComponent extends Component {
     resultModal.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
-      this.gameState?.score.right || 0
-    }</p>
+        this.gameState?.score.right || 0
+      }</p>
       ${buttonHtml}
     `;
 
@@ -341,12 +341,13 @@ export class GameComponent extends Component {
 
   private exitToLobby() {
     const lobbyId = sessionStorage.getItem("lastLobbyId");
-    sessionStorage.removeItem("lastLobbyId");
+    setTimeout(() => {
+      sessionStorage.removeItem("lastLobbyId");
+    }, 5000);
     window.router.navigate(`/lobby/${lobbyId}`);
   }
 
   private exitToHome() {
-    sessionStorage.removeItem("lastLobbyId");
     window.router.navigate(`/`);
   }
 
