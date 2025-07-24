@@ -2,6 +2,7 @@ import Game from "#domains/game/model/Game.js";
 import GameDto from "#domains/game/model/GameDto.js";
 import GameRepository from "#domains/game/repo/gameRepo.js";
 import { GameStatus } from "@prisma/client";
+import UserRepo from "#domains/user/repo/userRepo.js";
 
 export class GameService {
   /**
@@ -16,7 +17,7 @@ export class GameService {
     if (GameService.instance) {
       return GameService.instance;
     }
-
+    this.userRepo = new UserRepo();
     /**
      * 활성화된 게임 목록
      * @type { Map<number, Game> } - key: gameId, value: Game instance
@@ -182,7 +183,7 @@ export class GameService {
     return intervalId;
   }
 
-  _sendGameState(gameId) {
+  async _sendGameState(gameId) {
     const game = this.activeGames.get(gameId);
     if (!game) {
       throw new Error("[Game] 해당하는 게임이 없음");
@@ -190,17 +191,19 @@ export class GameService {
 
     const players = game.getPlayers();
 
+    const leftUser = await this.userRepo.getUserById(Number(players.get("left").id));
+    const rightUser = await this.userRepo.getUserById(Number(players.get("right").id));
+
     const gameState = game.getState();
     const payload = {
       ball: gameState.ball,
       paddles: gameState.paddles,
       score: game.getScore(),
       players: {
-        left: players.get("left"),
-        right: players.get("right"),
+        left: leftUser,
+        right: rightUser,
       },
     };
-
     this.broadcastCallback(players, "state", payload);
   }
 

@@ -37,8 +37,7 @@ const websocketHandlers = {
     websocketManager.registerNamespace("lobby", lobbyNamespace);
 
     lobbyNamespace.on("connection", (socket) => {
-      const userId = socket.handshake.auth["user-id"];
-      const lobbyId = socket.handshake.auth["lobby-id"];
+      const { userId, lobbyId } = socket.handshake.auth;
 
       console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
 
