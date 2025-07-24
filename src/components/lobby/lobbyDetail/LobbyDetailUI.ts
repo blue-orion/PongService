@@ -81,6 +81,13 @@ export class LobbyDetailUI {
                     </div>
                 </div>
             </div>
+            
+            <div class="chat-section">
+                <h3>로비 채팅</h3>
+                <div id="chat-container" class="chat-container">
+                    <!-- LobbyChatComponent가 여기에 렌더링됩니다 -->
+                </div>
+            </div>
         `;
   }
 

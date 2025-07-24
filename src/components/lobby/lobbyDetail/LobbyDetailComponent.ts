@@ -5,6 +5,7 @@ import { LobbyDetailService } from "./LobbyDetailService";
 import { LobbyDetailUI } from "./LobbyDetailUI";
 import { SocketEventProcessor } from "../managers/SocketEventProcessor";
 import { LobbyData, SocketEventHandlers, UIEventHandlers } from "../../../types/lobby";
+import { LobbyChatComponent } from "../chattingRoom/LobbyChatComponent";
 
 export class LobbyDetailComponent extends Component {
   private lobbyId: string;
@@ -13,6 +14,7 @@ export class LobbyDetailComponent extends Component {
   private service: LobbyDetailService;
   private ui: LobbyDetailUI;
   private socketProcessor: SocketEventProcessor;
+  private chatComponent: LobbyChatComponent | null = null;
 
   constructor(container: HTMLElement, lobbyId: string) {
     super(container);
@@ -38,6 +40,21 @@ export class LobbyDetailComponent extends Component {
 
     // 로비 데이터 로드
     await this.loadLobbyData();
+
+    // 채팅 컴포넌트 초기화
+    this.initializeChat();
+
+    console.log("로비 상세 컴포넌트 렌더링 완료");
+  }
+
+  private initializeChat(): void {
+    // 채팅 컨테이너가 UI에 있는지 확인
+    const chatContainer = this.container.querySelector("#chat-container");
+
+    if (chatContainer && !this.chatComponent) {
+      this.chatComponent = new LobbyChatComponent(chatContainer as HTMLElement, this.lobbyId);
+      console.log("💬 채팅 컴포넌트 초기화 완료");
+    }
   }
 
   private setupEventHandlers(): void {
@@ -467,7 +484,9 @@ export class LobbyDetailComponent extends Component {
 
               <div class="tournament-info grid md:grid-cols-3 gap-4 mt-6">
                 <div class="stat-item text-center">
-                  <div class="text-2xl font-bold text-primary-700">${winner?.nickname || winner?.username || "알 수 없음"}</div>
+                  <div class="text-2xl font-bold text-primary-700">${
+                    winner?.nickname || winner?.username || "알 수 없음"
+                  }</div>
                   <div class="text-sm text-gray-600">우승자</div>
                 </div>
                 <div class="stat-item text-center">
@@ -500,6 +519,13 @@ export class LobbyDetailComponent extends Component {
   }
 
   destroy(): void {
+    // 채팅 컴포넌트 정리
+    if (this.chatComponent) {
+      this.chatComponent.destroy();
+      this.chatComponent = null;
+      console.log("💬 채팅 컴포넌트 정리 완료");
+    }
+
     // this.ui.clearEventHandlers(); // 핸들러 제거
     this.service.disconnect();
   }

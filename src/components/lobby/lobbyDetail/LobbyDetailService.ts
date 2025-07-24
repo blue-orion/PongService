@@ -62,7 +62,7 @@ export class LobbyDetailService {
       console.log("🔌 WebSocket 연결 시도:", { userId, lobbyId: this.lobbyId });
 
       const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
-        query: {
+        auth: {
           "user-id": userId,
           "lobby-id": this.lobbyId,
         },
@@ -181,11 +181,6 @@ export class LobbyDetailService {
 
     this.socket.on("join_room_error", (error: any) => {
       console.error("💥 로비 방 입장 실패:", error);
-    });
-
-    // 디버깅용 모든 이벤트 로깅
-    this.socket.onAny((eventName: string, ...args: any[]) => {
-      console.log(`🔊 WebSocket 이벤트 수신: ${eventName}`, args);
     });
 
     // 게임 시작 이벤트
