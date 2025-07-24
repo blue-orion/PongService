@@ -47,9 +47,9 @@ export class PlayerRenderer {
             badges.push('<span class="host-badge">호스트</span>');
         }
         
-        if (player.is_leader) {
-            badges.push('<span class="leader-badge">리더</span>');
-        }
+        // if (player.is_leader) {
+        //     badges.push('<span class="leader-badge">리더</span>');
+        // }
         
         return `<div class="player-badges">${badges.join('')}</div>`;
     }
@@ -76,16 +76,16 @@ export class PlayerRenderer {
 
     static renderLobbyInfoGrid(lobbyData: LobbyData): string {
         return `
-            <div class="info-grid">
-                <div class="info-item">
+            <div class="info-grid flex flex-col gap-3">
+                <div class="info-item flex justify-between items-center">
                     <label>호스트:</label>
                     <span>${lobbyData.host}</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item flex justify-between items-center">
                     <label>현재 인원:</label>
                     <span>${lobbyData.currentPlayers}/${lobbyData.maxPlayers}</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item flex justify-between items-center">
                     <label>생성 시간:</label>
                     <span>${lobbyData.createdAt}</span>
                 </div>

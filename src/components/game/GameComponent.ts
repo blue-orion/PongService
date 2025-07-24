@@ -311,7 +311,7 @@ export class GameComponent extends Component {
 
     // 결과 표시
     const resultModal = document.createElement("div");
-    resultModal.className = "game-result glass-card p-6 mt-4 text-center";
+    resultModal.className = "game-result bg-white border border-gray-200 rounded-lg shadow-lg p-6 mt-4 text-center";
     resultModal.innerHTML = `
       <h3 class="text-2xl font-bold text-primary-700 mb-4">${resultMessage}</h3>
       <p class="text-primary-600 mb-4">최종 점수: ${this.gameState?.score.left || 0} - ${
@@ -322,7 +322,7 @@ export class GameComponent extends Component {
 
     const modalElement = document.createElement("div");
     modalElement.appendChild(resultModal);
-    modalElement.className = "modal-overlay";
+    modalElement.className = "modal-overlay bg-black bg-opacity-50 fixed inset-0 flex items-center justify-center z-50";
 
     this.container.appendChild(modalElement);
 

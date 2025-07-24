@@ -277,11 +277,11 @@
 
   /* 매칭 결과 모달 스타일 */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/30 flex items-center justify-center z-50;
+    @apply fixed inset-0 bg-black/30 flex items-center justify-center z-[70] pt-[60px];
   }
 
   .match-result-modal {
-    @apply w-full max-w-4xl max-h-[90vh] mx-4;
+    @apply w-full max-w-4xl max-h-[90vh];
   }
 
   .match-result-content {
@@ -301,7 +301,7 @@
   }
 
   .match-result-body {
-    @apply p-6 max-h-96 overflow-y-auto;
+    @apply max-h-[80vh] overflow-y-auto;
   }
 
   .tournament-completed {
@@ -365,7 +365,7 @@
   }
 
   .match-status {
-    @apply text-xs px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full;
+    @apply text-xs px-2 py-1 bg-yellow-200 rounded-full;
   }
 
   .match-players {
@@ -630,7 +630,7 @@
   }
 
   .match-status-text {
-    @apply text-xs text-gray-500 mt-1;
+    @apply text-xs mt-1;
   }
 
   .match-result {
@@ -664,7 +664,7 @@
 
   /* 토너먼트 브라켓 스타일 */
   .tournament-bracket {
-    @apply bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 shadow-lg;
+    @apply bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-2 shadow-lg;
   }
 
   .tournament-header {
@@ -1368,7 +1368,8 @@
   }
 
   @keyframes matchVersusSparkle {
-    0%, 100% {
+    0%,
+    100% {
       transform: scale(1);
       opacity: 1;
     }
@@ -1512,7 +1513,7 @@
     animation: fadeIn 0.3s ease-out;
   }
 
-    .countdown-circle {
+  .countdown-circle {
     width: 6rem;
     height: 6rem;
     margin: 0 auto;
@@ -1541,7 +1542,8 @@
   }
 
   @keyframes countdownBounce {
-    0%, 100% {
+    0%,
+    100% {
       transform: scale(1);
     }
     50% {
@@ -1550,11 +1552,436 @@
   }
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       box-shadow: 0 0 0 0 rgba(var(--primary-300), 0.7);
     }
     50% {
       box-shadow: 0 0 0 10px rgba(var(--primary-300), 0);
+    }
+  }
+
+  /* 토너먼트 연결선 스타일 */
+  .round-connectors {
+    @apply flex flex-col justify-center items-center relative;
+    width: 60px;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .connector-group {
+    @apply relative flex flex-col items-center justify-center;
+    height: 120px; /* 매치 높이와 동일 */
+    margin: 20px 0; /* 매치 간격과 동일 */
+  }
+
+  .connector-line-horizontal {
+    @apply bg-gray-400;
+    height: 2px;
+    width: 30px;
+    position: relative;
+  }
+
+  .connector-line-vertical {
+    @apply bg-gray-400;
+    width: 2px;
+    height: 60px;
+    margin: 0 14px; /* 중앙 정렬을 위한 마진 */
+  }
+
+  .connector-line-horizontal.from-match-0,
+  .connector-line-horizontal.from-match-1 {
+    margin-bottom: 4px;
+  }
+
+  .connector-line-horizontal.to-next-round {
+    margin-top: 4px;
+  }
+
+  .connector-group.bye-connector .connector-line-horizontal.bye-line {
+    @apply bg-orange-400;
+  }
+
+  .connector-group.bye-connector {
+    @apply opacity-75;
+  }
+
+  /* 연결선 애니메이션 */
+  .connector-line-horizontal,
+  .connector-line-vertical {
+    @apply transition-colors duration-300;
+  }
+
+  .tournament-match.completed + .round-connectors .connector-line-horizontal,
+  .tournament-match.completed + .round-connectors .connector-line-vertical {
+    @apply bg-green-500;
+  }
+
+  /* 토너먼트 브라켓 스타일 */
+  .tournament-bracket-container {
+    @apply flex items-start justify-center gap-4 p-6 overflow-x-auto min-h-[80vh];
+    min-width: fit-content;
+  }
+
+  .bracket-round-wrapper {
+    @apply flex items-center;
+  }
+
+  .bracket-round-column {
+    @apply flex flex-col items-center gap-4;
+    min-width: 200px;
+  }
+
+  .round-label {
+    @apply text-lg font-bold text-gray-700 mb-4 text-center px-4 py-2 bg-blue-100 rounded-lg;
+  }
+
+  .round-matches-container {
+    @apply flex flex-col gap-8 items-center;
+  }
+
+  .tournament-match {
+    @apply relative bg-white border-2 border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+    width: 180px;
+    min-height: 120px;
+  }
+
+  .tournament-match:hover {
+    @apply border-blue-300;
+  }
+
+  .match-bracket {
+    @apply p-3;
+  }
+
+  .match-player {
+    @apply flex items-center justify-between p-2 rounded-md mb-1 transition-all duration-300;
+    min-height: 40px;
+  }
+
+  .match-player.top-player {
+    @apply bg-gray-50 border-b border-gray-200;
+  }
+
+  .match-player.bottom-player {
+    @apply bg-gray-50;
+  }
+
+  .match-player.winner {
+    @apply bg-green-100 border-green-300 font-semibold;
+  }
+
+  .player-info {
+    @apply flex items-center gap-2 flex-1 min-w-0;
+  }
+
+  .player-avatar-small {
+    @apply w-6 h-6 rounded-full object-cover;
+  }
+
+  .player-avatar-placeholder-small {
+    @apply w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs;
+  }
+
+  .player-name {
+    @apply text-sm font-medium truncate;
+  }
+
+  .player-score {
+    @apply text-sm font-bold text-gray-600 ml-2;
+  }
+
+  .match-connector {
+    @apply flex items-center justify-center py-1;
+  }
+
+  .connector-line {
+    @apply w-full h-px bg-gray-300;
+  }
+
+  .match-status-indicator {
+    @apply absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold;
+  }
+
+  .match-status-indicator.pending {
+    @apply bg-gray-200 text-gray-600;
+  }
+
+  .match-status-indicator.playing {
+    @apply bg-green-500 text-white animate-pulse;
+  }
+
+  .match-status-indicator.completed {
+    @apply bg-blue-500 text-white;
+  }
+
+  .match-info-tooltip {
+    @apply absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300 pointer-events-none;
+    z-index: 10;
+  }
+
+  .tournament-match:hover .match-info-tooltip {
+    @apply opacity-100;
+  }
+
+  .match-id {
+    @apply font-bold;
+  }
+
+  .match-status {
+    @apply text-gray-300;
+  }
+
+  /* 반응형 스타일 */
+  @media (max-width: 768px) {
+    .tournament-bracket-container {
+      @apply flex-col gap-6;
+    }
+
+    .bracket-round-column {
+      @apply w-full;
+    }
+
+    .round-matches-container {
+      @apply flex-row flex-wrap justify-center;
+    }
+
+    .tournament-match {
+      width: 160px;
+      min-height: 100px;
+    }
+
+    .round-connectors {
+      width: 100%;
+      height: 40px;
+    }
+
+    .connector-group {
+      @apply flex-row;
+      height: auto;
+      width: 100%;
+    }
+
+    .connector-line-vertical {
+      @apply hidden;
+    }
+  }
+
+  /* 토너먼트 결과 화면용 브라켓 스타일 */
+  .tournament-bracket-container-result {
+    @apply bg-white/50 backdrop-blur-sm rounded-xl shadow-lg;
+  }
+
+  .tournament-bracket-container-final {
+    @apply flex items-start justify-center gap-4 p-6 overflow-x-auto min-h-[400px];
+    min-width: fit-content;
+  }
+
+  .bracket-round-wrapper-final {
+    @apply flex items-center;
+  }
+
+  .bracket-round-column-final {
+    @apply flex flex-col items-center gap-4;
+    min-width: 200px;
+  }
+
+  .round-label-final {
+    @apply text-lg font-bold text-gray-700 mb-4 text-center px-4 py-2 bg-green-100 rounded-lg border-2 border-green-300;
+  }
+
+  .round-matches-container-final {
+    @apply flex flex-col items-center;
+    gap: 80px; /* 매치 간격을 더 넓게 */
+  }
+
+  .tournament-match-final {
+    @apply relative bg-white border-2 border-green-300 rounded-lg shadow-lg;
+    width: 200px; /* 너비를 약간 늘림 */
+    min-height: 120px;
+  }
+
+  .tournament-match-final.completed {
+    @apply border-green-500 bg-green-50;
+  }
+
+  .match-bracket-final {
+    @apply p-3;
+  }
+
+  .match-player-final {
+    @apply flex items-center justify-between p-2 rounded-md mb-1 transition-all duration-300;
+    min-height: 40px;
+  }
+
+  .match-player-final.top-player {
+    @apply bg-gray-50 border-b border-gray-200;
+  }
+
+  .match-player-final.bottom-player {
+    @apply bg-gray-50;
+  }
+
+  .match-player-final.winner {
+    @apply bg-green-200 border-green-400 font-bold text-green-800;
+  }
+
+  .player-info-final {
+    @apply flex items-center gap-2 flex-1 min-w-0;
+  }
+
+  .player-avatar-small-final {
+    @apply w-6 h-6 rounded-full object-cover;
+  }
+
+  .player-avatar-placeholder-small-final {
+    @apply w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs;
+  }
+
+  .player-name-final {
+    @apply text-sm font-medium truncate;
+  }
+
+  .player-score-final {
+    @apply text-sm font-bold text-green-700 ml-2;
+  }
+
+  .match-connector-final {
+    @apply flex items-center justify-center py-1;
+  }
+
+  .connector-line-final {
+    @apply w-full h-px bg-green-400;
+  }
+
+  .match-status-indicator-final {
+    @apply absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold;
+  }
+
+  .match-status-indicator-final.completed {
+    @apply bg-green-500 text-white;
+  }
+
+  .match-info-tooltip-final {
+    @apply absolute -bottom-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300 pointer-events-none;
+    z-index: 10;
+  }
+
+  .tournament-match-final:hover .match-info-tooltip-final {
+    @apply opacity-100;
+  }
+
+  .match-winner-final {
+    @apply font-bold text-green-300;
+  }
+
+  .match-time-final {
+    @apply text-gray-300;
+  }
+
+  /* 토너먼트 결과용 연결선 스타일 */
+  .round-connectors-final {
+    @apply flex flex-col justify-start items-center relative;
+    width: 80px;
+    height: 100%;
+    z-index: 1;
+    margin: 0 10px;
+    position: relative;
+  }
+
+  .connector-group-final {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+  }
+
+  .connector-line-horizontal-final {
+    @apply bg-green-500;
+    height: 3px;
+    position: absolute;
+  }
+
+  .connector-line-vertical-final {
+    @apply bg-green-500;
+    width: 3px;
+    height: 80px;
+    position: absolute;
+    left: 50%;
+    top: -40px;
+    transform: translateX(-50%);
+  }
+
+  .connector-line-horizontal-final.from-match-0 {
+    width: 40px;
+    top: -40px;
+    left: 0;
+  }
+
+  .connector-line-horizontal-final.from-match-1 {
+    width: 40px;
+    top: 40px;
+    left: 0;
+  }
+
+  .connector-line-horizontal-final.to-next-round {
+    width: 40px;
+    top: 0;
+    right: 0;
+  }
+
+  .connector-group-final.bye-connector .connector-line-horizontal-final.bye-line {
+    @apply bg-orange-400;
+    width: 40px;
+    top: 0;
+    left: 0;
+  }
+
+  .connector-group-final.bye-connector .connector-line-horizontal-final.to-next-round {
+    width: 40px;
+    top: 0;
+    right: 0;
+  }
+
+  .connector-group-final.bye-connector {
+    @apply opacity-75;
+  }
+
+  .connector-group-final.bye-connector .connector-line-vertical-final {
+    @apply hidden;
+  }
+
+  /* 토너먼트 결과 화면 반응형 */
+  @media (max-width: 768px) {
+    .tournament-bracket-container-final {
+      @apply flex-col gap-6;
+    }
+
+    .bracket-round-column-final {
+      @apply w-full;
+    }
+
+    .round-matches-container-final {
+      @apply flex-row flex-wrap justify-center;
+    }
+
+    .tournament-match-final {
+      width: 160px;
+      min-height: 100px;
+    }
+
+    .round-connectors-final {
+      width: 100%;
+      height: 40px;
+    }
+
+    .connector-group-final {
+      @apply flex-row;
+      height: auto;
+      width: 100%;
+    }
+
+    .connector-line-vertical-final {
+      @apply hidden;
     }
   }
 }
