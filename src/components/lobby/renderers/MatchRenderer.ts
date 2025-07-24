@@ -123,7 +123,6 @@ export class MatchRenderer {
     return `
             <div class="tournament-bracket">
                 <div class="tournament-header">
-                    <h3>토너먼트 브라켓</h3>
                     <div class="tournament-info-grid">
                         <div class="info-item">
                             <label>토너먼트 ID:</label>
@@ -152,25 +151,26 @@ export class MatchRenderer {
   static renderTournamentBracket(matches: MatchInfo[], totalRounds: number): string {
     const matchesByRound = this.groupMatchesByRound(matches);
 
-    let bracketHTML = '<div class="bracket-container">';
-
+    // 토너먼트 브라켓 구조 생성
+    let bracketHTML = '<div class="tournament-bracket-container">';
+    
+    // 각 라운드별로 처리
     for (let round = 1; round <= totalRounds; round++) {
       const roundMatches = matchesByRound[round] || [];
+      const nextRoundMatches = matchesByRound[round + 1] || [];
+      const roundName = this.getRoundName(round, totalRounds);
+      
       bracketHTML += `
-                <div class="bracket-round" data-round="${round}">
-                    <div class="round-header">
-                        <h4>${this.getRoundName(round, totalRounds)}</h4>
-                        <span class="round-number">라운드 ${round}</span>
-                    </div>
-                    <div class="round-matches">
-                        ${roundMatches.map((match) => this.renderBracketMatch(match)).join("")}
-                    </div>
-                </div>
-            `;
+        <div class="bracket-round-wrapper" data-round="${round}">
+          <div class="bracket-round-column">
+            <div class="round-label">${roundName}</div>
+            <div class="round-matches-container">
+              ${roundMatches.map((match, index) => this.renderTournamentMatch(match, round, index)).join("")}
+            </div>
+          </div>
+      `;
 
-      if (round < totalRounds) {
-        bracketHTML += '<div class="bracket-connector"></div>';
-      }
+      bracketHTML += '</div>';
     }
 
     bracketHTML += "</div>";
@@ -193,7 +193,91 @@ export class MatchRenderer {
     if (round === totalRounds - 1) return "준결승";
     if (round === totalRounds - 2) return "8강";
     if (round === totalRounds - 3) return "16강";
-    return `라운드 ${round}`;
+    return `${round}라운드`;
+  }
+
+  private static renderTournamentMatch(match: MatchInfo, round: number, index: number): string {
+    const isCompleted = match.game_status === "COMPLETED";
+    const isInProgress = match.game_status === "IN_PROGRESS";
+    const isPending = match.game_status === "PENDING";
+
+    return `
+      <div class="tournament-match" data-game-id="${match.game_id}" data-round="${round}" data-index="${index}">
+        <div class="match-bracket">
+          <div class="match-player top-player ${isCompleted && match.winner?.position === 'left' ? 'winner' : ''}">
+            <div class="player-info">
+              ${match.left_player?.profile_image 
+                ? `<img src="${match.left_player.profile_image}" alt="프로필" class="player-avatar-small">` 
+                : `<div class="player-avatar-placeholder-small">👤</div>`
+              }
+              <span class="player-name">${match.left_player?.nickname || "대기 중"}</span>
+            </div>
+            <div class="player-score">
+              ${isCompleted ? (match.left_player?.score || 0) : isPending ? "" : (match.left_player?.score || 0)}
+            </div>
+          </div>
+          
+          <div class="match-connector">
+            <div class="connector-line"></div>
+            ${isInProgress ? '<div class="match-status-indicator playing">▶</div>' : 
+              isCompleted ? '<div class="match-status-indicator completed">✓</div>' : 
+              '<div class="match-status-indicator pending">○</div>'
+            }
+          </div>
+          
+          <div class="match-player bottom-player ${isCompleted && match.winner?.position === 'right' ? 'winner' : ''}">
+            <div class="player-info">
+              ${match.right_player?.profile_image 
+                ? `<img src="${match.right_player.profile_image}" alt="프로필" class="player-avatar-small">` 
+                : `<div class="player-avatar-placeholder-small">👤</div>`
+              }
+              <span class="player-name">${match.right_player?.nickname || "대기 중"}</span>
+            </div>
+            <div class="player-score">
+              ${isCompleted ? (match.right_player?.score || 0) : isPending ? "" : (match.right_player?.score || 0)}
+            </div>
+          </div>
+        </div>
+        
+        <div class="match-info-tooltip">
+          <div class="match-id">Game ${match.game_id}</div>
+          <div class="match-status">${this.getGameStatusText(match.game_status)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  private static renderRoundConnectors(currentRoundMatches: MatchInfo[], nextRoundMatches: MatchInfo[], round: number): string {
+    let connectorsHTML = '<div class="round-connectors" data-from-round="' + round + '" data-to-round="' + (round + 1) + '">';
+    
+    // 현재 라운드의 매치 수에 따라 연결선 생성
+    for (let i = 0; i < nextRoundMatches.length; i++) {
+      const match1Index = i * 2;
+      const match2Index = i * 2 + 1;
+      
+      // 두 매치가 존재하는 경우에만 연결선 생성
+      if (match1Index < currentRoundMatches.length && match2Index < currentRoundMatches.length) {
+        connectorsHTML += `
+          <div class="connector-group" data-next-match="${i}">
+            <div class="connector-line-horizontal from-match-${match1Index}"></div>
+            <div class="connector-line-horizontal from-match-${match2Index}"></div>
+            <div class="connector-line-vertical"></div>
+            <div class="connector-line-horizontal to-next-round"></div>
+          </div>
+        `;
+      } else if (match1Index < currentRoundMatches.length) {
+        // 홀수 개의 매치가 있는 경우 (부전승)
+        connectorsHTML += `
+          <div class="connector-group bye-connector" data-next-match="${i}">
+            <div class="connector-line-horizontal from-match-${match1Index} bye-line"></div>
+            <div class="connector-line-horizontal to-next-round"></div>
+          </div>
+        `;
+      }
+    }
+    
+    connectorsHTML += '</div>';
+    return connectorsHTML;
   }
 
   static renderBracketMatch(match: MatchInfo): string {
@@ -396,7 +480,6 @@ export class MatchRenderer {
     return `
             <div class="match-summary-card">
                 <div class="match-info-header">
-                    <span class="match-number">Game ${match.game_id}</span>
                     <span class="match-status ${match.game_status.toLowerCase()}">${this.getGameStatusText(match.game_status)}</span>
                 </div>
                 <div class="match-players-summary">

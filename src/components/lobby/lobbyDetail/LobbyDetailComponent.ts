@@ -414,39 +414,8 @@ export class LobbyDetailComponent extends Component {
   private generateTournamentResultHtml(tournamentData: any, isWinner: boolean): string {
     const { tournament, winner, total_rounds, round_results } = tournamentData;
 
-    // 라운드별 결과 HTML 생성
-    const roundResultsHtml = Object.entries(round_results)
-      .map(([round, matches]: [string, any]) => {
-        const matchesHtml = matches
-          .map((match: any) => {
-            // 플레이어 정보 안전하게 추출
-            const playerOneName = match.player_one?.nickname || match.player_one?.username || "알 수 없음";
-            const playerTwoName = match.player_two?.nickname || match.player_two?.username || "알 수 없음";
-            const winnerName = match.winner_id === match.player_one?.id ? playerOneName : playerTwoName;
-
-            return `
-              <div class="match-result glass-card p-3 mb-2">
-                <div class="flex justify-between items-center">
-                  <span class="font-medium">${playerOneName} vs ${playerTwoName}</span>
-                  <span class="text-sm">${match.score || "점수 없음"}</span>
-                </div>
-                <div class="text-sm text-gray-600 mt-1">
-                  승자: ${winnerName}
-                  | 플레이 시간: ${match.play_time || "시간 정보 없음"}
-                </div>
-              </div>
-            `;
-          })
-          .join("");
-
-        return `
-          <div class="round-section mb-6">
-            <h4 class="text-lg font-semibold text-primary-700 mb-3">라운드 ${round}</h4>
-            ${matchesHtml}
-          </div>
-        `;
-      })
-      .join("");
+    // 토너먼트 브라켓 생성을 위해 매치 데이터 변환
+    const tournamentBracketHtml = this.generateTournamentBracketHtml(round_results, total_rounds);
 
     return `
       <div class="tournament-result-container min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 p-6">
@@ -458,12 +427,12 @@ export class LobbyDetailComponent extends Component {
           <div class="absolute bottom-20 right-20 w-24 h-24 bg-primary-200/20 rounded-full floating" style="animation-delay: -1s"></div>
         </div>
 
-        <div class="max-w-4xl mx-auto relative z-10">
+        <div class="max-w-6xl mx-auto relative z-10">
           <!-- 결과 헤더 -->
           <div class="text-center mb-8">
             <div class="glass-card p-8 mb-6">
               <h1 class="text-4xl font-bold text-primary-700 mb-4">
-                🏆 토너먼트 완료!
+                🏆 토너먼트 브라켓
               </h1>
               
               ${
@@ -501,10 +470,9 @@ export class LobbyDetailComponent extends Component {
             </div>
           </div>
 
-          <!-- 라운드별 결과 -->
-          <div class="rounds-container glass-card p-6 mb-6">
-            <h3 class="text-2xl font-bold text-primary-700 mb-6">라운드별 결과</h3>
-            ${roundResultsHtml}
+          <!-- 토너먼트 브라켓 -->
+          <div class="tournament-bracket-container-result glass-card p-6 mb-6">
+            ${tournamentBracketHtml}
           </div>
 
           <!-- 홈으로 돌아가기 버튼 -->
@@ -516,6 +484,105 @@ export class LobbyDetailComponent extends Component {
         </div>
       </div>
     `;
+  }
+
+  private generateTournamentBracketHtml(roundResults: any, totalRounds: number): string {
+    let bracketHTML = '<div class="tournament-bracket-container-final">';
+    
+    // 각 라운드별로 처리
+    for (let round = 1; round <= totalRounds; round++) {
+      const roundMatches = roundResults[round] || [];
+      const nextRoundMatches = roundResults[round + 1] || [];
+      const roundName = this.getRoundName(round, totalRounds);
+      
+      bracketHTML += `
+        <div class="bracket-round-wrapper-final" data-round="${round}">
+          <div class="bracket-round-column-final">
+            <div class="round-label-final">${roundName}</div>
+            <div class="round-matches-container-final">
+              ${roundMatches.map((match: any, index: number) => this.renderFinalTournamentMatch(match, round, index)).join("")}
+            </div>
+          </div>
+      `;
+
+      // 다음 라운드가 있으면 연결선 추가
+      if (round < totalRounds) {
+        bracketHTML += this.renderFinalRoundConnectors(roundMatches, nextRoundMatches, round);
+      }
+
+      bracketHTML += '</div>';
+    }
+
+    bracketHTML += "</div>";
+    return bracketHTML;
+  }
+
+  private getRoundName(round: number, totalRounds: number): string {
+    if (round === totalRounds) return "결승";
+    if (round === totalRounds - 1) return "준결승";
+    if (round === totalRounds - 2) return "8강";
+    if (round === totalRounds - 3) return "16강";
+    return `${round}라운드`;
+  }
+
+  private renderFinalTournamentMatch(match: any, round: number, index: number): string {
+    const playerOneName = match.player_one?.nickname || match.player_one?.username || "알 수 없음";
+    const playerTwoName = match.player_two?.nickname || match.player_two?.username || "알 수 없음";
+    const winnerName = match.winner_id === match.player_one?.id ? playerOneName : playerTwoName;
+    const isPlayerOneWinner = match.winner_id === match.player_one?.id;
+    const isPlayerTwoWinner = match.winner_id === match.player_two?.id;
+
+    // 점수 정보 처리 - 다양한 필드명 확인
+    const playerOneScore = match.player_one_score || match.score?.left || match.left_score || 0;
+    const playerTwoScore = match.player_two_score || match.score?.right || match.right_score || 0;
+
+    return `
+      <div class="tournament-match-final completed" data-game-id="${match.game_id}" data-round="${round}" data-index="${index}">
+        <div class="match-bracket-final">
+          <div class="match-player-final top-player ${isPlayerOneWinner ? 'winner' : ''}">
+            <div class="player-info-final">
+              ${match.player_one?.profile_image 
+                ? `<img src="${match.player_one.profile_image}" alt="프로필" class="player-avatar-small-final">` 
+                : `<div class="player-avatar-placeholder-small-final">👤</div>`
+              }
+              <span class="player-name-final">${playerOneName}</span>
+            </div>
+            <div class="player-score-final">
+              ${playerOneScore}
+            </div>
+          </div>
+          
+          <div class="match-connector-final">
+            <div class="connector-line-final"></div>
+            <div class="match-status-indicator-final completed">✓</div>
+          </div>
+          
+          <div class="match-player-final bottom-player ${isPlayerTwoWinner ? 'winner' : ''}">
+            <div class="player-info-final">
+              ${match.player_two?.profile_image 
+                ? `<img src="${match.player_two.profile_image}" alt="프로필" class="player-avatar-small-final">` 
+                : `<div class="player-avatar-placeholder-small-final">👤</div>`
+              }
+              <span class="player-name-final">${playerTwoName}</span>
+            </div>
+            <div class="player-score-final">
+              ${playerTwoScore}
+            </div>
+          </div>
+        </div>
+        
+        <div class="match-info-tooltip-final">
+          <div class="match-winner-final">승자: ${winnerName}</div>
+          <div class="match-score-final">${playerOneScore} - ${playerTwoScore}</div>
+          <div class="match-time-final">${match.play_time || "시간 정보 없음"}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderFinalRoundConnectors(currentRoundMatches: any[], nextRoundMatches: any[], round: number): string {
+    // 연결선 제거 - 빈 문자열 반환
+    return '';
   }
 
   destroy(): void {
