@@ -1,5 +1,4 @@
-# FROM node:20-alpine AS builder
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -15,19 +14,8 @@ COPY ./index.html ./index.html
 
 RUN npm install && npm run build
 
-ENTRYPOINT ["npm", "run", "preview"]
-
-# 배포시 nginx??
-# FROM nginx:alpine
-#
-# # Nginx 설정 파일을 덮어쓸 수도 있음 (옵션)
-# # COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-#
-# # Vite 빌드 결과물 복사
-# COPY --from=builder /app/dist /usr/share/nginx/html
-#
-# EXPOSE 443
-# EXPOSE 8080
-#
-# CMD ["nginx", "-g", "daemon off;"]
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/dist ./
+CMD ["echo", "Frontend build completed"]
 
