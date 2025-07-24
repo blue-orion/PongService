@@ -182,6 +182,11 @@ class UserRepo {
             id: true,
             created_at: true,
             game_status: true,
+            play_time: true,
+            player_one_id: true,
+            player_two_id: true,
+            player_one_score: true,
+            player_two_score: true,
             winner: {
               select: {
                 id: true,
