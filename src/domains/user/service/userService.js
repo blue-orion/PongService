@@ -26,18 +26,24 @@ class UserService {
     return profileDto;
   }
 
-  async updateUserNickname(user, nickname) {
-    this.userHelpers.validateUpdateNickname(nickname);
-    await this.userRepo.putNickname(user.id, nickname);
+  async updateUserNickname(userId, nickname) {
+    const user = await this.userRepo.getUserById(userId);
+    this.userHelpers.validateUpdateNickname(nickname, user.nickname);
+
+    await this.userRepo.putNickname(userId, nickname);
   }
 
-  async updateUserProfileImage(user, profileImage) {
-    this.userHelpers.validateUpdateProfileImage(profileImage);
-    await this.userRepo.putProfileImage(user.id, profileImage);
+  async updateUserProfileImage(userId, profileImage) {
+    const isChanged = this.userHelpers.validateUpdateProfileImage(profileImage);
+    if (isChanged) {
+      await this.userRepo.putProfileImage(userId, profileImage);
+    } else {
+      await this.userRepo.putProfileImage(userId, null);
+    }
   }
 
   async broadcastCurrentUserProfile(userId) {
-    const user = await this.userRepo.getUserById(Number(userId));
+    const user = await this.userRepo.getUserById(userId);
     const updateProfileDto = new ProfileDto(user);
 
     const friendsData = await this.userRepo.getUserFriendIds(user.id);
