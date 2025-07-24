@@ -35,7 +35,9 @@ export class LobbyDetailUI {
 
   renderLobbyDetail(lobbyData: LobbyData, isConnected: boolean = false, transport: string = "unknown"): void {
     const currentUserId = Number(UserManager.getUserId());
-    const currentPlayer = PlayerRenderer.findPlayerById(lobbyData.players, currentUserId || 0);
+    // 백엔드 DTO 호환성을 위한 players 배열 안전 접근
+    const players = lobbyData.players || lobbyData.lobby_players || [];
+    const currentPlayer = PlayerRenderer.findPlayerById(players, currentUserId || 0);
 
     this.container.innerHTML = `
             <div class="lobby-detail-page">

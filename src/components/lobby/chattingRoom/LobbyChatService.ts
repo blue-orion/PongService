@@ -61,9 +61,9 @@ export class LobbyChatService {
     try {
       // 채팅 전용 네임스페이스로 연결
       const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
-        query: {
-          "user-id": userId,
-          "lobby-id": this.lobbyId,
+        auth: {
+          userId: userId,
+          lobbyId: Number(this.lobbyId),
         },
         transports: ["websocket", "polling"],
       });
