@@ -85,6 +85,7 @@ export interface SocketEventHandlers {
   onMatchCreated: (data: MatchCreatedEvent) => void;
   onConnectionStatusChange: (isConnected: boolean, transport?: string) => void;
   onGameStarted: (data: GameStartedEvent) => void;
+  onRefresh: () => void;
 }
 
 export interface GameStartedEvent {

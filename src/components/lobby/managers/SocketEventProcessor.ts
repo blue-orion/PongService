@@ -2,7 +2,7 @@ import { LobbyData, LobbyPlayer, SocketEventHandlers } from "../../../types/lobb
 import { AuthManager } from "../../../utils/auth";
 import { UserManager } from "../../../utils/user";
 import { PlayerRenderer } from "../renderers/PlayerRenderer";
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export class SocketEventProcessor {
   private lobbyData: LobbyData | null = null;
   private onUIUpdate: (lobbyData: LobbyData) => void;
@@ -35,7 +35,8 @@ export class SocketEventProcessor {
 
     // matchData가 없으면 잠시 기다렸다가 다시 시도 (match:created 이벤트 대기)
     if (!this.lobbyData?.matchData) {
-      if (retryCount < 10) { // 최대 10번 재시도 (1초)
+      if (retryCount < 10) {
+        // 최대 10번 재시도 (1초)
         console.log(`⏳ matchData가 아직 없습니다. 100ms 후 다시 시도합니다... (${retryCount + 1}/10)`);
         setTimeout(() => {
           this.handleGameStarted(data, retryCount + 1);
@@ -95,16 +96,23 @@ export class SocketEventProcessor {
     console.log("🔍 SocketEventProcessor에서 참여 게임 직접 검색 시작");
     console.log("🔍 this.lobbyData 존재 여부:", !!this.lobbyData);
     console.log("🔍 this.lobbyData.matchData 존재 여부:", !!this.lobbyData?.matchData);
-    
+
     // JSON.stringify로 실제 그 순간의 객체 상태 확인
     if (this.lobbyData) {
-      console.log("🔍 실제 lobbyData JSON:", JSON.stringify({
-        id: this.lobbyData.id,
-        hasMatchData: !!this.lobbyData.matchData,
-        matchDataKeys: this.lobbyData.matchData ? Object.keys(this.lobbyData.matchData) : [],
-        matchDataType: typeof this.lobbyData.matchData,
-        matchDataValue: this.lobbyData.matchData
-      }, null, 2));
+      console.log(
+        "🔍 실제 lobbyData JSON:",
+        JSON.stringify(
+          {
+            id: this.lobbyData.id,
+            hasMatchData: !!this.lobbyData.matchData,
+            matchDataKeys: this.lobbyData.matchData ? Object.keys(this.lobbyData.matchData) : [],
+            matchDataType: typeof this.lobbyData.matchData,
+            matchDataValue: this.lobbyData.matchData,
+          },
+          null,
+          2
+        )
+      );
     }
 
     if (!this.lobbyData || !this.lobbyData.matchData) {
@@ -113,7 +121,7 @@ export class SocketEventProcessor {
         hasLobbyData: !!this.lobbyData,
         hasMatchData: !!this.lobbyData?.matchData,
         lobbyDataKeys: this.lobbyData ? Object.keys(this.lobbyData) : [],
-        matchDataValue: this.lobbyData?.matchData
+        matchDataValue: this.lobbyData?.matchData,
       });
       return undefined;
     }
@@ -346,7 +354,7 @@ export class SocketEventProcessor {
       // 기존 플레이어의 enabled 상태 변경
       this.lobbyData.players[existingPlayerIndex].enabled = true;
       if (lobbyInfo) {
-        this.updateLobbyDataFromSocket(lobbyInfo);
+        this.updateLobbyDataFromSocket(lobbyInfo); // 반환값 무시 (입장 시에는 호스트 변경 체크 불필요)
       }
     } else {
       // 신규 플레이어 추가
@@ -411,10 +419,21 @@ export class SocketEventProcessor {
     // 퇴장한 플레이어가 호스트였는지 확인
     if (leftUserId === this.lobbyData.creatorId) {
       console.log("🔄 호스트가 퇴장함 - 새로운 호스트 확인 필요");
-      if (data.lobby) {
-        this.updateLobbyDataFromSocket(data.lobby);
+
+      // 백엔드에서 새로운 호스트 정보가 왔는지 확인
+      if (data.lobby && data.lobby.creator_id && data.lobby.creator_id !== leftUserId) {
+        console.log("📥 백엔드에서 새로운 호스트 정보 수신:", data.lobby.creator_id);
+        const hostUpdated = this.updateLobbyDataFromSocket(data.lobby);
+
+        if (!hostUpdated) {
+          console.log("❌ 백엔드 호스트 정보 업데이트 실패 - 자동 방장 선정 실행");
+          this.autoAssignNewLeader();
+          return;
+        }
       } else {
-        this.onDataRefresh();
+        console.log("⚡ 백엔드에서 새로운 호스트 정보가 없음 - 자동 방장 선정 실행");
+        // 백엔드에서 새로운 호스트 정보가 없으면 자동으로 방장 선정
+        this.autoAssignNewLeader();
         return;
       }
     }
@@ -453,16 +472,31 @@ export class SocketEventProcessor {
     this.lobbyData.isPlayerReady = PlayerRenderer.isCurrentUserReady(this.lobbyData.players, currentUserId);
   }
 
-  private updateLobbyDataFromSocket(socketLobbyData: any): void {
-    if (!this.lobbyData) return;
+  private updateLobbyDataFromSocket(socketLobbyData: any): boolean {
+    if (!this.lobbyData) return false;
+
+    let hostUpdated = false;
 
     // 호스트 정보 업데이트
     if (socketLobbyData.creator_id) {
-      this.lobbyData.creatorId = socketLobbyData.creator_id;
+      const newCreatorId = socketLobbyData.creator_id;
+      this.lobbyData.creatorId = newCreatorId;
       this.lobbyData.host = socketLobbyData.creator_nickname || "알 수 없음";
 
       const currentUserId = UserManager.getUserId();
-      this.lobbyData.isHost = currentUserId === socketLobbyData.creator_id;
+      this.lobbyData.isHost = currentUserId === newCreatorId;
+
+      // 모든 플레이어의 is_leader 상태 업데이트
+      this.lobbyData.players.forEach((player: LobbyPlayer) => {
+        player.is_leader = player.user_id === newCreatorId;
+        // 새로운 방장의 enabled 상태를 true로 설정
+        if (player.user_id === newCreatorId) {
+          player.enabled = true;
+        }
+      });
+
+      hostUpdated = true;
+      console.log(`🎯 백엔드에서 새로운 호스트 정보 업데이트 완료: ${this.lobbyData.host} (ID: ${newCreatorId})`);
     }
 
     // 로비 상태 업데이트
@@ -470,6 +504,8 @@ export class SocketEventProcessor {
       this.lobbyData.status = socketLobbyData.lobby_status === "PENDING" ? "waiting" : "playing";
       this.lobbyData.statusText = socketLobbyData.lobby_status === "PENDING" ? "대기 중" : "게임 중";
     }
+
+    return hostUpdated;
   }
 
   private showLeadershipChangeAlert(
@@ -485,5 +521,74 @@ export class SocketEventProcessor {
       console.log(`📢 다른 사용자가 방장이 됨: ${newLeaderName}`);
       alert(`👑 ${newLeaderName}님이 새로운 방장이 되었습니다.`);
     }
+  }
+
+  // 자동 방장 선정 기능 추가
+  private autoAssignNewLeader(): void {
+    if (!this.lobbyData || !this.lobbyData.players || this.lobbyData.players.length === 0) {
+      console.warn("❌ 새로운 방장을 선정할 플레이어가 없습니다.");
+      this.onDataRefresh();
+      return;
+    }
+    // 활성화된 플레이어 중에서 새로운 방장 선정
+    const activePlayers = this.lobbyData.players.filter((player: LobbyPlayer) => player.enabled !== false);
+
+    if (activePlayers.length === 0) {
+      console.warn("❌ 활성화된 플레이어가 없어서 새로운 방장을 선정할 수 없습니다.");
+      this.onDataRefresh();
+      return;
+    }
+
+    // 방장 선정: 가장 먼저 입장한 플레이어 (user_id가 가장 작은 플레이어)
+    const newLeader = activePlayers.reduce((prev, current) => {
+      return prev.user_id < current.user_id ? prev : current;
+    });
+
+    console.log("👑 새로운 방장 자동 선정:", {
+      newLeaderId: newLeader.user_id,
+      newLeaderName: PlayerRenderer.getPlayerDisplayName(newLeader),
+      totalActivePlayers: activePlayers.length,
+    });
+
+    // 기존 방장 위임 로직을 활용하여 방장 변경 처리
+    this.transferLeadership(newLeader.user_id, this.lobbyData.id);
+  }
+
+  // 자동 방장 변경 알림
+  async transferLeadership(targetUserId: number, lobbyId: number): Promise<void> {
+    console.log("🔄 방장 위임 API 호출 시작:", { targetUserId });
+
+    const currentUserId = Number(UserManager.getUserId());
+    if (!currentUserId) {
+      throw new Error("로그인이 필요합니다.");
+    }
+
+    console.log("📤 방장 위임 요청 데이터:", {
+      current_leader_id: currentUserId,
+      target_user_id: targetUserId,
+      lobbyId: lobbyId,
+    });
+
+    const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${lobbyId}/authorize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        current_leader_id: currentUserId,
+        target_user_id: targetUserId,
+      }),
+    });
+
+    console.log("📥 방장 위임 응답:", response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("❌ 방장 위임 API 실패:", errorData);
+      throw new Error(errorData.message || "방장 위임에 실패했습니다.");
+    }
+
+    const result = await response.json();
+    console.log("✅ 방장 위임 API 성공:", result);
   }
 }

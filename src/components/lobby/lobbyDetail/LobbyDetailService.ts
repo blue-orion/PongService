@@ -9,7 +9,9 @@ import {
   ChatError,
   UserConnectionEvent,
   ChatSocketEventHandlers,
+  LobbyPlayer,
 } from "../../../types/lobby";
+import { PlayerRenderer } from "../renderers/PlayerRenderer";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
 
@@ -687,5 +689,45 @@ export class LobbyDetailService {
 
   getCurrentLobbyId(): string {
     return this.lobbyId;
+  }
+
+  // 자동 방장 선정 기능 추가
+  autoAssignNewLeader(lobbyData: LobbyData): void {
+    // 활성화된 플레이어 중에서 새로운 방장 선정
+    const activePlayers = lobbyData.players.filter(
+      (player: LobbyPlayer) => player.enabled !== false && player.user_id !== UserManager.getUserId()
+    );
+    console.log("👑 자동 방장 선정 시작:", {
+      totalActivePlayers: activePlayers.length,
+      lobbyId: lobbyData.id,
+    });
+    if (!activePlayers || activePlayers.length === 0) {
+      console.warn("❌ 활성화된 플레이어가 없습니다. 방장 선정이 불가능합니다.");
+      this.handlers!.onRefresh();
+      return;
+    }
+
+    // 방장 선정: 가장 먼저 입장한 플레이어 (user_id가 가장 작은 플레이어)
+    const newLeader = activePlayers.reduce((prev, current) => {
+      return prev.user_id < current.user_id ? prev : current;
+    });
+
+    console.log("👑 새로운 방장 자동 선정:", {
+      newLeaderId: newLeader.user_id,
+      newLeaderName: PlayerRenderer.getPlayerDisplayName(newLeader),
+      totalActivePlayers: activePlayers.length,
+    });
+
+    // 기존 방장 위임 로직을 활용하여 방장 변경 처리
+    this.transferLeadership(newLeader.user_id)
+      .then(() => {
+        // 방장 위임 완료 후 로비 데이터 갱신
+        console.log("✅ 방장 위임 완료, 로비 데이터 갱신 중...");
+        this.handlers!.onRefresh();
+      })
+      .catch((error) => {
+        console.error("❌ 자동 방장 위임 실패:", error);
+        this.handlers!.onRefresh();
+      });
   }
 }
