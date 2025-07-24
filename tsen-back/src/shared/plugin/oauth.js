@@ -13,7 +13,7 @@ async function oauthPlugin(fastify, _options) {
       auth: fastifyOauth2.GOOGLE_CONFIGURATION,
     },
     startRedirectPath: "/v1/auth/google",
-    callbackUri: process.env.GOOGLE_REDIRECT_URI || "http://localhost:3333/v1/auth/google/callback",
+    callbackUri: `${process.env.REDIRECT_BASE}${process.env.GOOGLE_REDIRECT_URI}`,
   });
 
   fastify.register(fastifyOauth2, {
@@ -32,7 +32,7 @@ async function oauthPlugin(fastify, _options) {
       },
     },
     startRedirectPath: "/v1/auth/42",
-    callbackUri: process.env.FORTY_TWO_REDIRECT_URI || "http://localhost:3333/v1/auth/42/callback",
+    callbackUri: `${process.env.REDIRECT_BASE}${process.env.FORTY_TWO_REDIRECT_URI}`,
   });
 }
 

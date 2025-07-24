@@ -32,12 +32,18 @@ enum GameStatus {
 enum LobbyStatus {
   PENDING
   STARTED
+  COMPLETED
 }
 
 enum UserStatus {
-  LOGGED_OUT
-  LOGGED_IN
+  OFFLINE
+  ONLINE
   PLAYING
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
 }
 
 model User {
@@ -50,76 +56,99 @@ model User {
   refresh_token String?     @unique
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
-  status        UserStatus  @default(LOGGED_OUT)
+  status        UserStatus  @default(OFFLINE)
   enabled       Boolean     @default(true)
   total_wins    Int         @default(0)
-  total_loses   Int         @default(0)
+  total_losses   Int         @default(0)
   win_rate      Float       @default(0)
+  friends       String?     @default("[]")
   // Relations
-  gamesAsPlayerOne Game[]       @relation("PlayerOne")
-  gamesAsPlayerTwo Game[]       @relation("PlayerTwo")
-  gamesAsWinner    Game[]       @relation("Winner")
-  gamesAsLoser     Game[]       @relation("Loser")
+  gamesAsPlayerOne Game[]        @relation("PlayerOne")
+  gamesAsPlayerTwo Game[]        @relation("PlayerTwo")
+  gamesAsWinner    Game[]        @relation("Winner")
+  gamesAsLoser     Game[]        @relation("Loser")
   lobby_players    LobbyPlayer[]
+  createdLobbies   Lobby[]       @relation("LobbyCreator")
+  sentFriendRequests     Friendship[] @relation("SentRequests")
+  receivedFriendRequests Friendship[] @relation("ReceivedRequests")
+}
+
+model Friendship {
+  id          Int          @id @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      FriendStatus @default(PENDING)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  // Relations
+  sender   User @relation("SentRequests", fields: [sender_id], references: [id])
+  receiver User @relation("ReceivedRequests", fields: [receiver_id], references: [id])
+  @@unique([sender_id, receiver_id])
 }
 
 model Tournament {
-  id                Int             @id @default(autoincrement())
+  id                Int              @id @default(autoincrement())
   tournament_type   TournamentType
   tournament_status TournamentStatus
-  created_at        DateTime        @default(now())
-  updated_at        DateTime        @updatedAt
-  enabled           Boolean         @default(true)
+  round             Int
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+  enabled           Boolean          @default(true)
   // Relations
   games             Game[]
   lobbies           Lobby[]
 }
 
 model Game {
-  id                Int          @id @default(autoincrement())
-  tournament_id     Int
-  player_one_id     Int
-  player_two_id     Int
-  player_one_score  Int?
-  player_two_score  Int?
-  winner_id         Int?
-  loser_id          Int?
-  play_time         Int?
-  round             Int
-  match             Int
-  game_status       GameStatus
-  created_at        DateTime     @default(now())
-  updated_at        DateTime     @updatedAt
-  enabled           Boolean      @default(true)
+  id               Int        @id @default(autoincrement())
+  tournament_id    Int
+  player_one_id    Int
+  player_two_id    Int
+  player_one_score Int?
+  player_two_score Int?
+  winner_id        Int?
+  loser_id         Int?
+  play_time        String?
+  round            Int
+  match            Int
+  game_status      GameStatus
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+  enabled          Boolean    @default(true)
   // Relations
-  tournament        Tournament   @relation(fields: [tournament_id], references: [id])
-  player_one        User         @relation("PlayerOne", fields: [player_one_id], references: [id])
-  player_two        User         @relation("PlayerTwo", fields: [player_two_id], references: [id])
-  winner            User?        @relation("Winner", fields: [winner_id], references: [id])
-  loser             User?        @relation("Loser", fields: [loser_id], references: [id])
+  tournament       Tournament @relation(fields: [tournament_id], references: [id])
+  player_one       User       @relation("PlayerOne", fields: [player_one_id], references: [id])
+  player_two       User       @relation("PlayerTwo", fields: [player_two_id], references: [id])
+  winner           User?      @relation("Winner", fields: [winner_id], references: [id])
+  loser            User?      @relation("Loser", fields: [loser_id], references: [id])
 }
 
 model Lobby {
-  id            Int         @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   tournament_id Int
+  creator_id    Int           
   max_player    Int
   lobby_status  LobbyStatus
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
-  enabled       Boolean     @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  enabled       Boolean       @default(true)
   // Relations
-  tournament    Tournament  @relation(fields: [tournament_id], references: [id])
+  tournament    Tournament    @relation(fields: [tournament_id], references: [id])
+  creator       User          @relation("LobbyCreator", fields: [creator_id], references: [id])
   lobby_players LobbyPlayer[]
 }
 
 model LobbyPlayer {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   lobby_id   Int
   user_id    Int
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  enabled    Boolean   @default(true)
+  is_ready   Boolean  @default(false)
+  is_leader  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  enabled    Boolean  @default(true)
   // Relations
-  lobby      Lobby     @relation(fields: [lobby_id], references: [id])
-  user       User      @relation(fields: [user_id], references: [id])
+  lobby      Lobby    @relation(fields: [lobby_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
 }
