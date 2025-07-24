@@ -78,10 +78,10 @@ export const getFriendComponentTemplate = (): string => {
 
   <!-- 친구창 내용 -->
   <div class="friend-content" id="friendContent">
-    <!-- 친구 추가 -->
+    <!-- 친구 요청 -->
     <div class="friend-add-section">
       <div class="friend-add-form">
-        <input type="text" placeholder="사용자명으로 친구 추가" class="friend-add-input" id="addFriendInput" />
+        <input type="text" placeholder="사용자명으로 친구 요청" class="friend-add-input" id="addFriendInput" />
         <button class="friend-add-btn" id="addFriendBtn">+</button>
       </div>
     </div>
