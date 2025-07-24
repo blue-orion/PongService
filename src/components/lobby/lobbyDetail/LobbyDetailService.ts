@@ -65,6 +65,7 @@ export class LobbyDetailService {
         auth: {
           "user-id": userId,
           "lobby-id": this.lobbyId,
+          username: UserManager.getUsername(),
         },
         transports: ["websocket", "polling"],
       });
