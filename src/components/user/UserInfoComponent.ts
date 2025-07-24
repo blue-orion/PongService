@@ -60,14 +60,6 @@ export class UserInfoComponent extends Component {
     const userIdStr = this.userId ? String(this.userId).trim() : "";
     const isMe = myIdStr && userIdStr && myIdStr === userIdStr;
 
-    // 디버깅용 로그
-    console.log("[UserInfoComponent] 프로필 구분 디버깅:");
-    console.log("- myId:", myId);
-    console.log("- this.userId:", this.userId);
-    console.log("- myIdStr:", myIdStr);
-    console.log("- userIdStr:", userIdStr);
-    console.log("- isMe:", isMe);
-
     // ProfileDto 구조에 맞게 필드 매칭 (data 속성 안에 실제 데이터가 있음)
     const profileData = userData.data || {};
     const profileImage = profileData.profileImage || "";
@@ -106,9 +98,6 @@ export class UserInfoComponent extends Component {
     // 친구 관련 메서드에서 사용할 수 있도록 username 저장
     this.currentUsername = username;
 
-    // 디버깅용 로그
-    console.log("[UserInfoComponent] 템플릿 데이터:", templateData);
-
     // HTML 직접 렌더링
     this.container.innerHTML = this.getUserInfoTemplate(templateData);
     this.setupEventListeners();
@@ -116,58 +105,87 @@ export class UserInfoComponent extends Component {
 
   private getUserInfoTemplate(data: any): string {
     return `
-<div class="p-5 max-w-2xl mx-auto font-sans">
-    <div class="flex items-center mb-8 pb-4 border-b-2 border-gray-200">
-        <button class="back-btn bg-transparent border-none text-base text-gray-500 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 mr-4 hover:bg-gray-100 hover:text-gray-700">← 뒤로가기</button>
-        <h2 class="m-0 text-gray-900 text-2xl font-semibold">사용자 정보</h2>
-    </div>
-    <div class="relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-8 shadow-xl text-white overflow-hidden">
-        <div class="absolute inset-0 bg-white bg-opacity-10 backdrop-blur-sm rounded-3xl"></div>
-        <div class="relative z-10">
-            <div class="text-center mb-5">
-                ${
-                  data.profileImage
-                    ? `
-                    <img src="${data.profileImage}" alt="${data.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-30 h-30 rounded-full border-4 border-white border-opacity-30 shadow-xl object-cover transition-transform duration-300 hover:scale-105 mx-auto">
-                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl" style="display: none;">
-                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<div class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-cyan-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 헤더 -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center gap-4">
+                    <button class="back-btn bg-indigo-100 text-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors font-medium">
+                        ← 뒤로가기
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">${data.isMe ? '내 프로필' : data.username + '님의 프로필'}</h1>
+                        <p class="text-gray-600 text-sm">사용자 정보 및 설정</p>
+                    </div>
+                </div>
+                ${data.profileImage ? `
+                    <div class="w-16 h-16 rounded-full overflow-hidden border-3 border-indigo-200">
+                        <img src="${data.profileImage}" alt="${data.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center" style="display: none;">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
                         </svg>
                     </div>
+                `}
+            </div>
+        </div>
+        
+        <!-- 프로필 카드 -->
+        <div class="bg-white rounded-xl shadow-md p-8 mb-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="mb-6">
+                    ${
+                      data.profileImage
+                        ? `
+                        <img src="${data.profileImage}" alt="${data.username}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-24 h-24 rounded-full object-cover shadow-lg mx-auto">
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center mx-auto shadow-lg" style="display: none;">
+                            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    `
+                        : `
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center mx-auto shadow-lg">
+                            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    `
+                    }
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">${data.username}</h2>
+                    <p class="text-gray-600 mb-3">닉네임: ${data.nickname}</p>
+                    <span class="inline-block px-4 py-2 rounded-full text-sm font-semibold ${data.statusClasses}">${data.status}</span>
+                </div>
+                
+                ${
+                  data.isMe
+                    ? `
+                    <div class="flex flex-col gap-3 w-full max-w-sm">
+                        <button class="toggle-2fa-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg" data-enabled="${data.is2faEnabled}">${data.twoFaButtonText}</button>
+                        <button class="edit-profile-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg">내 정보 변경</button>
+                        <button class="view-my-stats-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-green-600 text-white hover:bg-green-700 hover:shadow-lg">전적 보기</button>
+                        <button class="deactivate-account-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-red-600 text-white hover:bg-red-700 hover:shadow-lg">회원 탈퇴</button>
+                    </div>
                 `
                     : `
-                    <div class="w-30 h-30 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mx-auto border-4 border-white border-opacity-30 shadow-xl">
-                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                        </svg>
+                    <div class="flex flex-col gap-3 w-full max-w-sm">
+                        <button class="view-stats-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-green-600 text-white hover:bg-green-700 hover:shadow-lg">전적 보기</button>
+                        ${this.getFriendButtonHtml(data.friendStatus)}
                     </div>
                 `
                 }
             </div>
-            <div class="text-center mb-6">
-                <h3 class="text-3xl font-bold mb-2.5 text-white drop-shadow-sm">${data.username}</h3>
-                <p class="text-base mb-4 text-white text-opacity-90 font-medium">닉네임: ${data.nickname}</p>
-                <p class="inline-block px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide shadow-lg ${
-                  data.statusClasses
-                }">${data.status}</p>
-            </div>
-            ${
-              data.isMe
-                ? `
-                <div class="text-center flex flex-col gap-3 mt-5">
-                    <button class="toggle-2fa-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-white bg-opacity-20 text-white border-white border-opacity-30 hover:bg-white hover:bg-opacity-30 hover:border-white hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36" data-enabled="${data.is2faEnabled}">${data.twoFaButtonText}</button>
-                    <button class="edit-profile-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">내 정보 변경</button>
-                    <button class="view-my-stats-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">전적 보기</button>
-                    <button class="deactivate-account-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-red-500 bg-opacity-20 text-white border-red-500 border-opacity-30 hover:bg-red-500 hover:bg-opacity-30 hover:border-red-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">회원 탈퇴</button>
-                </div>
-            `
-                : `
-                <div class="text-center flex flex-col gap-3 mt-5">
-                    <button class="view-stats-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-blue-500 bg-opacity-20 text-white border-blue-500 border-opacity-30 hover:bg-blue-500 hover:bg-opacity-30 hover:border-blue-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">전적 보기</button>
-                    ${this.getFriendButtonHtml(data.friendStatus)}
-                </div>
-            `
-            }
         </div>
     </div>
     <div class="user-info-error bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-center font-medium m-5 hidden"></div>
@@ -658,38 +676,30 @@ export class UserInfoComponent extends Component {
   private getFriendButtonHtml(friendStatus: string): string {
     switch (friendStatus) {
       case "friend":
-        return `<button class="remove-friend-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-red-500 bg-opacity-20 text-white border-red-500 border-opacity-30 hover:bg-red-500 hover:bg-opacity-30 hover:border-red-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">친구 해제</button>`;
+        return `<button class="remove-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-red-600 text-white hover:bg-red-700 hover:shadow-lg">친구 해제</button>`;
       case "pending":
-        return `<button class="cancel-friend-request-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-yellow-500 bg-opacity-20 text-white border-yellow-500 border-opacity-30 hover:bg-yellow-500 hover:bg-opacity-30 hover:border-yellow-500 hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">요청 취소</button>`;
+        return `<button class="cancel-friend-request-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-yellow-600 text-white hover:bg-yellow-700 hover:shadow-lg">요청 취소</button>`;
       case "none":
       default:
-        return `<button class="add-friend-btn px-6 py-3 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300 backdrop-blur-sm border-2 bg-white bg-opacity-20 text-white border-white border-opacity-30 hover:bg-white hover:bg-opacity-30 hover:border-white hover:border-opacity-50 hover:-translate-y-0.5 hover:shadow-xl min-w-36">친구 추가</button>`;
+        return `<button class="add-friend-btn px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg">친구 추가</button>`;
     }
   }
 
   // 친구 상태 확인 메서드
   private async checkFriendStatus(userId: string): Promise<string> {
     try {
-      console.log("[UserInfoComponent] 친구 상태 확인 시작:", userId);
-
       // friendService를 사용하여 친구 목록 조회
       const friendsResponse = await friendService.getFriendsList(1, 100); // 충분한 수의 친구 목록 조회
 
       if (friendsResponse.success && friendsResponse.data) {
-        console.log("[UserInfoComponent] 친구 목록 응답:", friendsResponse.data);
-
         // 친구 목록에서 해당 사용자 찾기
         const friends = friendsResponse.data.friends || [];
-        console.log("[UserInfoComponent] 친구 목록:", friends);
-        console.log("[UserInfoComponent] 찾고 있는 userId:", userId);
-
+        
         const isFriend = friends.some((friend: any) => {
-          console.log(`[UserInfoComponent] 친구 비교: friend.id=${friend.id}, userId=${userId}`);
           return String(friend.id) === String(userId) || String(friend.userId) === String(userId);
         });
 
         if (isFriend) {
-          console.log("[UserInfoComponent] 이미 친구임");
           return "friend";
         }
       }
@@ -701,7 +711,6 @@ export class UserInfoComponent extends Component {
         const hasReceivedRequest = receivedRequests.some((request: any) => String(request.id) === String(userId));
 
         if (hasReceivedRequest) {
-          console.log("[UserInfoComponent] 받은 친구 요청 있음");
           return "pending";
         }
       }
@@ -713,12 +722,10 @@ export class UserInfoComponent extends Component {
         const hasSentRequest = sentRequests.some((request: any) => String(request.id) === String(userId));
 
         if (hasSentRequest) {
-          console.log("[UserInfoComponent] 보낸 친구 요청 있음");
           return "pending";
         }
       }
 
-      console.log("[UserInfoComponent] 친구 관계 없음");
       return "none";
     } catch (error) {
       console.error("[UserInfoComponent] 친구 상태 확인 오류:", error);

@@ -69,16 +69,34 @@ export class GameHistoryComponent extends Component {
 
     private async loadGameHistory(): Promise<void> {
         try {
-            // 올바른 API 경로 사용
-            const url = `${GameHistoryComponent.API_BASE_URL}/users/records/${this.userId}?page=${this.currentPage}&size=${this.pageSize}`;
+            // 백엔드 PageRequest에 맞춰 1-based 페이징 사용
+            // PageRequest.of()에서 page는 1부터 시작함
+            const page = this.currentPage; // 1-based index (백엔드 PageRequest와 일치)
+            const url = `${GameHistoryComponent.API_BASE_URL}/users/records/${this.userId}?page=${page}&size=${this.pageSize}`;
             
             const response = await AuthManager.authenticatedFetch(url);
-
+            
             if (!response.ok) {
-                throw new Error(`게임 기록 요청 실패: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error(`[GameHistoryComponent] API 에러 응답:`, errorText);
+                throw new Error(`게임 기록 요청 실패: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
-            const pageData: PageResponse = await response.json();
+            const responseData = await response.json();
+            
+            // API 응답 구조 확인
+            let pageData: PageResponse;
+            if (responseData.success && responseData.data) {
+                // { success: true, data: { content: [...], ... } } 구조
+                pageData = responseData.data;
+            } else if (responseData.content) {
+                // { content: [...], ... } 구조 (직접 PageResponse)
+                pageData = responseData;
+            } else {
+                console.error(`[GameHistoryComponent] 예상하지 못한 응답 구조:`, responseData);
+                throw new Error('응답 데이터 구조가 올바르지 않습니다.');
+            }
+            
             this.renderGameHistory(pageData);
 
         } catch (error) {
@@ -99,14 +117,15 @@ export class GameHistoryComponent extends Component {
                         </div>
                     </div>
                     <div class="text-center">
-                        <button class="back-btn bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        <button class="back-to-stats-btn bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                             전적으로 돌아가기
                         </button>
                     </div>
                 </div>
             </div>
         `;
-        this.setupBackButton();
+        // 에러 상태에서는 "전적으로 돌아가기" 버튼만 설정
+        this.setupBackToStatsButton();
     }
 
     private async renderGameHistory(pageData: PageResponse): Promise<void> {
@@ -268,18 +287,21 @@ export class GameHistoryComponent extends Component {
                         <div class="text-6xl mb-4">🎮</div>
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 게임 기록이 없습니다</h3>
                         <p class="text-gray-600 mb-6">첫 게임을 시작해보세요!</p>
-                        <button class="back-btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <button class="back-to-stats-btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl">
                             전적으로 돌아가기
                         </button>
                     </div>
                 </div>
             </div>
         `;
+        // 빈 상태에서는 두 버튼 모두 설정
         this.setupBackButton();
+        this.setupBackToStatsButton();
     }
 
     private setupEventListeners(): void {
         this.setupBackButton();
+        this.setupBackToStatsButton();
         this.setupOpponentProfileButtons();
         this.setupPaginationButtons();
     }
@@ -287,11 +309,30 @@ export class GameHistoryComponent extends Component {
     private setupBackButton(): void {
         const backBtn = this.container.querySelector('.back-btn');
         if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                if (window.router) {
-                    window.router.navigate(`/user/${this.userId}/stats`);
-                }
-            });
+            // 기존 이벤트 리스너 제거 (중복 방지)
+            backBtn.removeEventListener('click', this.handleBackButtonClick);
+            
+            // 새 이벤트 리스너 등록
+            backBtn.addEventListener('click', this.handleBackButtonClick, true);
+        }
+    }
+
+    private handleBackButtonClick = (event: Event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (window.router) {
+            window.router.navigate(`/user/${this.userId}/stats`);
+        }
+    }
+
+    private setupBackToStatsButton(): void {
+        const backToStatsBtn = this.container.querySelector('.back-to-stats-btn');
+        if (backToStatsBtn) {
+            // 기존 이벤트 리스너 제거 (중복 방지)
+            backToStatsBtn.removeEventListener('click', this.handleBackButtonClick);
+            
+            // 뒤로가기 버튼과 같은 이벤트 핸들러 사용
+            backToStatsBtn.addEventListener('click', this.handleBackButtonClick, true);
         }
     }
 
@@ -327,7 +368,12 @@ export class GameHistoryComponent extends Component {
         // 이벤트 리스너 정리
         const backBtn = this.container.querySelector('.back-btn');
         if (backBtn) {
-            backBtn.removeEventListener('click', () => {});
+            backBtn.removeEventListener('click', this.handleBackButtonClick);
+        }
+
+        const backToStatsBtn = this.container.querySelector('.back-to-stats-btn');
+        if (backToStatsBtn) {
+            backToStatsBtn.removeEventListener('click', this.handleBackButtonClick);
         }
 
         // 컨테이너는 Layout에서 관리하므로 여기서는 비우지 않음
