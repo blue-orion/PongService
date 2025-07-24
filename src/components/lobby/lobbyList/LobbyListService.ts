@@ -62,10 +62,10 @@ export class LobbyListService {
       const data = await response.json().then((data) => data.data);
       console.log("📥 로비 목록 API 응답:", data);
 
-      const lobbiesArray = data.lobbies || [];
-      const totalItems = data.total || 0;
+      const lobbiesArray = data.content || [];
+      let transformedLobbies = this.transformLobbiesData(lobbiesArray);
 
-      const transformedLobbies = this.transformLobbiesData(lobbiesArray);
+      const totalItems = transformedLobbies.length;
 
       return {
         lobbies: transformedLobbies,

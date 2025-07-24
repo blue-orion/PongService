@@ -40,6 +40,24 @@ export class LobbyListComponent extends Component {
     <div class="lobby-grid" id="lobby-grid">
         <!-- 로비 카드들이 동적으로 생성됩니다 -->
     </div>
+
+    <!-- 페이징 섹션 -->
+    <div class="pagination-section">
+        <div class="pagination-info">
+            <span id="pagination-info">로비를 불러오는 중...</span>
+        </div>
+        <div class="pagination-controls">
+            <button id="prev-page" class="pagination-btn" disabled>
+                <span>‹</span> 이전
+            </button>
+            <div id="page-numbers" class="page-numbers">
+                <!-- 페이지 번호 버튼들이 동적으로 생성됩니다 -->
+            </div>
+            <button id="next-page" class="pagination-btn" disabled>
+                다음 <span>›</span>
+            </button>
+        </div>
+    </div>
 </div>
         `;
   }

@@ -14,6 +14,7 @@ import { LobbyListComponent } from "./components/lobby/lobbyList/LobbyListCompon
 import { LobbyDetailComponent } from "./components/lobby/lobbyDetail/LobbyDetailComponent";
 import { UserInfoComponent } from "./components/user/UserInfoComponent";
 import { DashboardComponent } from "./components/dashboard/DashboardComponent";
+import { HomeComponent } from "./components/home/HomeComponent";
 import { EditProfileComponent } from "./components/user/EditProfileComponent";
 import { StatsComponent } from "./components/user/StatsComponent";
 import { GameHistoryComponent } from "./components/user/GameHistoryComponent";
@@ -95,9 +96,9 @@ class App {
       await this.loadComponent(SignupComponent);
     });
 
-    // 메인 페이지 (로비 리스트) - Layout 내에서 LobbyListComponent 렌더링
+    // 메인 페이지 (홈 화면) - Layout 내에서 HomeComponent 렌더링
     this.router.addRoute("/", async () => {
-      await this.loadLayoutWithComponent(LobbyListComponent);
+      await this.loadLayoutWithComponent(HomeComponent);
     });
 
     // 로비 목록 페이지 (헤더에서 접근)
@@ -105,9 +106,8 @@ class App {
       await this.loadLayoutWithComponent(LobbyListComponent);
     });
 
-    // 대시보드 페이지
+    // 대시보드 페이지 (랭킹 시스템)
     this.router.addRoute("/dashboard", async () => {
-      // 대시보드 컴포넌트가 있다면 사용, 없으면 로비 리스트로 리다이렉트
       await this.loadLayoutWithComponent(DashboardComponent);
     });
 

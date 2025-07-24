@@ -483,7 +483,7 @@ export class LobbyDetailService {
       const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/finish`);
 
       if (!response.ok) {
-        if (response.status === 404) {
+        if (response.status === 409) {
           // 토너먼트가 아직 완료되지 않은 경우
           return null;
         }

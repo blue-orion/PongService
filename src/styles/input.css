@@ -1309,6 +1309,69 @@
     }
   }
 
+  /* 페이징 섹션 스타일 */
+  .pagination-section {
+    @apply mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-6 bg-white/80 rounded-lg border border-gray-200;
+  }
+
+  .pagination-info {
+    @apply text-sm text-gray-600 font-medium;
+  }
+
+  .pagination-controls {
+    @apply flex items-center gap-2;
+  }
+
+  .pagination-btn {
+    @apply flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium;
+    @apply hover:bg-gray-50 hover:border-gray-400 transition-all duration-200;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300;
+  }
+
+  .pagination-btn:not(:disabled):hover {
+    @apply shadow-md;
+  }
+
+  .page-numbers {
+    @apply flex items-center gap-1 mx-4;
+  }
+
+  .page-number {
+    @apply w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 font-medium;
+    @apply hover:bg-gray-50 hover:border-gray-400 transition-all duration-200;
+  }
+
+  .page-number.active {
+    @apply bg-blue-500 border-blue-500 text-white shadow-md;
+  }
+
+  .page-number:not(.active):hover {
+    @apply shadow-sm;
+  }
+
+  /* 모바일 페이징 스타일 */
+  @media (max-width: 640px) {
+    .pagination-section {
+      @apply flex-col gap-3;
+    }
+
+    .pagination-controls {
+      @apply w-full justify-center;
+    }
+
+    .page-numbers {
+      @apply mx-2;
+    }
+
+    .pagination-btn {
+      @apply px-3 py-2 text-sm;
+    }
+
+    .page-number {
+      @apply w-8 h-8 text-sm;
+    }
+  }
+
   /* 레이아웃 컨테이너 기본 스타일 */
   .layout-container {
     min-height: 100vh;
