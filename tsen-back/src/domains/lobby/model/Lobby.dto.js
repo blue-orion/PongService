@@ -263,7 +263,9 @@ export class MatchResponseDto {
     this.current_round = data.current_round;
     this.total_rounds = data.total_rounds;
     this.total_matches = data.total_matches;
-    this.matches = data.matches?.map((match) => new GameMatchDto(match)) || [];
+    this.games = (data.matches && Array.isArray(data.matches)) 
+      ? data.matches.map((match) => new GameMatchDto(match)) 
+      : [];
     this.message = data.message;
     this.winner = data.winner;
   }
@@ -296,7 +298,9 @@ export class MatchesResponseDto {
     this.tournament_status = data.tournament_status;
     this.current_round = data.current_round;
     this.total_rounds = data.total_rounds;
-    this.matches = data.matches?.map((match) => new DetailedGameMatchDto(match)) || [];
+    this.matches = (data.matches && Array.isArray(data.matches)) 
+      ? data.matches.map((match) => new DetailedGameMatchDto(match)) 
+      : [];
   }
 }
 

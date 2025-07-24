@@ -237,33 +237,21 @@ export class LobbyController {
       });
 
       // 2. 매칭된 게임 정보 추출
-      const matchGames = createdMatch.matches; // Game 모델 기반의 배열
+      const games = createdMatch.games; // Game 모델 기반의 배열
 
       // 3. 로비 네임스페이스를 통해 해당 로비 룸에 매칭 완료 알림 전송
       const lobbyNamespace = websocketManager.getLobbyNamespace();
       if (lobbyNamespace) {
         lobbyNamespace.to(`lobby-${id}`).emit("match:created", {
           tournament_id: createdMatch.tournament_id,
+          tournament_status: createdMatch.tournament_status,
           lobby_id: createdMatch.lobby_id,
-          round: createdMatch.round,
+          current_round: createdMatch.current_round,
+          total_rounds: createdMatch.total_rounds,
           total_matches: createdMatch.total_matches,
-          games: matchGames.map((game) => ({
-            game_id: game.game_id,
-            round: game.round,
-            match: game.match,
-            game_status: game.game_status,
-            player_one: {
-              id: game.player_one.id,
-              nickname: game.player_one.user?.nickname,
-              username: game.player_one.user?.username,
-            },
-            player_two: {
-              id: game.player_two.id,
-              nickname: game.player_two.user?.nickname,
-              username: game.player_two.user?.username,
-            },
-          })),
-          message: "매칭이 완료되었습니다.",
+          games: createdMatch.games,
+          message: createdMatch.message,
+          winner: createdMatch.winner
         });
       }
 
@@ -301,6 +289,7 @@ export class LobbyController {
         });
       }
 
+      console.log(gameStartResult);
       return ApiResponse.ok(res, gameStartResult);
     } catch (error) {
       return ApiResponse.error(res, error);
@@ -317,7 +306,7 @@ export class LobbyController {
   async handleGameCompleted(tournamentId, gameId, gameResult = {}) {
     try {
       console.log(`[LobbyController] Game completed: tournamentId=${tournamentId}, gameId=${gameId}`);
-      
+
       const { winnerId, loserId } = gameResult;
 
       // 1. 패자를 로비에서 제거
@@ -342,7 +331,7 @@ export class LobbyController {
             // 토너먼트가 완료된 경우 - 로비 상태도 COMPLETED로 변경
             await this.lobbyService.updateLobbyStatus(lobbyId, LobbyStatus.COMPLETED);
             console.log(`[LobbyController] Updated lobby ${lobbyId} status to COMPLETED`);
-            
+
             lobbyNamespace.to(`lobby-${lobbyId}`).emit("tournament:completed", {
               tournament_id: tournamentId,
               lobby_id: lobbyId,

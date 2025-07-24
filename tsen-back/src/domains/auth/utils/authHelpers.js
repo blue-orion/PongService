@@ -66,7 +66,7 @@ class AuthHelpers {
     if (typeof profileImage !== "string") {
       throw new PongException("Profile image must be a string URL", 400);
     }
-    if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(profileImage)) {
+    if (!/^(https?:\/\/.+\.(jpg|jpeg|png|gif)|data:image\/(jpeg|jpg|png|gif);base64,.+)$/.test(profileImage)) {
       throw new PongException("Profile image must be a valid URL ending with .jpg, .jpeg, .png, or .gif", 400);
     }
   }
@@ -92,6 +92,12 @@ class AuthHelpers {
   validate2FAForm(formData) {
     if (!formData.username) {
       throw new PongException("Username is required for 2FA setup", 400);
+    }
+  }
+
+  validate2FAConfirmForm(formData) {
+    if (!formData.username || !formData.tempSecret || !formData.token) {
+      throw new PongException("Username, tempSecret, and token are required for 2FA confirmation", 400);
     }
   }
 

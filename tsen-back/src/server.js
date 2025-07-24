@@ -1,6 +1,7 @@
 import "#env";
 
 import Fastify from "fastify";
+import fs from "fs";
 
 import jwtPlugin from "#shared/plugin/jwt.js";
 import oauthPlugin from "#shared/plugin/oauth.js";
@@ -13,7 +14,14 @@ import fastifyCors from "@fastify/cors";
 import "./env.js";
 import websocketHandlers from "#shared/websocket/websocketHandlers.js";
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: true,
+  https: {
+    key: fs.readFileSync("/app/ssl/key.pem"),
+    cert: fs.readFileSync("/app/ssl/cert.pem"),
+  },
+});
+
 
 app.register(jwtPlugin);
 app.register(encryptPlugin);
@@ -22,7 +30,7 @@ app.register(oauthPlugin);
 // 플러그인 등록 순서 중요!
 app.register(fastifyIO, {
   cors: {
-    origin: `${process.env.FRONTEND_URL}`, // 프론트엔드 서버 주소
+    origin: "*", // 프론트엔드 서버 주소
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -55,7 +63,7 @@ const { host, port, nodeEnv } = config.server;
 const start = async () => {
   try {
     await app.listen({ port, host });
-    console.log(`🚀 Server running on http://${host}:${port}`);
+    console.log(`🚀 Server running on https://${host}:${port}`);
     console.log(`🌱 Environment: ${nodeEnv}`);
   } catch (err) {
     app.log.error(err);

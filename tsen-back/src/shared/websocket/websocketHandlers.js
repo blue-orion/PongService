@@ -37,8 +37,7 @@ const websocketHandlers = {
     websocketManager.registerNamespace("lobby", lobbyNamespace);
 
     lobbyNamespace.on("connection", (socket) => {
-      const userId = socket.handshake.auth["user-id"];
-      const lobbyId = socket.handshake.auth["lobby-id"];
+      const { userId, lobbyId, username } = socket.handshake.auth;
 
       console.log(`Lobby WebSocket connected: ${userId} (lobby: ${lobbyId})`);
 
@@ -53,7 +52,8 @@ const websocketHandlers = {
         socket.to(`lobby-${lobbyId}`).emit("user:connected", {
           user_id: userId,
           lobby_id: lobbyId,
-          message: `사용자 ${userId}가 로비에 접속했습니다.`,
+          username,
+          message: `${username}가 로비에 접속했습니다.`,
         });
       }
 
@@ -141,7 +141,8 @@ const websocketHandlers = {
           socket.to(`lobby-${lobbyId}`).emit("user:disconnected", {
             user_id: userId,
             lobby_id: lobbyId,
-            message: `사용자 ${userId}가 로비에서 나갔습니다.`,
+            username: userName,
+            message: `${userName}가 로비에서 나갔습니다.`,
           });
         }
       });
