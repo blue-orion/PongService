@@ -10,6 +10,7 @@ export interface UIEventHandlers {
   onPreviousPage: () => void;
   onNextPage: () => void;
   onRetry: () => void;
+  onRefresh: () => void;
 }
 
 export class LobbyListUI {
@@ -212,6 +213,12 @@ export class LobbyListUI {
     const createLobbyBtn = this.container.querySelector(".create-lobby-btn");
     if (createLobbyBtn) {
       createLobbyBtn.addEventListener("click", this.handlers.onCreateLobby);
+    }
+
+    // 새로고침 버튼
+    const refreshBtn = this.container.querySelector(".refresh-btn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", this.handlers.onRefresh);
     }
 
     // 필터 이벤트

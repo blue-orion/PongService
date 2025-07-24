@@ -35,7 +35,9 @@ export class LobbyDetailUI {
 
   renderLobbyDetail(lobbyData: LobbyData, isConnected: boolean = false, transport: string = "unknown"): void {
     const currentUserId = Number(UserManager.getUserId());
-    const currentPlayer = PlayerRenderer.findPlayerById(lobbyData.players, currentUserId || 0);
+    // 백엔드 DTO 호환성을 위한 players 배열 안전 접근
+    const players = lobbyData.players || lobbyData.lobby_players || [];
+    const currentPlayer = PlayerRenderer.findPlayerById(players, currentUserId || 0);
 
     this.container.innerHTML = `
             <div class="lobby-detail-page">
@@ -62,7 +64,7 @@ export class LobbyDetailUI {
   private renderLobbyContent(lobbyData: LobbyData, currentUserId: number | null): string {
     return `
             <div class="lobby-content">
-                <div class="lobby-info-section">
+                <div class="lobby-info-section flex flex-col gap-4">
                     <h3>로비 정보</h3>
                     ${PlayerRenderer.renderLobbyInfoGrid(lobbyData)}
                 </div>
@@ -128,7 +130,7 @@ export class LobbyDetailUI {
             <div class="match-result-modal">
                 <div class="match-result-content">
                     <div class="match-result-header">
-                        <h2>🎉 매칭이 생성되었습니다!</h2>
+                        <h2>토너먼트 브라켓</h2>
                         <button class="close-modal-btn">×</button>
                     </div>
                     

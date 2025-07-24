@@ -79,8 +79,8 @@ export class LobbyDetailService {
 
       const socket = (window as any).io(`${SOCKET_BASE_URL}/ws/lobby`, {
         auth: {
-          "user-id": userId,
-          "lobby-id": this.lobbyId,
+          userId,
+          lobbyId: Number(this.lobbyId),
           username: UserManager.getUsername(),
         },
         transports: ["websocket", "polling"],
@@ -128,6 +128,20 @@ export class LobbyDetailService {
       this.handlers!.onLeadershipChange(data);
     });
 
+    // 호스트 자동 이전 이벤트 (호스트 퇴장 시)
+    this.socket.on("lobby:hostTransferred", (data: any) => {
+      console.log("🎯 WebSocket에서 호스트 자동 이전 이벤트 수신:", data);
+      console.log("📊 호스트 이전 이벤트 상세:", {
+        lobby_id: data.lobby_id,
+        previous_host_id: data.previous_host_id,
+        new_host_id: data.new_host_id,
+        new_host_nickname: data.new_host_nickname,
+        message: data.message,
+        timestamp: new Date().toISOString(),
+      });
+      this.handlers!.onHostTransferred(data);
+    });
+
     // 로비 퇴장 이벤트
     this.socket.on("lobby:left", (data: any) => {
       console.log("🎯 WebSocket에서 로비 퇴장 이벤트 수신:", data);
@@ -155,15 +169,7 @@ export class LobbyDetailService {
     // 매칭 생성 이벤트
     this.socket.on("match:created", (data: any) => {
       console.log("🎯 WebSocket에서 매칭 생성 이벤트 수신:", data);
-      console.log("📊 매칭 생성 이벤트 상세:", {
-        tournament_id: data.tournament_id,
-        lobby_id: data.lobby_id,
-        round: data.round,
-        total_matches: data.total_matches,
-        games: data.games,
-        message: data.message,
-        timestamp: new Date().toISOString(),
-      });
+
       this.handlers!.onMatchCreated(data);
     });
 
@@ -218,9 +224,62 @@ export class LobbyDetailService {
 
     // 게임 시작 이벤트
     this.socket.on("game:started", (data: any) => {
-      console.log("🎯 WebSocket에서 게임 이벤트 수신:", data);
-
+      console.log("🎯 WebSocket에서 게임 시작 이벤트 수신:", data);
+      console.log("📊 게임 시작 이벤트 상세:", {
+        tournament_id: data.tournament_id,
+        game_id: data.game_id,
+        lobby_id: data.lobby_id,
+        players: data.players,
+        message: data.message,
+        timestamp: new Date().toISOString(),
+      });
       this.handlers?.onGameStarted(data);
+    });
+
+    // 게임 완료 이벤트 (새로운 백엔드 이벤트)
+    this.socket.on("game:completed", (data: any) => {
+      console.log("🎯 WebSocket에서 게임 완료 이벤트 수신:", data);
+      console.log("📊 게임 완료 이벤트 상세:", {
+        tournament_id: data.tournament_id,
+        game_id: data.game_id,
+        lobby_id: data.lobby_id,
+        current_round: data.current_round,
+        tournament_status: data.tournament_status,
+        winner_id: data.winner_id,
+        loser_id: data.loser_id,
+        message: data.message,
+        timestamp: new Date().toISOString(),
+      });
+      this.handlers?.onGameCompleted?.(data);
+    });
+
+    // 토너먼트 완료 이벤트 (새로운 백엔드 이벤트)
+    this.socket.on("tournament:completed", (data: any) => {
+      console.log("🎯 WebSocket에서 토너먼트 완료 이벤트 수신:", data);
+      console.log("📊 토너먼트 완료 이벤트 상세:", {
+        tournament_id: data.tournament_id,
+        lobby_id: data.lobby_id,
+        tournament_status: data.tournament_status,
+        tournament_type: data.tournament_type,
+        final_round: data.final_round,
+        winner_id: data.winner_id,
+        message: data.message,
+        timestamp: new Date().toISOString(),
+      });
+      this.handlers?.onTournamentCompleted?.(data);
+    });
+
+    // 플레이어 제거 이벤트 (새로운 백엔드 이벤트)
+    this.socket.on("lobby:playerRemoved", (data: any) => {
+      console.log("🎯 WebSocket에서 플레이어 제거 이벤트 수신:", data);
+      console.log("📊 플레이어 제거 이벤트 상세:", {
+        lobby_id: data.lobby_id,
+        removed_user_id: data.removed_user_id,
+        reason: data.reason,
+        message: data.message,
+        timestamp: new Date().toISOString(),
+      });
+      this.handlers?.onPlayerRemoved?.(data);
     });
 
     // 채팅 이벤트 리스너들 직접 설정
@@ -310,10 +369,15 @@ export class LobbyDetailService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json().then((data: any) => data.data);
-      console.log("받은 로비 상세 데이터:", data);
+      const responseData = await response.json();
+      console.log("📥 로비 데이터 API 응답:", responseData);
 
-      return this.transformApiDataToLobbyData(data);
+      // 백엔드 응답 구조에 맞춰 데이터 추출 - { data:  } 또는 { data: ... } 형태 지원
+      const rawData = responseData.data || responseData;
+      const lobbyData = this.transformApiDataToLobbyData(rawData);
+
+      console.log("✅ 로비 데이터 로드 성공:", lobbyData);
+      return lobbyData;
     } catch (error) {
       console.error("로비 데이터 로드 실패:", error);
       throw error;
@@ -325,19 +389,31 @@ export class LobbyDetailService {
     const activePlayers = data.players?.filter((player: any) => player.enabled === true) || [];
     const currentPlayer = activePlayers.find((p: any) => p.user_id === currentUserId);
 
-    return {
+    // 백엔드 DTO에 맞춘 로비 데이터 변환
+    const lobbyData: LobbyData = {
+      // 백엔드 필드들 (primary)
       id: data.id,
+      tournament_id: data.tournament_id,
+      max_player: data.max_player || 2,
+      lobby_status: data.lobby_status || "PENDING",
+      creator_id: data.creator_id,
+      creator_nickname: data.creator_nickname,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      tournament: data.tournament,
+      lobby_players: activePlayers,
+
+      // 호환성을 위한 필드들 (프론트엔드 기존 로직 호환성)
       name: `로비 ${data.id}`,
       tournamentId: data.tournament_id,
       maxPlayers: data.max_player || 2,
       status: data.lobby_status === "PENDING" ? "waiting" : "playing",
       statusText: data.lobby_status === "PENDING" ? "대기 중" : "게임 중",
       creatorId: data.creator_id,
-      createdAt: new Date(data.created_at).toLocaleTimeString("ko-KR"),
-      updatedAt: new Date(data.updated_at).toLocaleTimeString("ko-KR"),
-      tournament: data.tournament,
-      players: activePlayers,
+      createdAt: new Date(data.created_at).toLocaleString("ko-KR"),
+      updatedAt: new Date(data.updated_at).toLocaleString("ko-KR"),
       currentPlayers: activePlayers.length,
+      players: activePlayers,
       host:
         data.creator_nickname ||
         activePlayers.find((p: any) => p.user_id === data.creator_id)?.user?.nickname ||
@@ -346,6 +422,8 @@ export class LobbyDetailService {
       isPlayerReady: currentPlayer?.is_ready || false,
       allPlayersReady: activePlayers.length > 0 && activePlayers.every((p: any) => p.is_ready),
     };
+
+    return lobbyData;
   }
 
   async toggleReady(): Promise<void> {
@@ -532,18 +610,19 @@ export class LobbyDetailService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      console.log("✅ 매칭 정보 조회 성공:", result);
+      const responseData = await response.json();
+      console.log("✅ 매칭 정보 조회 성공:", responseData);
 
-      // 새로운 API 응답 구조에 맞춰 데이터 반환
-      const tournamentData = result.data;
+      // 백엔드 응답 구조에 맞춰 데이터 추출
+      const tournamentData = responseData.data || responseData;
       return {
         lobby_id: tournamentData.lobby_id,
         tournament_id: tournamentData.tournament_id,
         tournament_status: tournamentData.tournament_status,
         current_round: tournamentData.current_round,
         total_rounds: tournamentData.total_rounds,
-        matches: tournamentData.matches,
+        matches: tournamentData.games || tournamentData.matches, // games 필드 우선 지원
+        games: tournamentData.games, // 새로운 games 필드 추가
       };
     } catch (error) {
       console.warn("⚠️ 매칭 정보 조회 실패 (아직 매칭이 생성되지 않을 수 있음):", error);
@@ -578,12 +657,12 @@ export class LobbyDetailService {
   async startGames(lobbyData: LobbyData | null): Promise<any> {
     try {
       const userId = Number(UserManager.getUserId());
-      const matches = lobbyData?.matchData?.matches ?? [];
-      if (!lobbyData || !matches) {
-        console.warn("존재하는 매치가 없습니다, 매치 생성 먼저하세요");
+      const games = lobbyData?.matchData?.games ?? [];
+      if (!lobbyData || !games) {
+        console.warn("존재하는 게임이 없습니다, 게임 생성 먼저하세요");
       }
 
-      for (let match of matches) {
+      for (let game of games) {
         const response = await AuthManager.authenticatedFetch(`${API_BASE_URL}/lobbies/${this.lobbyId}/start_game`, {
           method: "POST",
           headers: {
@@ -591,7 +670,7 @@ export class LobbyDetailService {
           },
           body: JSON.stringify({
             user_id: userId,
-            game_id: match.game_id,
+            game_id: game.game_id,
           }),
         });
 

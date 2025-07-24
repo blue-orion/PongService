@@ -44,7 +44,7 @@
 
   /* 친구 패널 - 깔끔한 글래스 효과 */
   .friend-panel {
-    @apply fixed top-0 right-0 w-80 h-full z-[56];
+    @apply fixed top-[60px] right-0 w-80 h-full z-[56];
     @apply bg-gradient-to-br from-blue-50/95 via-slate-50/95 to-indigo-50/95 backdrop-blur-sm border-l border-blue-200;
     @apply shadow-xl transition-transform duration-300;
     @apply lg:translate-x-0 translate-x-full;

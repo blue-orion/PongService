@@ -25,7 +25,10 @@ export class LobbyListComponent extends Component {
 <div class="lobby-list-page">
     <div class="page-header">
         <h2>🎮 게임 로비 목록</h2>
-        <button class="create-lobby-btn">새 로비 만들기</button>
+        <div class="header-buttons">
+            <button class="refresh-btn" title="새로고침">🔄</button>
+            <button class="create-lobby-btn">새 로비 만들기</button>
+        </div>
     </div>
     
     <div class="lobby-filters">
@@ -88,6 +91,7 @@ export class LobbyListComponent extends Component {
       onPreviousPage: () => this.goToPreviousPage(),
       onNextPage: () => this.goToNextPage(),
       onRetry: () => this.loadLobbyData(),
+      onRefresh: () => this.refreshLobbyList(),
     };
 
     this.ui.setEventHandlers(uiHandlers);
@@ -166,6 +170,11 @@ export class LobbyListComponent extends Component {
       this.currentPage++;
       await this.loadLobbyData();
     }
+  }
+
+  private async refreshLobbyList(): Promise<void> {
+    console.log("🔄 로비 목록 새로고침");
+    await this.loadLobbyData();
   }
 
   private async joinLobby(lobbyId: number): Promise<void> {
