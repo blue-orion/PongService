@@ -1,7 +1,9 @@
-import dashboardService from "#domains/dashboard/service/dashboardService.js";
+import DashboardService from "#domains/dashboard/service/dashboardService.js";
 import { ApiResponse } from "#shared/api/response.js";
 import PageRequest from "#shared/page/PageRequest.js";
 import PageResponse from "#shared/page/PageResponse.js";
+
+const dashboardService = new DashboardService();
 
 const dashboardController = {
   // GET /v1/dashboard/rank

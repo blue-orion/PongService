@@ -1,9 +1,12 @@
-import dashboardRepo from "#domains/dashboard/repo/dashboardRepo.js";
+import DashboardRepo from "#domains/dashboard/repo/dashboardRepo.js";
 
-const dashboardService = {
+class DashboardService {
+  constructor(dashboardRepo = new DashboardRepo()) {
+    this.dashboardRepo = dashboardRepo;
+  }
   async getRankData(pageable) {
-    return dashboardRepo.getRankData(pageable);
-  },
-};
+    return this.dashboardRepo.getRankData(pageable);
+  }
+}
 
-export default dashboardService;
+export default DashboardService;

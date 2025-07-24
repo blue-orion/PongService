@@ -65,6 +65,11 @@ temp/
 # Test output
 test-results/
 
+# Prettierrc files
+.prettier*
+
 .env.*
 /src/generated/prisma
 prisma/*.db
+
+prisma/seed.js
