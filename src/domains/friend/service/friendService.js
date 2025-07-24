@@ -141,6 +141,7 @@ class FriendService {
         userId: friendCancelDto.senderId,
       },
     });
+    await this.friendRepo.deleteFriend(relation.id);
   }
 }
 

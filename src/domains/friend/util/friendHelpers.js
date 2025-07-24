@@ -38,8 +38,8 @@ class FriendHelpers {
   }
 
   validateFriendCancelForm(formData) {
-    if (!formData.receiverId || !formData.userId) {
-      throw new PongException("Receiver ID and User ID are required", 400);
+    if (!formData.receiverId || !formData.senderId) {
+      throw new PongException("Receiver ID and Sender ID are required", 400);
     }
   }
 }
