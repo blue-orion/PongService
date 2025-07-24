@@ -1,0 +1,470 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-card {
+    @apply bg-glass backdrop-blur-xl rounded-2xl border border-glass shadow-xl;
+  }
+
+  /* Dashboard specific styles */
+  .dashboard-container {
+    @apply max-w-7xl mx-auto px-4 py-8 space-y-8;
+  }
+
+  .dashboard-header {
+    @apply glass-card p-8 text-center space-y-2;
+  }
+
+  .dashboard-title {
+    @apply text-4xl sm:text-5xl font-bold bg-gradient-primary text-transparent bg-clip-text;
+  }
+
+  .dashboard-subtitle {
+    @apply text-lg text-primary-600;
+  }
+
+  /* Stats Overview */
+  .stats-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 text-center hover:scale-105 transition-transform duration-300;
+  }
+
+  .stat-number {
+    @apply text-3xl sm:text-4xl font-bold text-primary-800;
+  }
+
+  .stat-label {
+    @apply text-sm uppercase text-primary-600 tracking-wider;
+  }
+
+  /* Rankings Table */
+  .rankings-container {
+    @apply glass-card p-6 space-y-6;
+  }
+
+  .rankings-header {
+    @apply flex items-center justify-between;
+  }
+
+  .rankings-title {
+    @apply text-2xl font-semibold text-primary-800;
+  }
+
+  .rankings-subtitle {
+    @apply text-sm text-primary-600;
+  }
+
+  .rankings-table {
+    @apply table-auto w-full border-collapse overflow-hidden rounded-lg;
+  }
+
+  .table-header {
+    @apply px-4 py-3 bg-gradient-primary text-white text-left font-semibold text-sm uppercase tracking-wider;
+  }
+
+  .table-header:first-child {
+    @apply rounded-tl-lg;
+  }
+
+  .table-header:last-child {
+    @apply rounded-tr-lg;
+  }
+
+  .table-row {
+    @apply hover:bg-white/50 transition-colors duration-200 border-b border-white/20;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm;
+  }
+
+  /* Rank Badges */
+  .rank-badge {
+    @apply inline-block w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm;
+  }
+
+  .rank-gold {
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-600 text-primary-900;
+  }
+
+  .rank-silver {
+    @apply bg-gradient-to-br from-gray-300 to-gray-500 text-primary-900;
+  }
+
+  .rank-bronze {
+    @apply bg-gradient-to-br from-yellow-700 to-yellow-900 text-white;
+  }
+
+  .rank-default {
+    @apply bg-gradient-primary text-white;
+  }
+
+  /* Profile Display */
+  .profile-container {
+    @apply flex items-center space-x-3;
+  }
+
+  .profile-avatar {
+    @apply w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center font-semibold text-sm;
+  }
+
+  .profile-info {
+    @apply min-w-0 flex-1;
+  }
+
+  .profile-name {
+    @apply text-primary-800 font-medium truncate;
+  }
+
+  .profile-username {
+    @apply text-xs text-primary-600 truncate;
+  }
+
+  /* Win Rate Badges */
+  .win-rate-badge {
+    @apply px-2 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .win-rate-excellent {
+    @apply bg-success-100 text-success-700;
+  }
+
+  .win-rate-good {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .win-rate-average {
+    @apply bg-warning-100 text-warning-700;
+  }
+
+  .win-rate-poor {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .win-rate-none {
+    @apply bg-gray-100 text-gray-500;
+  }
+
+  /* Game Stats */
+  .wins-text {
+    @apply text-success-500 font-semibold;
+  }
+
+  .losses-text {
+    @apply text-red-500 font-semibold;
+  }
+
+  .no-games-text {
+    @apply italic text-primary-600 text-sm;
+  }
+
+  /* Pagination */
+  .pagination-container {
+    @apply flex items-center justify-center space-x-4;
+  }
+
+  .pagination-info {
+    @apply text-primary-700 font-medium;
+  }
+
+  /* Loading States */
+  .loading-container {
+    @apply flex items-center justify-center py-12;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-2 border-primary-200 border-t-primary-500;
+  }
+
+  /* Empty States */
+  .empty-state {
+    @apply text-center py-12 space-y-4;
+  }
+
+  .empty-state-icon {
+    @apply text-6xl text-primary-400;
+  }
+
+  .empty-state-title {
+    @apply text-xl font-semibold text-primary-800;
+  }
+
+  .empty-state-description {
+    @apply text-primary-600;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .dashboard-title {
+      @apply text-3xl leading-tight;
+    }
+
+    .rankings-table {
+      @apply text-xs;
+    }
+
+    .table-cell {
+      @apply px-2 py-2;
+    }
+
+    .profile-container {
+      @apply space-x-2;
+    }
+
+    .profile-avatar {
+      @apply w-8 h-8 text-xs;
+    }
+
+    .rank-badge {
+      @apply w-6 h-6 text-xs;
+    }
+
+    .data-route {
+      @apply cursor-pointer;
+    }
+  }
+
+  /* Animation Enhancements */
+  .fade-in {
+    @apply animate-pulse;
+  }
+
+  .slide-up {
+    @apply transform translate-y-4 opacity-0 transition-all duration-500;
+  }
+
+  .slide-up.active {
+    @apply translate-y-0 opacity-100;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200 hover:shadow-xl hover:shadow-primary-200/50;
+  }
+
+  /* Home Page Styles */
+  .home-page {
+    @apply min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    @apply relative min-h-screen flex items-center justify-center px-4 overflow-hidden;
+  }
+
+  .hero-background {
+    @apply absolute inset-0 pointer-events-none;
+  }
+
+  .floating-shapes {
+    @apply absolute inset-0;
+  }
+
+  .shape {
+    @apply absolute rounded-full opacity-20;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .shape-1 {
+    @apply w-20 h-20 bg-primary-300 top-20 left-20;
+    animation-delay: 0s;
+  }
+
+  .shape-2 {
+    @apply w-16 h-16 bg-secondary-300 top-40 right-40;
+    animation-delay: -2s;
+  }
+
+  .shape-3 {
+    @apply w-12 h-12 bg-neutral-300 bottom-32 left-32;
+    animation-delay: -4s;
+  }
+
+  .shape-4 {
+    @apply w-24 h-24 bg-primary-200 bottom-20 right-20;
+    animation-delay: -1s;
+  }
+
+  .hero-content {
+    @apply relative z-10 text-center max-w-4xl mx-auto;
+  }
+
+  .hero-title {
+    @apply space-y-4 mb-8;
+  }
+
+  .title-main {
+    @apply block text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 text-transparent bg-clip-text;
+  }
+
+  .title-sub {
+    @apply block text-2xl md:text-3xl font-semibold text-primary-700;
+  }
+
+  .hero-description {
+    @apply text-lg md:text-xl text-primary-600 mb-12 leading-relaxed;
+  }
+
+  .hero-actions {
+    @apply flex flex-col sm:flex-row gap-4 justify-center items-center;
+  }
+
+  .hero-btn {
+    @apply px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 min-w-[200px];
+  }
+
+  /* Sections */
+  .section-container {
+    @apply max-w-6xl mx-auto px-4 py-16;
+  }
+
+  .section-title {
+    @apply text-4xl font-bold text-center text-primary-700 mb-12;
+  }
+
+  /* Features Section */
+  .features-section {
+    @apply bg-white/50 backdrop-blur-sm;
+  }
+
+  .features-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8;
+  }
+
+  .feature-card {
+    @apply glass-card p-6 text-center hover:scale-105 transition-all duration-300 hover:shadow-xl;
+  }
+
+  .feature-icon {
+    @apply text-4xl mb-4;
+  }
+
+  .feature-title {
+    @apply text-xl font-bold text-primary-700 mb-3;
+  }
+
+  .feature-description {
+    @apply text-primary-600 leading-relaxed;
+  }
+
+  /* Game Preview Section */
+  .game-preview-container {
+    @apply grid md:grid-cols-2 gap-12 items-center;
+  }
+
+  .game-screen {
+    @apply glass-card p-8 bg-gray-900 rounded-2xl overflow-hidden;
+  }
+
+  .ping-pong-demo {
+    @apply relative h-48 bg-gradient-to-b from-green-800 to-green-900 rounded-lg border-4 border-white flex items-center justify-center;
+  }
+
+  .demo-paddle {
+    @apply absolute w-2 h-16 bg-white rounded-sm;
+  }
+
+  .demo-paddle-left {
+    @apply left-4;
+  }
+
+  .demo-paddle-right {
+    @apply right-4;
+  }
+
+  .demo-ball {
+    @apply absolute w-3 h-3 bg-white rounded-full;
+    animation: pingpong 2s linear infinite;
+  }
+
+  .game-info {
+    @apply space-y-6;
+  }
+
+  .game-info-title {
+    @apply text-2xl font-bold text-primary-700;
+  }
+
+  .game-features-list {
+    @apply space-y-3;
+  }
+
+  .game-features-list li {
+    @apply text-primary-600 text-lg;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    @apply bg-gradient-to-r from-primary-100 to-secondary-100;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600 text-white;
+  }
+
+  .cta-content {
+    @apply text-center;
+  }
+
+  .cta-title {
+    @apply text-4xl font-bold mb-6;
+  }
+
+  .cta-description {
+    @apply text-xl mb-8 text-primary-100;
+  }
+
+  .cta-actions {
+    @apply flex justify-center;
+  }
+
+  .cta-btn {
+    @apply px-8 py-4 bg-white text-primary-600 font-bold rounded-xl hover:bg-primary-50 transition-colors duration-300;
+  }
+
+  /* Animations */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pingpong {
+    0% {
+      left: 2rem;
+    }
+    50% {
+      left: calc(100% - 3rem);
+    }
+    100% {
+      left: 2rem;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.8s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
