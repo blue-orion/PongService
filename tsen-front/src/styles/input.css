@@ -29,7 +29,7 @@
 @layer components {
   /* 게임 컨테이너 */
   .game-container {
-    @apply h-screen flex flex-col items-center justify-start;
+    @apply h-[80vh] flex flex-col items-center justify-start;
   }
 
   /* 게임 상태 표시 */

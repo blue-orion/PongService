@@ -118,7 +118,7 @@ export class LobbyDetailComponent extends Component {
 
       // 토너먼트 완료 상태 확인
       const tournamentFinishData = await this.service.checkTournamentFinish();
-      if (tournamentFinishData) {
+      if (tournamentFinishData.is_completed) {
         this.showTournamentResult(tournamentFinishData);
         return;
       }

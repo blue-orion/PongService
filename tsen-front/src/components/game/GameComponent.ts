@@ -71,30 +71,7 @@ export class GameComponent extends Component {
   private getTemplate(): string {
     return `
 <div class="game-container relative overflow-hidden">
-  <!-- 배경 플로팅 요소들 (로그인과 동일) -->
-  <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute top-20 left-20 w-20 h-20 bg-primary-300/30 rounded-full floating"></div>
-    <div
-      class="absolute top-40 right-40 w-16 h-16 bg-secondary-300/30 rounded-full floating"
-      style="animation-delay: -2s"
-    ></div>
-    <div
-      class="absolute bottom-32 left-32 w-12 h-12 bg-neutral-300/30 rounded-full floating"
-      style="animation-delay: -4s"
-    ></div>
-    <div
-      class="absolute bottom-20 right-20 w-24 h-24 bg-primary-200/20 rounded-full floating"
-      style="animation-delay: -1s"
-    ></div>
-    <div
-      class="absolute top-1/2 left-1/4 w-8 h-8 bg-secondary-200/25 rounded-full floating"
-      style="animation-delay: -3s"
-    ></div>
-    <div
-      class="absolute top-1/3 right-1/3 w-14 h-14 bg-accent-300/20 rounded-full floating"
-      style="animation-delay: -5s"
-    ></div>
-  </div>
+  
 
   <div class="status-bar flex relative justify-between items-center w-[800px]">
 		<div id="gameStatus" class="game-status">
@@ -302,8 +279,6 @@ export class GameComponent extends Component {
   }
 
   private showGameResult(gameData: any): void {
-    console.log("🎮 게임 결과 표시:", gameData);
-
     // 결과 메시지 생성 및 승패 판단
     let resultMessage = "게임 종료!";
     let isWinner = false;
@@ -338,24 +313,19 @@ export class GameComponent extends Component {
     const exitLobbyButton = modalElement.querySelector(".exit-lobby-button");
     exitLobbyButton?.addEventListener("click", () => {
       this.container.removeChild(modalElement);
-      this.exitToLobby(); // 로비로 나가기
+      this.exitToLobby();
     });
   }
 
   private exitToLobby() {
     const lobbyId = sessionStorage.getItem("lastLobbyId");
-    console.log("🔍 로비로 돌아가기 - lastLobbyId:", lobbyId);
     
     if (lobbyId && lobbyId !== "null") {
-      console.log("✅ 저장된 로비 ID로 이동:", lobbyId);
-      // 사용된 후 세션에서 제거
       setTimeout(() => {
         sessionStorage.removeItem("lastLobbyId");
       }, 5000);
       window.router.navigate(`/lobby/${lobbyId}`);
     } else {
-      console.warn("⚠️ lastLobbyId가 없습니다. 홈으로 이동합니다.");
-      // 저장된 로비 ID가 없으면 홈으로 이동
       window.router.navigate(`/`);
     }
   }
@@ -366,7 +336,6 @@ export class GameComponent extends Component {
     errorDiv.textContent = error;
     this.statusElement.appendChild(errorDiv);
 
-    // 5초 후 자동 제거
     setTimeout(() => errorDiv.remove(), 5000);
   }
 
