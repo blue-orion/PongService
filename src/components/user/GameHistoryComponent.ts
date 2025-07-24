@@ -5,6 +5,18 @@ interface GameRecord {
     id: number;
     created_at: string;
     game_status: string;
+    play_time?: string; // 플레이타임 (문자열 형태, 예: "05:32")
+    tournament_id?: number;
+    round?: number;
+    match?: number;
+    player_one_id?: number;
+    player_two_id?: number;
+    player_one_score?: number;
+    player_two_score?: number;
+    winner_id?: number;
+    loser_id?: number;
+    winner_score?: number; // 기존 호환성을 위해 유지
+    loser_score?: number; // 기존 호환성을 위해 유지
     winner: {
         id: number;
         username: string;
@@ -141,6 +153,67 @@ export class GameHistoryComponent extends Component {
             const isWin = record.winner.id.toString() === this.userId;
             const opponent = isWin ? record.loser : record.winner;
             
+            // 스코어 정보 처리 (새로운 player_one_score, player_two_score 우선 사용)
+            let myScore = 0;
+            let opponentScore = 0;
+            
+            if (record.player_one_score !== undefined && record.player_two_score !== undefined) {
+                // 새로운 구조: player_one_score, player_two_score 사용
+                const currentUserId = parseInt(this.userId);
+                if (record.player_one_id === currentUserId) {
+                    // 현재 사용자가 player_one
+                    myScore = record.player_one_score;
+                    opponentScore = record.player_two_score;
+                } else if (record.player_two_id === currentUserId) {
+                    // 현재 사용자가 player_two
+                    myScore = record.player_two_score;
+                    opponentScore = record.player_one_score;
+                } else {
+                    // 폴백: winner/loser 기반으로 처리
+                    myScore = isWin ? (record.winner_score || 0) : (record.loser_score || 0);
+                    opponentScore = isWin ? (record.loser_score || 0) : (record.winner_score || 0);
+                }
+            } else {
+                // 기존 구조: winner_score, loser_score 사용
+                myScore = isWin ? (record.winner_score || 0) : (record.loser_score || 0);
+                opponentScore = isWin ? (record.loser_score || 0) : (record.winner_score || 0);
+            }
+            
+            // 플레이타임 포맷팅 (문자열 또는 초 -> 분:초)
+            const formatPlayTime = (playTime?: string | number): string => {
+                if (!playTime) return '00:00';
+                
+                // 이미 문자열 형태라면 처리
+                if (typeof playTime === 'string') {
+                    // MM:SS 형태인지 확인 (예: "05:32")
+                    if (/^\d{2}:\d{2}$/.test(playTime)) {
+                        return playTime;
+                    }
+                    // M:SS 또는 M:S 형태인지 확인 (예: "0:3", "5:32", "10:5")
+                    if (/^\d{1,2}:\d{1,2}$/.test(playTime)) {
+                        const [minutes, seconds] = playTime.split(':').map(num => parseInt(num));
+                        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                    // 초 단위 문자열이라면 숫자로 변환 후 처리
+                    const seconds = parseInt(playTime);
+                    if (!isNaN(seconds)) {
+                        const minutes = Math.floor(seconds / 60);
+                        const remainingSeconds = seconds % 60;
+                        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                    }
+                    return playTime; // 알 수 없는 형태라면 그대로 반환
+                }
+                
+                // 숫자 형태라면 초 단위로 처리
+                if (typeof playTime === 'number') {
+                    const minutes = Math.floor(playTime / 60);
+                    const remainingSeconds = playTime % 60;
+                    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                }
+                
+                return '00:00';
+            };
+            
             return {
                 id: record.id,
                 result: isWin ? '승리' : '패배',
@@ -152,7 +225,16 @@ export class GameHistoryComponent extends Component {
                     hour: '2-digit',
                     minute: '2-digit'
                 }),
-                opponent: opponent
+                opponent: opponent,
+                myScore: myScore,
+                opponentScore: opponentScore,
+                scoreDisplay: `${myScore} : ${opponentScore}`,
+                playTime: formatPlayTime(record.play_time),
+                gameId: record.id,
+                gameStatus: record.game_status,
+                tournamentId: record.tournament_id,
+                round: record.round,
+                match: record.match
             };
         });
 
@@ -179,14 +261,39 @@ export class GameHistoryComponent extends Component {
     private renderGameHistoryFallback(gameRecords: any[], pageData: PageResponse): void {
         const recordsHTML = gameRecords.map(record => `
             <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div class="flex items-center justify-between">
-                    <!-- 게임 결과 -->
-                    <div class="flex items-center gap-4">
-                        <div class="${record.resultClass} text-white px-4 py-2 rounded-full text-sm font-semibold">
+                <!-- 게임 ID 및 상태 정보 -->
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">ID: ${record.gameId}</span>
+                        <div class="${record.resultClass} text-white px-3 py-1 rounded-full text-sm font-semibold">
                             ${record.result}
                         </div>
-                        <div class="text-sm text-gray-500">
-                            ${record.gameDate}
+                        ${record.gameStatus ? `
+                            <span class="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">${record.gameStatus}</span>
+                        ` : ''}
+                        ${record.tournamentId ? `
+                            <span class="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">토너먼트 #${record.tournamentId}</span>
+                        ` : ''}
+                        ${record.round && record.match ? `
+                            <span class="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">R${record.round}-M${record.match}</span>
+                        ` : ''}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        ${record.gameDate}
+                    </div>
+                </div>
+
+                <!-- 게임 정보 -->
+                <div class="flex items-center justify-between">
+                    <!-- 스코어 정보 -->
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500 mb-1">스코어</div>
+                            <div class="text-lg font-bold text-gray-800">${record.scoreDisplay}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500 mb-1">플레이타임</div>
+                            <div class="text-sm font-medium text-gray-700">${record.playTime}</div>
                         </div>
                     </div>
 
@@ -243,7 +350,7 @@ export class GameHistoryComponent extends Component {
                                 </button>
                                 <div>
                                     <h1 class="text-2xl font-bold text-gray-800">게임 기록</h1>
-                                    <p class="text-gray-600 text-sm">최근 게임 전적을 확인하세요</p>
+                                    <p class="text-gray-600 text-sm">스코어, 플레이타임, 상대방 정보를 확인하세요</p>
                                 </div>
                             </div>
                         </div>
@@ -276,7 +383,7 @@ export class GameHistoryComponent extends Component {
                                 </button>
                                 <div>
                                     <h1 class="text-2xl font-bold text-gray-800">게임 기록</h1>
-                                    <p class="text-gray-600 text-sm">최근 게임 전적을 확인하세요</p>
+                                    <p class="text-gray-600 text-sm">스코어, 플레이타임, 상대방 정보를 확인하세요</p>
                                 </div>
                             </div>
                         </div>
@@ -286,7 +393,10 @@ export class GameHistoryComponent extends Component {
                     <div class="bg-white rounded-xl shadow-md p-12 text-center">
                         <div class="text-6xl mb-4">🎮</div>
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 게임 기록이 없습니다</h3>
-                        <p class="text-gray-600 mb-6">첫 게임을 시작해보세요!</p>
+                        <p class="text-gray-600 mb-6">첫 게임을 시작해서 전적을 쌓아보세요!</p>
+                        <div class="text-sm text-gray-500 mb-4">
+                            게임을 완료하면 스코어, 플레이타임 등의 상세 정보가 표시됩니다.
+                        </div>
                         <button class="back-to-stats-btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl">
                             전적으로 돌아가기
                         </button>
@@ -321,7 +431,13 @@ export class GameHistoryComponent extends Component {
         event.preventDefault();
         event.stopPropagation();
         if (window.router) {
-            window.router.navigate(`/user/${this.userId}/stats`);
+            // 브라우저 히스토리를 사용하여 이전 페이지로 이동
+            if (window.router.canGoBack()) {
+                window.router.goBack();
+            } else {
+                // 히스토리가 없으면 전적 페이지로 이동
+                window.router.navigate(`/user/${this.userId}/stats`);
+            }
         }
     }
 

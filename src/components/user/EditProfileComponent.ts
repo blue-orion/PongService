@@ -226,9 +226,19 @@ export class EditProfileComponent extends Component {
         const backBtn = this.container.querySelector('.back-btn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
-                const userId = UserManager.getUserId();
-                if (window.router && userId) {
-                    window.router.navigate(`/user/${userId}`);
+                if (window.router) {
+                    // 브라우저 히스토리를 사용하여 이전 페이지로 이동
+                    if (window.router.canGoBack()) {
+                        window.router.goBack();
+                    } else {
+                        // 히스토리가 없으면 내 프로필로 이동
+                        const userId = UserManager.getUserId();
+                        if (userId) {
+                            window.router.navigate(`/user/${userId}`);
+                        } else {
+                            window.router.navigate("/");
+                        }
+                    }
                 }
             });
         }
