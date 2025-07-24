@@ -9,6 +9,7 @@ services:
       - "5555:5555"
     volumes:
       - ./tsen-back/prisma/transcendence.db:/app/prisma/transcendence.db
+      - ./tsen-back/ssl:/app/ssl
     networks:
       - app-network
     restart: unless-stopped
