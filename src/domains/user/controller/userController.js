@@ -22,14 +22,13 @@ const userController = {
 
   // PUT /v1/users/update
   async updateMyPageHandler(request, reply) {
-    const user = request.user;
+    const userId = Number(request.user.id);
     const updateProfileDto = new UpdateProfileDto(request.body);
-    userHelpers.validateUpdateMyPageForm(updateProfileDto);
 
-    await userService.updateUserNickname(user, updateProfileDto.nickname);
-    await userService.updateUserProfileImage(user, updateProfileDto.profileImage);
+    await userService.updateUserNickname(userId, updateProfileDto.nickname);
+    await userService.updateUserProfileImage(userId, updateProfileDto.profileImage);
 
-    await userService.broadcastCurrentUserProfile(user.id);
+    await userService.broadcastCurrentUserProfile(userId);
     return ApiResponse.ok(reply, { message: "User profile updated successfully" });
   },
 

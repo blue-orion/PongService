@@ -7,27 +7,24 @@ class UserHelpers {
     }
   }
 
-  validateUpdateMyPageForm(formData) {
-    if (!formData.nickname && !formData.profileImage) {
-      throw new PongException("At least one field (nickname or profile image) must be provided", 400);
+  validateUpdateNickname(newNickname, userNickname) {
+    if (userNickname === newNickname) {
+      newNickname = null;
     }
-  }
-
-  validateUpdateNickname(nickname) {
-    if (!nickname) {
+    if (!newNickname) {
       return;
     }
-    if (nickname.length < 3 || nickname.length > 20) {
+    if (newNickname.length < 3 || newNickname.length > 20) {
       throw new PongException("Nickname must be between 3 and 20 characters long", 400);
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+    if (!/^[a-zA-Z0-9_]+$/.test(newNickname)) {
       throw new PongException("Nickname can only contain letters, numbers, and underscores", 400);
     }
   }
 
   validateUpdateProfileImage(profileImage) {
     if (!profileImage) {
-      return;
+      return false;
     }
     if (typeof profileImage !== "string") {
       throw new PongException("Profile image must be a string URL", 400);
@@ -36,6 +33,7 @@ class UserHelpers {
     if (!/^(https?:\/\/.+\.(jpg|jpeg|png|gif)|data:image\/(jpeg|jpg|png|gif);base64,.+)$/.test(profileImage)) {
       throw new PongException("Profile image must be a valid URL or data URL", 400);
     }
+    return true;
   }
 
   validateUpdatePasswordForm(formData) {
