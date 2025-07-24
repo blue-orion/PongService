@@ -470,7 +470,7 @@ export class FriendComponent {
     try {
       // 자기 자신을 친구로 추가하려는 경우 방지
       if (this.dataManager.isSelfUsername(username.trim())) {
-        this.showInfoModal("친구 추가 불가", "자기 자신을 친구로 추가할 수 없습니다.");
+        this.showInfoModal("친구 요청 불가", "자기 자신에게 친구 요청을 보낼 수 없습니다.");
         return;
       }
 
@@ -480,7 +480,7 @@ export class FriendComponent {
         .find((friend) => friend.username?.toLowerCase() === username.trim().toLowerCase());
 
       if (existingFriend) {
-        this.showInfoModal("친구 추가 불가", "이미 친구로 등록된 사용자입니다.");
+        this.showInfoModal("친구 요청 불가", "이미 친구로 등록된 사용자입니다.");
         return;
       }
 
@@ -490,7 +490,7 @@ export class FriendComponent {
         .find((request) => request.username?.toLowerCase() === username.trim().toLowerCase());
 
       if (existingSentRequest) {
-        this.showInfoModal("친구 추가 불가", "이미 친구 요청을 보낸 사용자입니다.");
+        this.showInfoModal("친구 요청 불가", "이미 친구 요청을 보낸 사용자입니다.");
         return;
       }
 
@@ -501,7 +501,7 @@ export class FriendComponent {
 
       if (existingReceivedRequest) {
         this.showInfoModal(
-          "친구 추가 불가",
+          "친구 요청 불가",
           "해당 사용자로부터 이미 친구 요청을 받았습니다. 받은 요청에서 수락해주세요."
         );
         return;

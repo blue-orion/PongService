@@ -86,4 +86,19 @@ export class Router {
     const currentPath = window.location.pathname;
     await this.navigate(currentPath, false);
   }
+
+  // 뒤로가기
+  goBack(): void {
+    window.history.back();
+  }
+
+  // 앞으로가기
+  goForward(): void {
+    window.history.forward();
+  }
+
+  // 히스토리 길이 확인 (뒤로갈 페이지가 있는지)
+  canGoBack(): boolean {
+    return window.history.length > 1;
+  }
 }

@@ -124,7 +124,13 @@ export class LobbyDetailComponent extends Component {
   // UI 이벤트 핸들러들
   private navigateToLobbyList(): void {
     if (window.router) {
-      window.router.navigate("/");
+      // 브라우저 히스토리를 사용하여 이전 페이지로 이동
+      if (window.router.canGoBack()) {
+        window.router.goBack();
+      } else {
+        // 히스토리가 없으면 로비 목록으로 이동
+        window.router.navigate("/");
+      }
     }
   }
 

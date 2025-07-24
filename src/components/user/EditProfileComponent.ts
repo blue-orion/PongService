@@ -68,22 +68,22 @@ export class EditProfileComponent extends Component {
                     <!-- 프로필 이미지 -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">프로필 이미지</label>
-                        <div class="flex items-center gap-4">
-                            <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-300 transition-colors border-2 border-gray-300 hover:border-indigo-400" id="profileImageArea">
-                                ${profileImage ? `
-                                    <img id="currentProfileImage" src="${profileImage}" alt="현재 프로필" class="w-full h-full object-cover">
-                                ` : `
-                                    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                    </svg>
-                                `}
-                            </div>
-                            <div class="flex-1">
-                                <input type="file" id="profileImageInput" accept="image/*" class="hidden">
-                                <div class="text-sm text-gray-500">이미지를 클릭하여 변경하세요</div>
-                                <div class="text-xs text-gray-400 mt-1">JPG, PNG 파일 (최대 5MB)</div>
-                            </div>
+                        <div id="profileImageArea" class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition relative group">
+                            <span id="profileImageText" class="text-gray-400 ${profileImage ? 'hidden' : ''}">이미지를 클릭하여 선택</span>
+                            <img id="profileImagePreview" src="${profileImage || ''}" alt="프로필 이미지" class="max-h-full w-auto object-contain rounded-lg ${profileImage ? '' : 'hidden'}" />
+                            <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
+                            
+                            <!-- 간단한 제거 버튼 -->
+                            <button 
+                                type="button" 
+                                id="removeImageBtn" 
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors ${profileImage ? '' : 'hidden'}"
+                                title="이미지 제거"
+                            >
+                                ✕
+                            </button>
                         </div>
+                        <p class="text-sm text-gray-500 mt-2">JPG, PNG 파일 (최대 5MB)</p>
                     </div>
 
                     <!-- 닉네임 변경 -->
@@ -226,9 +226,19 @@ export class EditProfileComponent extends Component {
         const backBtn = this.container.querySelector('.back-btn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
-                const userId = UserManager.getUserId();
-                if (window.router && userId) {
-                    window.router.navigate(`/user/${userId}`);
+                if (window.router) {
+                    // 브라우저 히스토리를 사용하여 이전 페이지로 이동
+                    if (window.router.canGoBack()) {
+                        window.router.goBack();
+                    } else {
+                        // 히스토리가 없으면 내 프로필로 이동
+                        const userId = UserManager.getUserId();
+                        if (userId) {
+                            window.router.navigate(`/user/${userId}`);
+                        } else {
+                            window.router.navigate("/");
+                        }
+                    }
                 }
             });
         }
@@ -243,50 +253,7 @@ export class EditProfileComponent extends Component {
         });
 
         // 프로필 이미지 업로드 관련
-        const profileImageArea = this.container.querySelector('#profileImageArea');
-        const profileImageInput = this.container.querySelector('#profileImageInput') as HTMLInputElement;
-        const currentProfileImage = this.container.querySelector('#currentProfileImage') as HTMLImageElement;
-
-        // 이미지 영역 클릭으로 파일 선택
-        if (profileImageArea && profileImageInput) {
-            profileImageArea.addEventListener('click', () => {
-                profileImageInput.click();
-            });
-        }
-
-        if (profileImageInput) {
-            profileImageInput.addEventListener('change', (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                    if (!file.type.startsWith('image/')) {
-                        this.showMessage('이미지 파일만 업로드할 수 있습니다.', 'error');
-                        return;
-                    }
-
-                    if (file.size > 5 * 1024 * 1024) {
-                        this.showMessage('파일 크기는 5MB 이하여야 합니다.', 'error');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const result = e.target?.result as string;
-                        if (currentProfileImage) {
-                            // 현재 프로필 이미지를 새 이미지로 교체
-                            currentProfileImage.src = result;
-                            currentProfileImage.style.display = 'block';
-                        } else {
-                            // 프로필 이미지가 없던 경우 새로 생성
-                            const profileImageArea = this.container.querySelector('#profileImageArea');
-                            if (profileImageArea) {
-                                profileImageArea.innerHTML = `<img id="currentProfileImage" src="${result}" alt="현재 프로필" class="w-full h-full object-cover">`;
-                            }
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
+        this.setupProfileImageArea();
 
         // 프로필 변경 폼 제출
         const profileForm = this.container.querySelector('#profileForm');
@@ -347,15 +314,44 @@ export class EditProfileComponent extends Component {
     private async handleProfileSubmit(): Promise<void> {
         const nicknameInput = this.container.querySelector('#nickname') as HTMLInputElement;
         const fileInput = this.container.querySelector('#profileImageInput') as HTMLInputElement;
+        const previewImg = this.container.querySelector('#profileImagePreview') as HTMLImageElement;
         const submitBtn = this.container.querySelector('#profileForm button[type="submit"]') as HTMLButtonElement;
 
         const newNickname = nicknameInput?.value.trim();
         const uploadedFile = fileInput?.files?.[0];
-
-        // 닉네임이 현재 닉네임과 동일하면 변경할 필요 없음
-        const isNicknameChanged = newNickname && newNickname !== this.currentUserData?.nickname;
-
-        if (!isNicknameChanged && !uploadedFile) {
+        
+        // 현재 상태 확인
+        const originalNickname = this.currentUserData?.nickname || '';
+        const originalProfileImage = this.currentUserData?.profileImage;
+        
+        // 닉네임 변경 확인
+        const isNicknameChanged = newNickname !== originalNickname;
+        
+        // 프로필 이미지 변경 확인
+        let isImageChanged = false;
+        let imageAction: 'upload' | 'remove' | 'none' = 'none';
+        
+        if (uploadedFile) {
+            // 새 이미지 업로드
+            isImageChanged = true;
+            imageAction = 'upload';
+        } else {
+            // 현재 이미지 표시 상태 확인
+            const isImageCurrentlyShown = previewImg && !previewImg.classList.contains('hidden') && previewImg.src;
+            
+            if (originalProfileImage && !isImageCurrentlyShown) {
+                // 기존 이미지가 있었는데 현재는 표시되지 않음 = 제거됨
+                isImageChanged = true;
+                imageAction = 'remove';
+            } else if (!originalProfileImage && isImageCurrentlyShown) {
+                // 기존 이미지가 없었는데 현재는 표시됨 (이론적으로는 uploadedFile이 있어야 하지만 혹시 모를 경우)
+                isImageChanged = true;
+                imageAction = 'upload';
+            }
+        }
+        
+        // 변경사항이 없는 경우 요청하지 않음
+        if (!isNicknameChanged && !isImageChanged) {
             this.showMessage('변경할 내용이 없습니다. 닉네임 또는 프로필 이미지를 변경해주세요.', 'error');
             return;
         }
@@ -366,17 +362,22 @@ export class EditProfileComponent extends Component {
         submitBtn.disabled = true;
 
         try {
-            // JSON 방식으로 다시 변경 (data URL 전체 전송)
+            // 변경사항만 요청 바디에 포함
             const requestBody: any = {};
             
             if (isNicknameChanged) {
                 requestBody.nickname = newNickname;
             }
             
-            if (uploadedFile) {
-                // 파일을 data URL로 변환 (data:image/jpeg;base64,... 형태)
-                const dataUrl = await this.fileToDataURL(uploadedFile);
-                requestBody.profileImage = dataUrl;
+            if (isImageChanged) {
+                if (imageAction === 'upload' && uploadedFile) {
+                    // 새 이미지 업로드
+                    const dataUrl = await this.fileToDataURL(uploadedFile);
+                    requestBody.profileImage = dataUrl;
+                } else if (imageAction === 'remove') {
+                    // 이미지 제거
+                    requestBody.profileImage = null;
+                }
             }
 
             const response = await AuthManager.authenticatedFetch(`${EditProfileComponent.API_BASE_URL}/users/update`, {
@@ -390,6 +391,18 @@ export class EditProfileComponent extends Component {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `프로필 변경 실패: ${response.status}`);
+            }
+
+            // 현재 사용자 데이터 업데이트 (다음 변경사항 감지를 위해)
+            if (isNicknameChanged) {
+                this.currentUserData.nickname = newNickname;
+            }
+            if (isImageChanged) {
+                if (imageAction === 'upload' && uploadedFile) {
+                    this.currentUserData.profileImage = await this.fileToDataURL(uploadedFile);
+                } else if (imageAction === 'remove') {
+                    this.currentUserData.profileImage = null;
+                }
             }
 
             this.showMessage('프로필이 성공적으로 변경되었습니다!', 'success');
@@ -506,6 +519,85 @@ export class EditProfileComponent extends Component {
             setTimeout(() => {
                 messageDiv.classList.add('hidden');
             }, 5000);
+        }
+    }
+
+    private setupProfileImageArea(): void {
+        const area = this.container.querySelector('#profileImageArea') as HTMLElement;
+        const fileInput = this.container.querySelector('#profileImageInput') as HTMLInputElement;
+        const previewImg = this.container.querySelector('#profileImagePreview') as HTMLImageElement;
+        const textSpan = this.container.querySelector('#profileImageText') as HTMLElement;
+        const removeBtn = this.container.querySelector('#removeImageBtn') as HTMLButtonElement;
+        
+        if (!area || !fileInput || !previewImg || !textSpan || !removeBtn) return;
+
+        // 이미지 영역 클릭 시 파일 선택 (제거 버튼이 아닌 경우에만)
+        area.addEventListener('click', (e) => {
+            if (e.target !== removeBtn && !removeBtn.contains(e.target as Node)) {
+                fileInput.click();
+            }
+        });
+
+        // 제거 버튼 클릭
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.clearProfileImage();
+        });
+
+        // 파일 선택 시 미리보기
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (file) {
+                // 파일 크기 체크 (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    this.showMessage('파일 크기는 5MB 이하여야 합니다.', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                // 파일 타입 체크
+                if (!file.type.startsWith('image/')) {
+                    this.showMessage('이미지 파일만 선택할 수 있습니다.', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    previewImg.src = ev.target?.result as string;
+                    this.showImagePreview();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                this.clearProfileImage();
+            }
+        });
+    }
+
+    private showImagePreview(): void {
+        const previewImg = this.container.querySelector('#profileImagePreview') as HTMLImageElement;
+        const textSpan = this.container.querySelector('#profileImageText') as HTMLElement;
+        const removeBtn = this.container.querySelector('#removeImageBtn') as HTMLButtonElement;
+
+        if (previewImg && textSpan && removeBtn) {
+            previewImg.classList.remove('hidden');
+            textSpan.classList.add('hidden');
+            removeBtn.classList.remove('hidden');
+        }
+    }
+
+    private clearProfileImage(): void {
+        const fileInput = this.container.querySelector('#profileImageInput') as HTMLInputElement;
+        const previewImg = this.container.querySelector('#profileImagePreview') as HTMLImageElement;
+        const textSpan = this.container.querySelector('#profileImageText') as HTMLElement;
+        const removeBtn = this.container.querySelector('#removeImageBtn') as HTMLButtonElement;
+
+        if (fileInput && previewImg && textSpan && removeBtn) {
+            fileInput.value = '';
+            previewImg.src = '';
+            previewImg.classList.add('hidden');
+            textSpan.classList.remove('hidden');
+            removeBtn.classList.add('hidden');
         }
     }
 

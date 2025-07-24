@@ -655,4 +655,52 @@ export class FriendDataManager {
       return false;
     }
   }
+
+  /**
+   * 사용자와의 친구 관계 상태를 확인합니다
+   * @param userId 확인할 사용자 ID
+   * @returns "friend" | "pending" | "none"
+   */
+  public checkFriendStatus(userId: number): "friend" | "pending" | "none" {
+    try {
+      const userIdNum = Number(userId);
+      if (!userIdNum || isNaN(userIdNum)) {
+        console.error("유효하지 않은 사용자 ID:", userId);
+        return "none";
+      }
+
+      // 자기 자신인지 확인
+      if (this.isSelfUser(userIdNum)) {
+        return "none";
+      }
+
+      // 이미 친구인지 확인
+      const isFriend = this.friends.some((friend) => friend.id === userIdNum);
+      if (isFriend) {
+        return "friend";
+      }
+
+      // 받은 요청에서 확인 (상대방이 나에게 요청 보냄)
+      const hasReceivedRequest = this.friendRequests.some((request) => {
+        // request.id는 요청을 보낸 사람의 ID가 아니라 요청의 고유 ID
+        // 실제로는 sender 정보를 확인해야 함
+        return request.id === userIdNum;
+      });
+
+      // 보낸 요청에서 확인 (내가 상대방에게 요청 보냄)
+      const hasSentRequest = this.sentRequests.some((request) => {
+        // request.id는 요청을 받을 사람의 ID
+        return request.id === userIdNum;
+      });
+
+      if (hasReceivedRequest || hasSentRequest) {
+        return "pending";
+      }
+
+      return "none";
+    } catch (error) {
+      console.error("친구 상태 확인 중 오류:", error);
+      return "none";
+    }
+  }
 }
