@@ -93,8 +93,3 @@ npm run dev
 ## API 참고
 
 `tsen-back/src/domains/**/friendDoc.md` 및 Swagger UI(설정 시)를 참조하세요.
-
-## Author
-
-> Developed by [blue-orion](https://github.com/blue-orion)  
-> Portfolio: [https://your-portfolio.example.com](https://your-portfolio.example.com)
