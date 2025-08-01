@@ -1,6 +1,3 @@
-
-## 한국어 버전 (한글판)
-
 # PongService
 실시간 멀티플레이 Pong 게임 서비스로, 로비 생성, 매칭, 실시간 플레이를 지원합니다.
 
@@ -53,9 +50,9 @@
 | :--------- | :--------------------------------------- |
 | 백엔드     | Node.js, Fastify, Prisma, WebSocket      |
 | 데이터베이스 | SQLite (Prisma)                         |
-| 프론트엔드 | Vite, TypeScript, (Vue/React)            |
+| 프론트엔드 | Vite, TypeScript                          |
 | 스타일링   | Tailwind CSS                             |
-| 테스트     | Jest (백엔드), Vitest (프론트엔드)        |
+| 테스트     | Jest (백엔드), Vitest (프론트엔드, 도입 예정)         |
 | DevOps     | Docker, Docker Compose, Nginx            |
 
 ## 시작하기
@@ -148,7 +145,7 @@ npm test
 
 # PongService
 # A real-time multiplayer Pong game service with lobby, matchmaking, and live gameplay.
-Built with Node.js, Express, Prisma, WebSockets, TypeScript, and Vite.
+Built with Node.js, Fastify, Prisma, WebSockets, TypeScript, and Vite.
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
