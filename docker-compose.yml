@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: ./tsen-back
+    container_name: tsen-back
+    environment:
+      - NODE_ENV=prod
+      - REDIRECT_BASE=https://localhost:8443
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./tsen-back/prisma/transcendence.db:/app/prisma/transcendence.db
+      - ./tsen-back/ssl:/app/ssl
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./tsen-front
+    container_name: tsen-front
+    volumes:
+      - frontend-dist:/app
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tsen-nginx
+    ports:
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - frontend-dist:/usr/share/nginx/html
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  frontend-dist:

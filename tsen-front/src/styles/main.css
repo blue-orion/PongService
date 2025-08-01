@@ -1,0 +1,845 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  overflow-y: auto;
+}
+
+@layer components {
+  .layout-container {
+    @apply flex flex-col min-h-screen bg-[#f0f0f0];
+  }
+
+  .header-section {
+    @apply h-[60px] flex-shrink-0 w-full bg-[#2c3e50] text-white px-5 flex items-center justify-between shadow-md;
+  }
+
+  .body-section {
+    @apply flex flex-1 pt-[60px];
+  }
+
+  /* .friends-section { */
+  /*   @apply w-[250px] bg-[#34495e] text-white p-5 overflow-y-auto; */
+  /* } */
+  /**/
+
+  .main-section {
+    @apply flex-1 bg-white p-5 overflow-y-auto;
+  }
+
+  .chat-section {
+    @apply w-[300px] bg-[#34495e] text-white p-5 overflow-y-auto;
+  }
+}
+
+/* 로비 리스트 스타일 */
+@layer components {
+  .lobby-list-page {
+    @apply p-5;
+  }
+
+  .loading-state,
+  .error-state,
+  .empty-state {
+    @apply flex flex-col items-center justify-center p-10 bg-[#f8f9fa] rounded-lg my-5;
+  }
+
+  .loading-state p,
+  .error-state p,
+  .empty-state p {
+    @apply mb-4 text-gray-500 text-base;
+  }
+
+  .empty-state {
+    @apply px-10 py-16 text-center;
+  }
+
+  .empty-icon {
+    @apply text-[48px] mb-5;
+  }
+
+  .empty-state h3 {
+    @apply text-[#2c3e50] mb-2.5 text-2xl;
+  }
+
+  .empty-state p {
+    @apply text-gray-500 mb-6;
+  }
+
+  .create-lobby-btn-empty {
+    @apply bg-green-600 text-white border-none px-6 py-3 rounded-md cursor-pointer text-base font-bold transition-colors duration-200 hover:bg-green-700;
+  }
+
+  .retry-btn {
+    @apply bg-blue-600 text-white border-none px-5 py-2.5 rounded cursor-pointer text-sm hover:bg-blue-800;
+  }
+}
+
+/* 로비 생성 모달 스타일 */
+@layer components {
+  .create-lobby-modal {
+    @apply fixed inset-0 flex items-center justify-center z-[10000];
+  }
+
+  .modal-overlay {
+    @apply absolute inset-0 bg-black/50 z-[60];
+  }
+
+  .modal-content {
+    @apply relative bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.15)] w-[90%] max-w-[500px] max-h-[90vh] overflow-y-auto;
+  }
+
+  .modal-header {
+    @apply flex justify-between items-center px-6 py-5 border-b border-[#e9ecef];
+  }
+
+  .modal-header h3 {
+    @apply m-0 text-[#2c3e50];
+  }
+
+  .close-btn {
+    @apply bg-none border-none text-2xl cursor-pointer text-[#6c757d] p-0 w-[30px] h-[30px] flex items-center justify-center hover:text-[#2c3e50];
+  }
+
+  .create-lobby-form {
+    @apply p-6;
+  }
+
+  .form-group {
+    @apply mb-5;
+  }
+
+  .form-group label {
+    @apply block mb-2 font-semibold text-[#2c3e50];
+  }
+
+  .form-group select,
+  .form-group input[type="text"],
+  .form-group input[type="number"] {
+    @apply w-full px-3 py-2 border border-[#dee2e6] rounded text-sm focus:outline-none focus:border-[#007bff] focus:ring-2 focus:ring-[#007bff]/25;
+  }
+
+  .form-group small {
+    @apply block mt-1 text-xs text-[#6c757d];
+  }
+
+  .form-group input[type="checkbox"] {
+    @apply mr-2;
+  }
+
+  .player-info-display {
+    @apply bg-[#f8f9fa] border border-[#dee2e6] rounded px-4 py-3 flex items-center gap-2;
+  }
+
+  .info-label {
+    @apply text-[#6c757d] font-medium;
+  }
+
+  .player-count {
+    @apply text-[#2c3e50] font-semibold text-base;
+  }
+
+  .form-actions {
+    @apply flex gap-3 justify-end pt-5 border-t border-[#e9ecef];
+  }
+
+  .cancel-btn {
+    @apply px-5 py-2.5 bg-[#6c757d] text-white rounded font-semibold text-sm cursor-pointer hover:bg-[#5a6268];
+  }
+
+  .create-btn {
+    @apply px-5 py-2.5 bg-green-600 text-white rounded font-semibold text-sm cursor-pointer hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed;
+  }
+
+  .loading-overlay {
+    @apply absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded-lg;
+  }
+
+  .spinner {
+    @apply w-10 h-10 border-4 border-[#e9ecef] border-t-[#007bff] rounded-full animate-spin mb-4;
+  }
+
+  .error-message {
+    @apply bg-[#f8d7da] text-[#721c24] p-3 rounded mb-4 border border-[#f5c6cb];
+  }
+
+  .page-header {
+    @apply flex justify-between items-center mb-8;
+  }
+
+  .header-buttons {
+    @apply flex gap-3 items-center;
+  }
+
+  .refresh-btn {
+    @apply bg-blue-600 text-white border-none px-4 py-3 rounded-md cursor-pointer text-sm hover:bg-blue-700 transition-colors duration-200;
+  }
+
+  .refresh-btn:hover {
+    @apply transform scale-105;
+  }
+
+  .create-lobby-btn {
+    @apply bg-green-600 text-white border-none px-6 py-3 rounded-md cursor-pointer text-sm hover:bg-green-700;
+  }
+
+  .lobby-filters {
+    @apply flex gap-4 mb-5 p-4 bg-[#f8f9fa] rounded-lg;
+  }
+
+  .lobby-filters select,
+  .lobby-filters input {
+    @apply px-3 py-2 border border-[#ddd] rounded text-sm;
+  }
+
+  .lobby-grid {
+    @apply grid gap-5 mb-8;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .lobby-card {
+    @apply bg-white border border-[#ddd] rounded-lg p-5 shadow transition hover:-translate-y-0.5 hover:shadow-lg;
+  }
+
+  .lobby-header {
+    @apply flex justify-between items-start mb-4;
+  }
+
+  .lobby-header h3 {
+    @apply m-0 text-[#2c3e50];
+  }
+
+  .status {
+    @apply px-2 py-1 rounded text-xs font-bold;
+  }
+
+  .status.waiting {
+    @apply bg-[#f39c12] text-white;
+  }
+
+  .status.playing {
+    @apply bg-[#e74c3c] text-white;
+  }
+
+  .lobby-info p {
+    @apply my-1 text-sm text-[#666];
+  }
+
+  .join-btn {
+    @apply w-full px-4 py-2 rounded-md bg-[#3498db] text-white text-sm font-bold mt-4 hover:bg-[#2980b9];
+  }
+
+  .spectate-btn {
+    @apply w-full px-4 py-2 rounded-md bg-[#95a5a6] text-white text-sm font-bold mt-4 hover:bg-[#7f8c8d];
+  }
+}
+
+/* 페이징 스타일 */
+@layer components {
+  .pagination-container {
+    @apply flex justify-between items-center p-5 bg-[#f8f9fa] rounded-lg mt-5;
+  }
+
+  .pagination-info {
+    @apply text-sm text-[#666];
+  }
+
+  .pagination-controls {
+    @apply flex items-center gap-2.5;
+  }
+
+  .pagination-btn {
+    @apply px-4 py-2 border border-[#ddd] bg-white rounded cursor-pointer text-sm transition-colors duration-200 hover:bg-[#e9ecef] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .page-numbers {
+    @apply flex gap-1.5;
+  }
+
+  .page-number {
+    @apply px-3 py-2 border border-[#ddd] bg-white rounded cursor-pointer text-sm transition-colors duration-200 hover:bg-[#e9ecef];
+  }
+
+  .page-number.active {
+    @apply bg-[#007bff] text-white border-[#007bff];
+  }
+
+  .page-size-selector {
+    @apply flex items-center gap-2 text-sm;
+  }
+
+  .page-size-selector select {
+    @apply px-2.5 py-1.5 border border-[#ddd] rounded;
+  }
+}
+
+/* 헤더 스타일 개선 */
+@layer components {
+  .header {
+    @apply flex items-center justify-between w-full h-full;
+  }
+
+  .logo-link {
+    @apply text-white no-underline text-[20px] font-bold hover:text-[#ecf0f1];
+  }
+
+  .header .navigation ul {
+    @apply flex list-none gap-5 m-0 p-0;
+  }
+
+  .header .navigation a {
+    @apply text-white no-underline px-3 py-2 rounded transition-colors duration-200 hover:bg-white/10;
+  }
+
+  .header .user-menu {
+    @apply flex items-center gap-[15px];
+  }
+
+  .header .logout-btn {
+    @apply bg-[#e74c3c] text-white border-none px-4 py-2 rounded cursor-pointer transition-colors hover:bg-[#c0392b];
+  }
+
+  .header-section {
+    @apply fixed top-0 left-0 w-full z-[1000] bg-[#2c3e50] text-white px-5 flex items-center justify-between shadow-md;
+  }
+
+  .friends-section {
+    @apply [grid-area:friends] bg-[#34495e] text-white p-5 overflow-y-auto;
+  }
+
+  .main-section {
+    @apply [grid-area:main] bg-white p-5 overflow-y-auto;
+  }
+
+  .chat-section {
+    @apply [grid-area:chat] bg-[#34495e] text-white p-5 overflow-y-auto;
+  }
+
+  .home-page {
+    @apply max-w-[800px] mx-auto;
+  }
+
+  .dashboard-content {
+    @apply grid grid-cols-2 gap-5 mt-5;
+  }
+
+  .game-stats,
+  .recent-games {
+    @apply bg-[#f8f9fa] p-5 rounded-lg border border-[#dee2e6] shadow;
+  }
+
+  .quick-actions {
+    @apply mt-8 flex gap-4 justify-center;
+  }
+
+  .action-btn {
+    @apply bg-[#007bff] text-white border-none px-6 py-3 rounded-md cursor-pointer text-sm transition-colors hover:bg-[#0056b3];
+  }
+
+  .recent-games ul {
+    @apply list-none p-0 mt-2.5;
+  }
+
+  .recent-games li {
+    @apply py-2 border-b border-[#eee];
+  }
+
+  .recent-games li:last-child {
+    @apply border-b-0;
+  }
+}
+
+/* 헤더 스타일 */
+@layer components {
+  .header {
+    @apply flex items-center justify-between w-full h-full;
+  }
+
+  .header .navigation ul {
+    @apply flex list-none gap-5 m-0 p-0;
+  }
+
+  .header .navigation a {
+    @apply text-white no-underline px-3 py-2 rounded transition-colors duration-200 hover:bg-white/10;
+  }
+
+  .header .user-menu {
+    @apply flex items-center gap-[15px];
+  }
+
+  .header .logout-btn {
+    @apply bg-[#e74c3c] text-white border-none px-4 py-2 rounded cursor-pointer;
+  }
+}
+
+/* 친구리스트 스타일 */
+@layer components {
+  .friends-list h3 {
+    @apply mt-0 text-[#ecf0f1];
+  }
+
+  .friends-header {
+    @apply flex justify-between items-center mb-[15px];
+  }
+
+  .add-friend-btn {
+    @apply bg-[#27ae60] text-white border-none px-3 py-1.5 rounded cursor-pointer text-xs;
+  }
+
+  .friends-search {
+    @apply mb-[15px];
+  }
+
+  .friends-search-input {
+    @apply w-full p-2 border-none rounded bg-[#2c3e50] text-white;
+  }
+
+  .friends-items {
+    @apply list-none p-0 m-0;
+  }
+
+  .friend-item {
+    @apply flex items-center gap-2.5 p-2.5 mb-2 rounded cursor-pointer transition-colors duration-200 hover:bg-white/10;
+  }
+
+  .friend-item.online {
+    border-left: 3px solid #27ae60;
+  }
+
+  .friend-item.game {
+    border-left: 3px solid #f39c12;
+  }
+
+  .friend-item.offline {
+    border-left: 3px solid #95a5a6;
+  }
+
+  .friend-avatar {
+    @apply text-[20px];
+  }
+
+  .friend-info {
+    @apply flex flex-col;
+  }
+
+  .friend-name {
+    @apply font-bold;
+  }
+
+  .friend-status {
+    @apply text-xs opacity-80;
+  }
+}
+
+/* 채팅 스타일 */
+@layer components {
+  .chatting-room {
+    @apply flex flex-col h-full;
+  }
+
+  .chat-header h3 {
+    @apply m-0 mb-[15px] text-[#ecf0f1];
+  }
+
+  .chat-messages {
+    @apply flex-1 overflow-y-auto bg-[#2c3e50] p-[15px] rounded mb-[15px] max-h-[400px];
+  }
+
+  .message {
+    @apply mb-[10px] p-2 bg-white/10 rounded;
+  }
+
+  .message-user {
+    @apply font-bold text-[#3498db];
+  }
+
+  .message-text {
+    @apply ml-2;
+  }
+
+  .chat-input {
+    @apply flex gap-2;
+  }
+
+  .chat-input input {
+    @apply flex-1 p-2.5 border-none rounded bg-[#2c3e50] text-white;
+  }
+
+  .chat-input button {
+    @apply bg-[#3498db] text-white border-none px-[15px] py-[10px] rounded cursor-pointer hover:bg-[#2980b9];
+  }
+}
+
+/* 로비 리스트 스타일 */
+@layer components {
+  .lobby-list-page {
+    @apply p-5;
+  }
+
+  .page-header {
+    @apply flex justify-between items-center mb-[30px];
+  }
+
+  .create-lobby-btn {
+    @apply bg-[#27ae60] text-white border-none px-6 py-3 rounded-md cursor-pointer text-sm transition-colors duration-200 hover:bg-[#229954];
+  }
+
+  .lobby-filters {
+    @apply flex gap-[15px] mb-5 p-[15px] bg-[#f8f9fa] rounded-lg;
+  }
+
+  .lobby-filters select,
+  .lobby-filters input {
+    @apply px-3 py-2 border border-[#ddd] rounded text-sm;
+  }
+
+  .lobby-grid {
+    @apply grid gap-5;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .lobby-card {
+    @apply bg-white border border-[#ddd] rounded-lg p-5 shadow transition duration-200 hover:-translate-y-0.5 hover:shadow-lg;
+  }
+
+  .lobby-header {
+    @apply flex justify-between items-start mb-[15px];
+  }
+
+  .lobby-header h3 {
+    @apply m-0 text-[#2c3e50];
+  }
+
+  .status {
+    @apply px-2 py-1 rounded text-xs font-bold;
+  }
+
+  .status.waiting {
+    @apply bg-[#f39c12] text-white;
+  }
+
+  .status.playing {
+    @apply bg-[#e74c3c] text-white;
+  }
+
+  .lobby-info p {
+    @apply my-1 text-sm text-[#666];
+  }
+
+  .join-btn {
+    @apply w-full px-4 py-2 border-none rounded-md cursor-pointer text-sm font-bold mt-[15px] bg-[#3498db] text-white transition-colors hover:bg-[#2980b9];
+  }
+
+  .spectate-btn {
+    @apply w-full px-4 py-2 border-none rounded-md cursor-pointer text-sm font-bold mt-[15px] bg-[#95a5a6] text-white transition-colors hover:bg-[#7f8c8d];
+  }
+}
+
+/* 로비 상세 스타일 */
+@layer components {
+  .lobby-detail-page {
+    @apply p-5 max-w-[1200px] mx-auto;
+  }
+
+  .back-btn {
+    @apply bg-[#6c757d] text-white border-none px-4 py-2 rounded cursor-pointer mb-5;
+  }
+
+  .lobby-content {
+    @apply grid gap-[30px] mb-[30px];
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .lobby-info-section,
+  .players-section,
+  .game-settings-section,
+  .match-info-section {
+    @apply bg-[#f8f9fa] p-5 rounded-lg border border-[#dee2e6];
+  }
+
+  .info-grid,
+  .settings-grid {
+    @apply grid gap-[15px] mt-[15px];
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .info-item,
+  .setting-item {
+    @apply flex justify-between items-center;
+  }
+
+  .players-list {
+    @apply mt-[15px];
+  }
+
+  .player-item {
+    @apply flex items-center gap-[15px] p-[10px] mb-[10px] bg-white rounded-md border border-[#ddd];
+  }
+
+  .player-item.ready {
+    @apply border-[#27ae60] bg-[#d5f4e6];
+  }
+
+  .player-item.not-ready {
+    @apply border-[#e74c3c] bg-[#ffeaea];
+  }
+
+  .host-badge {
+    @apply bg-[#f39c12] text-white px-2 py-1 rounded text-xs font-bold;
+  }
+
+  .lobby-actions {
+    @apply flex justify-center gap-[15px] p-5 bg-[#f8f9fa] rounded-lg;
+  }
+
+  .ready-btn,
+  .start-game-btn,
+  .leave-lobby-btn {
+    @apply px-6 py-3 border-none rounded-md cursor-pointer text-sm font-bold transition-colors;
+  }
+
+  .ready-btn.confirm {
+    @apply bg-[#27ae60] text-white;
+  }
+
+  .ready-btn.cancel {
+    @apply bg-[#e74c3c] text-white;
+  }
+
+  .start-game-btn {
+    @apply bg-[#3498db] text-white;
+  }
+
+  .start-game-btn:disabled {
+    @apply bg-[#bdc3c7] cursor-not-allowed;
+  }
+
+  .leave-lobby-btn {
+    @apply bg-[#6c757d] text-white;
+  }
+}
+
+/* 사용자 정보 스타일 */
+@layer components {
+  .user-info-page {
+    @apply p-5 max-w-[1000px] mx-auto;
+  }
+
+  .user-profile {
+    @apply bg-[#f8f9fa] p-[30px] rounded-[12px] mb-[30px];
+  }
+
+  .profile-header {
+    @apply grid items-center gap-[30px];
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .profile-avatar {
+    @apply w-[100px] h-[100px] rounded-full overflow-hidden bg-[#ddd] flex items-center justify-center text-[48px];
+  }
+
+  .profile-avatar img {
+    @apply w-full h-full object-cover;
+  }
+
+  .profile-actions {
+    @apply flex flex-col gap-[10px];
+  }
+
+  .profile-actions button {
+    @apply px-4 py-2 border-none rounded cursor-pointer text-sm transition-colors;
+  }
+
+  .friend-btn.add {
+    @apply bg-[#27ae60] text-white;
+  }
+
+  .friend-btn.remove {
+    @apply bg-[#e74c3c] text-white;
+  }
+
+  .message-btn,
+  .invite-btn {
+    @apply bg-[#3498db] text-white;
+  }
+
+  .block-btn.block {
+    @apply bg-[#e74c3c] text-white;
+  }
+
+  .block-btn.unblock {
+    @apply bg-[#27ae60] text-white;
+  }
+
+  .user-stats,
+  .user-achievements,
+  .recent-games {
+    @apply bg-[#f8f9fa] p-5 rounded-lg mb-5;
+  }
+
+  .stats-grid {
+    @apply grid gap-[15px] mt-[15px];
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .stat-card {
+    @apply bg-white p-5 rounded-lg text-center border border-[#dee2e6];
+  }
+
+  .stat-value {
+    @apply text-[24px] font-bold text-[#2c3e50];
+  }
+
+  .stat-label {
+    @apply text-sm text-[#666] mt-[5px];
+  }
+
+  .achievements-grid {
+    @apply grid gap-[15px] mt-[15px];
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .achievement-item {
+    @apply flex gap-[15px] p-[15px] bg-white rounded-lg border border-[#dee2e6];
+  }
+
+  .achievement-item.unlocked {
+    @apply border-[#f39c12] bg-[#fef9e7];
+  }
+
+  .achievement-item.locked {
+    @apply opacity-60;
+  }
+
+  .achievement-icon {
+    @apply text-[32px] w-[50px] text-center;
+  }
+
+  .games-list {
+    @apply mt-[15px];
+  }
+
+  .game-record {
+    @apply flex justify-between items-center p-[15px] mb-[10px] bg-white rounded-lg border border-[#dee2e6];
+  }
+
+  .game-record.win {
+    border-left: 4px solid #27ae60;
+  }
+
+  .game-record.lose {
+    border-left: 4px solid #e74c3c;
+  }
+
+  .result.win {
+    @apply text-[#27ae60] font-bold;
+  }
+
+  .result.lose {
+    @apply text-[#e74c3c] font-bold;
+  }
+}
+
+/* 로비 채팅 관련 스타일 */
+@layer components {
+  .lobby-detail-page .chat-section {
+    @apply bg-[#f8f9fa] p-5 rounded-lg border border-[#dee2e6] mt-[30px] w-full;
+  }
+
+  .chat-container {
+    @apply h-full w-full;
+  }
+
+  .lobby-chat-box {
+    @apply bg-[#f8f9fa] border border-[#dee2e6] rounded-lg p-4 w-full;
+  }
+
+  .chat-messages-area {
+    @apply h-[280px] overflow-y-auto bg-white border border-[#e9ecef] rounded p-3 mb-3 w-full;
+  }
+
+  .welcome-message {
+    @apply text-center text-[#6c757d] text-sm py-4;
+  }
+
+  .chat-message-item {
+    @apply mb-3 pb-2 border-b border-[#f1f3f4] last:border-b-0;
+  }
+
+  .message-content .message-header {
+    @apply flex justify-between items-center mb-1;
+  }
+
+  .message-content .username {
+    @apply font-semibold text-[#495057] text-sm;
+  }
+
+  .message-content .timestamp {
+    @apply text-xs text-[#6c757d];
+  }
+
+  .message-content .message-text {
+    @apply text-[#212529] text-sm leading-relaxed;
+  }
+
+  .system-message {
+    @apply text-center text-[#6c757d] text-xs py-1 italic;
+  }
+
+  .error-message {
+    @apply text-center text-[#dc3545] text-xs py-2 bg-[#f8d7da] border border-[#f5c6cb] rounded mb-2;
+  }
+
+  .typing-status {
+    @apply text-xs text-[#6c757d] h-5 mb-2;
+  }
+
+  .typing-text {
+    @apply italic;
+  }
+
+  .typing-dots {
+    @apply ml-1 animate-pulse;
+  }
+
+  .chat-input-area {
+    @apply bg-white border border-[#dee2e6] rounded p-3 w-full;
+  }
+
+  .input-wrapper {
+    @apply flex gap-2 mb-2 w-full;
+  }
+
+  .message-input {
+    @apply flex-1 px-3 py-2 border border-[#ced4da] rounded focus:outline-none focus:ring-2 focus:ring-[#0d6efd] focus:border-transparent text-sm bg-white text-[#212529];
+  }
+
+  .message-input:disabled {
+    @apply bg-[#e9ecef] text-[#6c757d] cursor-not-allowed;
+  }
+
+  .send-button {
+    @apply bg-[#0d6efd] hover:bg-[#0b5ed7] text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .send-button:disabled {
+    @apply bg-[#6c757d];
+  }
+
+  .char-counter {
+    @apply flex justify-end items-center gap-1 text-xs text-[#6c757d];
+  }
+
+  .connection-indicator {
+    @apply px-2 py-1 rounded text-xs;
+  }
+
+  .connection-indicator.connected {
+    @apply bg-[#d1edff] text-[#084298];
+  }
+
+  .connection-indicator.disconnected {
+    @apply bg-[#f8d7da] text-[#721c24];
+  }
+}
