@@ -94,19 +94,6 @@ npm run dev
 
 `tsen-back/src/domains/**/friendDoc.md` 및 Swagger UI(설정 시)를 참조하세요.
 
-## 테스트
-
-### 백엔드 테스트
-```bash
-cd tsen-back
-npm test
-```
-
-### 프론트엔드 테스트
-```bash
-cd tsen-front
-npm test
-```
 ## Author
 
 > Developed by [blue-orion](https://github.com/blue-orion)  
