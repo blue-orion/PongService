@@ -1,149 +1,3 @@
-# PongService
-# A real-time multiplayer Pong game service with lobby, matchmaking, and live gameplay.
-Built with Node.js, Express, Prisma, WebSockets, TypeScript, and Vite.
-
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
-## Table of Contents
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Architecture](#architecture)
-4. [Tech Stack](#tech-stack)
-5. [Getting Started](#getting-started)
-   - [Prerequisites](#prerequisites)
-   - [Installation](#installation)
-   - [Configuration](#configuration)
-   - [Running the App](#running-the-app)
-6. [API Reference](#api-reference)
-7. [Testing](#testing)
-8. [Contributing](#contributing)
-9. [License](#license)
-10. [Author](#author)
-
-## Overview
-
-> PongService provides a scalable backend and modern frontend for hosting real-time Pong games. Users can create or join lobbies, match with friends, and play live multiplayer matches in their browser.
-
-## Features
-
-- Real-time game communication via WebSockets
-- Lobby creation, join, and matchmaking
-- User authentication with JWT & OAuth2
-- RESTful APIs powered by Fastify & Prisma ORM
-- Responsive frontend built with Vite, TypeScript, and Tailwind CSS
-- Dockerized services for easy deployment
-- Comprehensive Jest test suite for backend services
-
-## Architecture
-
-![Architecture Diagram](./nginx/architecture.png)
-
-- **Backend**: Node.js, Fastify, Prisma, WebSocket manager  
-- **Database**: SQLite (handled by Prisma)  
-- **Frontend**: Vite, TypeScript, Tailwind CSS  
-- **Deployment**: Docker, Docker Compose, and Nginx reverse proxy  
-
-## Tech Stack
-
-| Layer        | Technologies                          |
-| :----------- | :------------------------------------ |
-| Backend      | Node.js, Fastify, Prisma, WebSocket   |
-| Database     | SQLite via Prisma                    |
-| Frontend     | Vite, TypeScript, (Vue/React)         |
-| Styling      | Tailwind CSS                          |
-| Testing      | Jest (Backend), Vitest (Frontend)     |
-| DevOps       | Docker, Docker Compose, Nginx         |
-
-## Getting Started
-
-### Prerequisites
-
-- Docker & Docker Compose  
-- Node.js >= 16.x  
-- npm or yarn  
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/blue-orion/PongService.git
-cd PongService
-
-# Install backend dependencies
-cd tsen-back
-npm install
-
-# Install frontend dependencies
-cd ../tsen-front
-npm install
-```
-
-### Configuration
-
-Copy environment files and adjust settings:
-
-```bash
-cp tsen-back/.env.example tsen-back/.env
-cp tsen-front/.env.example tsen-front/.env
-```
-
-Update database credentials in `tsen-back/.env` and other settings as needed.
-
-### Running the App
-
-#### Using Docker Compose
-```bash
-docker-compose up --build
-```
-Services:
-- `nginx` - reverse proxy  
-- `tsen-back` - API & WebSocket server  
-- `tsen-front` - Static frontend  
-
-#### Local Development
-
-```bash
-# Start backend
-cd tsen-back
-npm run dev
-
-# Start frontend
-cd ../tsen-front
-npm run dev
-```
-
-## API Reference
-
-See detailed API documentation in `tsen-back/src/domains/**/friendDoc.md` and Swagger UI (if configured).
-
-## Testing
-
-### Backend Tests
-```bash
-cd tsen-back
-npm test
-```
-
-### Frontend Tests
-```bash
-cd tsen-front
-npm test
-```
-
-## Contributing
-
-> Contributions are welcome! Please read `tsen-back/readme.md` and `tsen-front/readme.md` for detailed guidelines.
-
-## License
-
-> This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-## Author
-
-> Developed by [blue-orion](https://github.com/blue-orion)  
-> Portfolio: [https://your-portfolio.example.com](https://your-portfolio.example.com)
 
 ## 한국어 버전 (한글판)
 
@@ -291,3 +145,150 @@ npm test
 
 > 개발자 [blue-orion](https://github.com/blue-orion)  
 > 포트폴리오: [https://your-portfolio.example.com](https://your-portfolio.example.com)
+
+# PongService
+# A real-time multiplayer Pong game service with lobby, matchmaking, and live gameplay.
+Built with Node.js, Express, Prisma, WebSockets, TypeScript, and Vite.
+
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Tech Stack](#tech-stack)
+5. [Getting Started](#getting-started)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+   - [Configuration](#configuration)
+   - [Running the App](#running-the-app)
+6. [API Reference](#api-reference)
+7. [Testing](#testing)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [Author](#author)
+
+## Overview
+
+> PongService provides a scalable backend and modern frontend for hosting real-time Pong games. Users can create or join lobbies, match with friends, and play live multiplayer matches in their browser.
+
+## Features
+
+- Real-time game communication via WebSockets
+- Lobby creation, join, and matchmaking
+- User authentication with JWT & OAuth2
+- RESTful APIs powered by Fastify & Prisma ORM
+- Responsive frontend built with Vite, TypeScript, and Tailwind CSS
+- Dockerized services for easy deployment
+- Comprehensive Jest test suite for backend services
+
+## Architecture
+
+![Architecture Diagram](./nginx/architecture.png)
+
+- **Backend**: Node.js, Fastify, Prisma, WebSocket manager  
+- **Database**: SQLite (handled by Prisma)  
+- **Frontend**: Vite, TypeScript, Tailwind CSS  
+- **Deployment**: Docker, Docker Compose, and Nginx reverse proxy  
+
+## Tech Stack
+
+| Layer        | Technologies                          |
+| :----------- | :------------------------------------ |
+| Backend      | Node.js, Fastify, Prisma, WebSocket   |
+| Database     | SQLite via Prisma                    |
+| Frontend     | Vite, TypeScript, (Vue/React)         |
+| Styling      | Tailwind CSS                          |
+| Testing      | Jest (Backend), Vitest (Frontend)     |
+| DevOps       | Docker, Docker Compose, Nginx         |
+
+## Getting Started
+
+### Prerequisites
+
+- Docker & Docker Compose  
+- Node.js >= 16.x  
+- npm or yarn  
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/blue-orion/PongService.git
+cd PongService
+
+# Install backend dependencies
+cd tsen-back
+npm install
+
+# Install frontend dependencies
+cd ../tsen-front
+npm install
+```
+
+### Configuration
+
+Copy environment files and adjust settings:
+
+```bash
+cp tsen-back/.env.example tsen-back/.env
+cp tsen-front/.env.example tsen-front/.env
+```
+
+Update database credentials in `tsen-back/.env` and other settings as needed.
+
+### Running the App
+
+#### Using Docker Compose
+```bash
+docker-compose up --build
+```
+Services:
+- `nginx` - reverse proxy  
+- `tsen-back` - API & WebSocket server  
+- `tsen-front` - Static frontend  
+
+#### Local Development
+
+```bash
+# Start backend
+cd tsen-back
+npm run dev
+
+# Start frontend
+cd ../tsen-front
+npm run dev
+```
+
+## API Reference
+
+See detailed API documentation in `tsen-back/src/domains/**/friendDoc.md` and Swagger UI (if configured).
+
+## Testing
+
+### Backend Tests
+```bash
+cd tsen-back
+npm test
+```
+
+### Frontend Tests
+```bash
+cd tsen-front
+npm test
+```
+
+## Contributing
+
+> Contributions are welcome! Please read `tsen-back/readme.md` and `tsen-front/readme.md` for detailed guidelines.
+
+## License
+
+> This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+
+## Author
+
+> Developed by [blue-orion](https://github.com/blue-orion)  
+> Portfolio: [https://your-portfolio.example.com](https://your-portfolio.example.com)
